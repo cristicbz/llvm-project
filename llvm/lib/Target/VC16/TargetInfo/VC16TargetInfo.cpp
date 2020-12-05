@@ -22,8 +22,3 @@ extern "C" void LLVMInitializeVC16TargetInfo() {
   RegisterTarget<Triple::vc16> X(getTheVC16Target(), "vc16",
                                  "TTL Video Computer 16", "VC16");
 }
-
-// TODO(cristicbz): Temporary stub - this function must be defined for linking
-// to succeed and will be called unconditionally by llc, so must be a no-op.
-// Remove once this function is properly implemented.
-extern "C" void LLVMInitializeVC16TargetMC() {}

@@ -14,6 +14,7 @@
 #ifndef LLVM_LIB_TARGET_VC16_VC16TARGETMACHINE_H
 #define LLVM_LIB_TARGET_VC16_VC16TARGETMACHINE_H
 
+#include "MCTargetDesc/VC16MCTargetDesc.h"
 #include "llvm/CodeGen/SelectionDAGTargetInfo.h"
 #include "llvm/IR/DataLayout.h"
 #include "llvm/Target/TargetMachine.h"
@@ -34,7 +35,6 @@ public:
     return TLOF.get();
   }
 };
-Target &getTheVC16Target();
 }
 
 #endif
