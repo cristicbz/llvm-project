@@ -31,6 +31,7 @@ subdirectories =
  NVPTX
  PowerPC
  RISCV
+ VC16
  Sparc
  SystemZ
  VE
