@@ -1,3 +1,10 @@
+set(LLVM_TARGET_DEFINITIONS VC16.td)
+
+tablegen(LLVM VC16GenRegisterInfo.inc -gen-register-info)
+tablegen(LLVM VC16GenInstrInfo.inc -gen-instr-info)
+
+add_public_tablegen_target(VC16CommonTableGen)
+
 add_llvm_target(VC16CodeGen
   VC16TargetMachine.cpp
  )
