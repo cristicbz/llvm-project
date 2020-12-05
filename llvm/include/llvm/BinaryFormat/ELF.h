@@ -312,6 +312,7 @@ enum {
   EM_LANAI = 244,         // Lanai 32-bit processor
   EM_BPF = 247,           // Linux kernel bpf virtual machine
   EM_VE = 251,            // NEC SX-Aurora VE
+  EM_VC16 = 254,          // TTL Video Computer 16
 };
 
 // Object file classes.
@@ -628,6 +629,11 @@ enum : unsigned {
 // ELF Relocation types for RISC-V
 enum {
 #include "ELFRelocs/RISCV.def"
+};
+//
+// ELF Relocation types for VC-16
+enum {
+#include "ELFRelocs/VC16.def"
 };
 
 // ELF Relocation types for S390/zSeries

@@ -97,6 +97,7 @@ public:
     wasm64,         // WebAssembly with 64-bit pointers
     renderscript32, // 32-bit RenderScript
     renderscript64, // 64-bit RenderScript
+    vc16,           // TTL Video Computer 16
     ve,             // NEC SX-Aurora Vector Engine
     LastArchType = ve
   };
