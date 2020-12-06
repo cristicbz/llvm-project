@@ -16,11 +16,15 @@ include "llvm/Target/Target.td"
 include "VC16RegisterInfo.td"
 include "VC16InstrInfo.td"
 
-def VC16InstrInfo : InstrInfo;
-
 //===----------------------------------------------------------------------===//
 // VC16 processors supported.
 //===----------------------------------------------------------------------===//
+
+def VC16InstrInfo : InstrInfo;
+
+def VC16AsmParser : AsmParser {
+  let ShouldEmitMatchRegisterAltName = 1;
+}
 
 def : ProcessorModel<"generic-vc16", NoSchedModel, []>;
 
@@ -30,4 +34,5 @@ def : ProcessorModel<"generic-vc16", NoSchedModel, []>;
 
 def VC16 : Target {
   let InstructionSet = VC16InstrInfo;
+  let AssemblyParsers = [VC16AsmParser];
 }

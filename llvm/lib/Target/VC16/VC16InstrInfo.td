@@ -16,13 +16,41 @@ include "VC16InstrFormats.td"
 //===----------------------------------------------------------------------===//
 // Operand and SDNode transformation definitions.
 //===----------------------------------------------------------------------===//
-def simm10 : Operand<i16>;
-def uimm11 : Operand<i16>;
-def uimm4 : Operand<i16>;
-def simm5 : Operand<i16>;
-def uimm5 : Operand<i16>;
-def uimm6 : Operand<i16>;
-def imm8 : Operand<i16>;
+class SImmAsmOperand<int width>
+    : AsmOperandClass {
+  let Name = "SImm" # width;
+  let RenderMethod = "addImmOperands";
+  let DiagnosticType = !strconcat("Invalid", Name);
+}
+
+class UImmAsmOperand<int width>
+    : AsmOperandClass {
+  let Name = "UImm" # width;
+  let RenderMethod = "addImmOperands";
+  let DiagnosticType = !strconcat("Invalid", Name);
+}
+
+def simm10 : Operand<i16> {
+  let ParserMatchClass = SImmAsmOperand<10>;
+}
+def uimm11 : Operand<i16> {
+  let ParserMatchClass = UImmAsmOperand<11>;
+}
+def uimm4 : Operand<i16> {
+  let ParserMatchClass = UImmAsmOperand<4>;
+}
+def simm5 : Operand<i16> {
+  let ParserMatchClass = SImmAsmOperand<5>;
+}
+def uimm5 : Operand<i16> {
+  let ParserMatchClass = UImmAsmOperand<5>;
+}
+def uimm6 : Operand<i16> {
+  let ParserMatchClass = UImmAsmOperand<6>;
+}
+def simm8 : Operand<i16> {
+  let ParserMatchClass = SImmAsmOperand<8>;
+}
 
 //===----------------------------------------------------------------------===//
 // Instruction Class Templates
@@ -74,4 +102,4 @@ def ADCI : ALU_ri5<      0b11011111, "adci">;
 def  ORI : ALU_ri5<      0b00111111, "ori">;
 def XORI : ALU_ri5<      0b01111111, "xori">;
 def  LLI : ALU_ri5<      0b10111111, "lli">;
-def ANDI : ALU_ri5<      0b11111111, "and">;
+def ANDI : ALU_ri5<      0b11111111, "andi">;

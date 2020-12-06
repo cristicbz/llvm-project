@@ -67,8 +67,7 @@ MCCodeEmitter *llvm::createVC16MCCodeEmitter(const MCInstrInfo &MCII,
 void VC16MCCodeEmitter::encodeInstruction(const MCInst &MI, raw_ostream &OS,
                                            SmallVectorImpl<MCFixup> &Fixups,
                                            const MCSubtargetInfo &STI) const {
-  // For now, we only support VC16 instructions with 32-bit length
-  uint32_t Bits = getBinaryCodeForInstr(MI, Fixups, STI);
+  uint16_t Bits = getBinaryCodeForInstr(MI, Fixups, STI);
   support::endian::write(OS, Bits, support::little);
   ++MCNumEmitted; // Keep track of the # of mi's emitted.
 }
