@@ -60,16 +60,16 @@ class VCInstM<bits<3> op3, dag outs, dag ins, string opcodestr,
     : VCInst<outs, ins, opcodestr, argstr, [], InstFormatM>
 {
   bits<5> imm5;
-  bits<3> rd;
-  bits<3> rs;
+  bits<3> rs2;
+  bits<3> rs1;
 
   // TODO(cristicbz): Add support for segment selectors, currently just point to
   // stack.
   // bits<2> ss;
 
   let Inst{15-14} = imm5{4-3};
-  let Inst{13-11} = rd;
-  let Inst{10-8} = rs;
+  let Inst{13-11} = rs2;
+  let Inst{10-8} = rs1;
   let Inst{7-6} = 0b11;
   let Inst{5-3} = imm5{2-0};
   let Inst{2-0} = op3;

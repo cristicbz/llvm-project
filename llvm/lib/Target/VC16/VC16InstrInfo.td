@@ -71,7 +71,7 @@ class ALU_ri5<bits<8> op8, string opcodestr>
 
 let hasSideEffects = 0, mayLoad = 0, mayStore = 0 in
 class ALU_ri4<bit arithshift, bits<8> op8, string opcodestr>
-    : VCInstRI4<arithshift, op8, (outs GPR:$rd), (ins uimm4:$imm4), opcodestr, "$rd, $imm4">;
+    : VCInstRI4<arithshift, op8, (outs GPR:$rd), (ins uimm4:$shamt), opcodestr, "$rd, $shamt">;
 
 let hasSideEffects = 0, mayLoad = 0, mayStore = 0 in
 class ALU_rr<bits<2> op2, bits<8> op8, string opcodestr>
@@ -96,17 +96,17 @@ def JAL  : VCInstRI10<0b011, (outs GPR:$rd), (ins simm11_lsb0:$imm10),
                       "jal", "$rd, $imm10">;
 
 let isCall = 1 in
-def JALR : VCInstRRI5<0b00111, (outs GPR:$rd), (ins GPR:$rs1, uimm6_lsb0:$imm5),
-                      "jalr", "$rd, $rs1, $imm5">;
+def JALR : VCInstRRI5<0b00111, (outs GPR:$rd), (ins GPR:$rs, uimm6_lsb0:$imm5),
+                      "jalr", "$rd, $rs, $imm5">;
 } // hasSideEffects = 0, mayLoad = 0, mayStore = 0
 
 
 let hasSideEffects = 0, mayLoad = 1, mayStore = 0 in {
-def LW : VCInstM<0b001, (outs GPR:$rd), (ins GPR:$rs1, uimm6_lsb0:$imm5),
-                 "lw", "$rd, ${imm5}(${rs1})">;
+def LW : VCInstM<0b001, (outs GPR:$rs2), (ins GPR:$rs1, uimm6_lsb0:$imm5),
+                 "lw", "$rs2, ${imm5}(${rs1})">;
 
-def LB : VCInstM<0b101, (outs GPR:$rd), (ins GPR:$rs1, uimm5:$imm5),
-                 "lb", "$rd, ${imm5}(${rs1})">;
+def LB : VCInstM<0b101, (outs GPR:$rs2), (ins GPR:$rs1, uimm5:$imm5),
+                 "lb", "$rs2, ${imm5}(${rs1})">;
 
 } // hasSideEffects = 0, mayLoad = 1, mayStore = 0
 
@@ -169,10 +169,6 @@ def : InstAlias<"jalr ${rs}",              (JALR      R6, GPR:$rs,       0), 3>;
 def : InstAlias<"jalr ${offset}(${rs})",   (JALR      R6, GPR:$rs, uimm6_lsb0:$offset)>;
 def : InstAlias<"jalr ${rd}, ${rs}",       (JALR GPR:$rd, GPR:$rs,       0), 2>;
 def : InstAlias<"ret",                     (JALR      R6,      R6,       0), 4>;
-def : InstAlias<"bltu ${offset}",          (BN        simm9_lsb0:$offset)>;
-def : InstAlias<"bgeu ${offset}",          (BNN       simm9_lsb0:$offset)>;
-def : InstAlias<"beq  ${offset}",          (BZ        simm9_lsb0:$offset)>;
-def : InstAlias<"bne  ${offset}",          (BNZ       simm9_lsb0:$offset)>;
 
 
 let EmitPriority = 0 in {
@@ -189,3 +185,8 @@ def : InstAlias<"sll $rd, $shamt", (SLLI  GPR:$rd, uimm4:$shamt)>;
 def : InstAlias<"srl $rd, $shamt", (SRLI  GPR:$rd, uimm4:$shamt)>;
 def : InstAlias<"sra $rd, $shamt", (SRAI  GPR:$rd, uimm4:$shamt)>;
 }
+
+def : MnemonicAlias<"bltu", "bn">;
+def : MnemonicAlias<"bgeu", "bnn">;
+def : MnemonicAlias<"beq", "bz">;
+def : MnemonicAlias<"bne", "bnz">;
