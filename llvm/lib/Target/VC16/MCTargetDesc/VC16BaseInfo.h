@@ -18,9 +18,22 @@
 
 namespace llvm {
 
-// VC16 - This namespace holds all of the target specific flags that
+// VC16II - This namespace holds all of the target specific flags that
 // instruction info tracks. All definitions must match VC16InstrFormats.td.
-namespace VC16 {
+namespace VC16II {
+enum {
+  InstFormatPseudo = 0,
+  InstFormatRI11 = 1,
+  InstFormatM = 2,
+  InstFormatRI10 = 3,
+  InstFormatRRI5 = 4,
+  InstFormatB = 5,
+  InstFormatRR = 6,
+  InstFormatRI4 = 7,
+  InstFormatRI5 = 8,
+
+  InstFormatMask = 15
+};
 enum {
   MO_None,
   MO_LO,

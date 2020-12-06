@@ -4,4 +4,6 @@ add_llvm_component_library(LLVMVC16Desc
   VC16MCAsmInfo.cpp
   VC16MCTargetDesc.cpp
   VC16MCCodeEmitter.cpp
+  VC16MCExpr.cpp
+  VC16MCTargetDesc.cpp
 )

@@ -10,7 +10,10 @@
 // This file implements the VC16MCCodeEmitter class.
 //
 //===----------------------------------------------------------------------===//
-
+//
+#include "MCTargetDesc/VC16BaseInfo.h"
+#include "MCTargetDesc/VC16FixupKinds.h"
+#include "MCTargetDesc/VC16MCExpr.h"
 #include "MCTargetDesc/VC16MCTargetDesc.h"
 #include "llvm/ADT/Statistic.h"
 #include "llvm/MC/MCAsmInfo.h"
@@ -18,8 +21,10 @@
 #include "llvm/MC/MCContext.h"
 #include "llvm/MC/MCExpr.h"
 #include "llvm/MC/MCInst.h"
+#include "llvm/MC/MCInstrInfo.h"
 #include "llvm/MC/MCRegisterInfo.h"
 #include "llvm/MC/MCSymbol.h"
+#include "llvm/Support/Casting.h"
 #include "llvm/Support/EndianStream.h"
 #include "llvm/Support/raw_ostream.h"
 
@@ -28,15 +33,18 @@ using namespace llvm;
 #define DEBUG_TYPE "mccodeemitter"
 
 STATISTIC(MCNumEmitted, "Number of MC instructions emitted");
+STATISTIC(MCNumFixups, "Number of MC fixups created");
 
 namespace {
 class VC16MCCodeEmitter : public MCCodeEmitter {
   VC16MCCodeEmitter(const VC16MCCodeEmitter &) = delete;
   void operator=(const VC16MCCodeEmitter &) = delete;
   MCContext &Ctx;
+  MCInstrInfo const &MCII;
 
 public:
-  VC16MCCodeEmitter(MCContext &ctx) : Ctx(ctx) {}
+  VC16MCCodeEmitter(MCContext &ctx, MCInstrInfo const &MCII)
+      : Ctx(ctx), MCII(MCII) {}
 
   ~VC16MCCodeEmitter() override {}
 
@@ -63,6 +71,7 @@ public:
   uint64_t getImmOpValueLsr1(const MCInst &MI, unsigned OpNo,
                              SmallVectorImpl<MCFixup> &Fixups,
                              const MCSubtargetInfo &STI) const;
+
   uint64_t getImmOpValue(const MCInst &MI, unsigned OpNo,
                          SmallVectorImpl<MCFixup> &Fixups,
                          const MCSubtargetInfo &STI) const;
@@ -70,9 +79,9 @@ public:
 } // end anonymous namespace
 
 MCCodeEmitter *llvm::createVC16MCCodeEmitter(const MCInstrInfo &MCII,
-                                              const MCRegisterInfo &MRI,
-                                              MCContext &Ctx) {
-  return new VC16MCCodeEmitter(Ctx);
+                                             const MCRegisterInfo &MRI,
+                                             MCContext &Ctx) {
+  return new VC16MCCodeEmitter(Ctx, MCII);
 }
 
 void VC16MCCodeEmitter::encodeInstruction(const MCInst &MI, raw_ostream &OS,
@@ -110,24 +119,7 @@ VC16MCCodeEmitter::getImmOpValueAsr1(const MCInst &MI, unsigned OpNo,
     return Res >> 1;
   }
 
-  llvm_unreachable("Unhandled expression!");
-
-  return 0;
-}
-
-uint64_t VC16MCCodeEmitter::getImmOpValue(const MCInst &MI, unsigned OpNo,
-                                          SmallVectorImpl<MCFixup> &Fixups,
-                                          const MCSubtargetInfo &STI) const {
-
-  const MCOperand &MO = MI.getOperand(OpNo);
-
-  // If the destination is an immediate, there is nothing to do
-  if (MO.isImm())
-    return MO.getImm();
-
-  llvm_unreachable("Unhandled expression!");
-
-  return 0;
+  return getImmOpValue(MI, OpNo, Fixups, STI);
 }
 
 uint64_t
@@ -142,7 +134,65 @@ VC16MCCodeEmitter::getImmOpValueLsr1(const MCInst &MI, unsigned OpNo,
     return Res >> 1;
   }
 
-  llvm_unreachable("Unhandled expression!");
+  return getImmOpValue(MI, OpNo, Fixups, STI);
+}
+
+uint64_t VC16MCCodeEmitter::getImmOpValue(const MCInst &MI, unsigned OpNo,
+                                          SmallVectorImpl<MCFixup> &Fixups,
+                                          const MCSubtargetInfo &STI) const {
+  MCInstrDesc const &Desc = MCII.get(MI.getOpcode());
+  unsigned MIFrm = Desc.TSFlags & VC16II::InstFormatMask;
+  const MCOperand &MO = MI.getOperand(OpNo);
+
+  // If the destination is an immediate, there is nothing to do
+  if (MO.isImm())
+    return MO.getImm();
+
+  assert(MO.isExpr() &&
+         "getImmOpValue expects only expressions or immediates");
+  const MCExpr *Expr = MO.getExpr();
+  MCExpr::ExprKind Kind = Expr->getKind();
+  VC16::Fixups FixupKind = VC16::fixup_vc16_invalid;
+  if (Kind == MCExpr::Target) {
+    const VC16MCExpr *RVExpr = cast<VC16MCExpr>(Expr);
+
+    switch (RVExpr->getKind()) {
+    case VC16MCExpr::VK_VC16_None:
+    case VC16MCExpr::VK_VC16_Invalid:
+      llvm_unreachable("Unhandled fixup kind!");
+    case VC16MCExpr::VK_VC16_LO:
+      if (MIFrm == VC16II::InstFormatM)
+        FixupKind = VC16::fixup_vc16_lo5_m;
+      else if (MIFrm == VC16II::InstFormatRI5)
+        FixupKind = VC16::fixup_vc16_lo5_ri5;
+      else if (MIFrm == VC16II::InstFormatRRI5)
+        FixupKind = VC16::fixup_vc16_lo5_rri5;
+      else
+        llvm_unreachable("VK_VC16_LO used with unexpected instruction format");
+      break;
+    case VC16MCExpr::VK_VC16_HIS:
+      FixupKind = VC16::fixup_vc16_hi11s;
+      break;
+    case VC16MCExpr::VK_VC16_HIU:
+      FixupKind = VC16::fixup_vc16_hi11u;
+      break;
+    }
+  } else if (Kind == MCExpr::SymbolRef &&
+             cast<MCSymbolRefExpr>(Expr)->getKind() == MCSymbolRefExpr::VK_None) {
+    if (Desc.getOpcode() == VC16::JAL) {
+      FixupKind = VC16::fixup_vc16_jal;
+    } else if (MIFrm == VC16II::InstFormatB) {
+      FixupKind = VC16::fixup_vc16_branch;
+    }
+  }
+
+  assert(FixupKind != VC16::fixup_vc16_invalid && "Unhandled expression!");
+
+  Fixups.push_back(
+      MCFixup::create(0, Expr, MCFixupKind(FixupKind), MI.getLoc()));
+  ++MCNumFixups;
+
+  return 0;
 }
 
 #include "VC16GenMCCodeEmitter.inc"

@@ -7,6 +7,8 @@
 //
 //===----------------------------------------------------------------------===//
 
+#include "MCTargetDesc/VC16BaseInfo.h"
+#include "MCTargetDesc/VC16MCExpr.h"
 #include "MCTargetDesc/VC16MCTargetDesc.h"
 #include "llvm/ADT/STLExtras.h"
 #include "llvm/ADT/StringSwitch.h"
@@ -55,6 +57,7 @@ class VC16AsmParser : public MCTargetAsmParser {
   OperandMatchResultTy parseImmediate(OperandVector &Operands);
   OperandMatchResultTy parseRegister(OperandVector &Operands);
   OperandMatchResultTy parseMemOpBaseReg(OperandVector &Operands);
+  OperandMatchResultTy parseOperandWithModifier(OperandVector &Operands);
 
   bool parseOperand(OperandVector &Operands);
 
@@ -65,6 +68,11 @@ public:
 #include "VC16GenAsmMatcher.inc"
 #undef GET_OPERAND_DIAGNOSTIC_TYPES
   };
+
+  static bool classifySymbolRef(const MCExpr *Expr,
+                                VC16MCExpr::VariantKind &Kind,
+                                int64_t &Addend);
+
 
   VC16AsmParser(const MCSubtargetInfo &STI, MCAsmParser &Parser,
                  const MCInstrInfo &MII, const MCTargetOptions &Options)
@@ -123,41 +131,112 @@ public:
   bool isImm() const override { return Kind == Immediate; }
   bool isMem() const override { return false; }
 
-  bool isConstantImm() const {
-    return isImm() && dyn_cast<MCConstantExpr>(getImm());
-  }
-
-  int64_t getConstantImm() const {
+  bool evaluateConstantImm(int64_t &Imm, VC16MCExpr::VariantKind &VK) const {
     const MCExpr *Val = getImm();
-    return static_cast<const MCConstantExpr *>(Val)->getValue();
+    bool Ret = false;
+    if (auto *RE = dyn_cast<VC16MCExpr>(Val)) {
+      Ret = RE->evaluateAsConstant(Imm);
+      VK = RE->getKind();
+    } else if (auto CE = dyn_cast<MCConstantExpr>(Val)) {
+      Ret = true;
+      VK = VC16MCExpr::VK_VC16_None;
+      Imm = CE->getValue();
+    }
+    return Ret;
   }
 
-  bool isSImm11Lsb0() const {
-    return (isConstantImm() && isShiftedInt<10, 1>(getConstantImm()));
-  }
-
-  bool isUImm11() const {
-    return (isConstantImm() && isUInt<11>(getConstantImm()));
-  }
+  // True if operand is a symbol with no modifiers, or a constant with no
+  // modifiers and isShiftedInt<N-1, 1>(Op).
+  template <int N> bool isBareSimmNLsb0() const {
+    int64_t Imm;
+    VC16MCExpr::VariantKind VK;
+    if (!isImm())
+      return false;
+    bool IsConstantImm = evaluateConstantImm(Imm, VK);
+    bool IsValid;
+    if (!IsConstantImm)
+      IsValid = VC16AsmParser::classifySymbolRef(getImm(), VK, Imm);
+    else
+      IsValid = isShiftedInt<N - 1, 1>(Imm);
+    return IsValid && VK == VC16MCExpr::VK_VC16_None;
+   }
 
   bool isUImm4() const {
-    return (isConstantImm() && isUInt<4>(getConstantImm()));
-  }
-
-  bool isSImm5() const {
-    return (isConstantImm() && isInt<5>(getConstantImm()));
+    int64_t Imm;
+    VC16MCExpr::VariantKind VK;
+    if (!isImm())
+      return false;
+    bool IsConstantImm = evaluateConstantImm(Imm, VK);
+    return IsConstantImm && isUInt<4>(Imm) && VK == VC16MCExpr::VK_VC16_None;
   }
 
   bool isUImm5() const {
-    return (isConstantImm() && isUInt<5>(getConstantImm()));
+    VC16MCExpr::VariantKind VK;
+    int64_t Imm;
+    bool IsValid;
+    if (!isImm())
+      return false;
+    bool IsConstantImm = evaluateConstantImm(Imm, VK);
+    if (!IsConstantImm)
+      IsValid = VC16AsmParser::classifySymbolRef(getImm(), VK, Imm);
+    else
+      IsValid = isUInt<5>(Imm);
+    return IsValid &&
+           (VK == VC16MCExpr::VK_VC16_None || VK == VC16MCExpr::VK_VC16_LO);
+  }
+
+  bool isUImm11() const {
+    VC16MCExpr::VariantKind VK;
+    int64_t Imm;
+    bool IsValid;
+    if (!isImm())
+      return false;
+    bool IsConstantImm = evaluateConstantImm(Imm, VK);
+    if (!IsConstantImm)
+      IsValid = VC16AsmParser::classifySymbolRef(getImm(), VK, Imm);
+    else
+      IsValid = isUInt<11>(Imm);
+    return IsValid && (VK == VC16MCExpr::VK_VC16_None ||
+                       VK == VC16MCExpr::VK_VC16_HIS ||
+                       VK == VC16MCExpr::VK_VC16_HIU);
+  }
+
+  bool isSImm5() const {
+    VC16MCExpr::VariantKind VK;
+    int64_t Imm;
+    bool IsValid;
+    if (!isImm())
+      return false;
+    bool IsConstantImm = evaluateConstantImm(Imm, VK);
+    if (!IsConstantImm)
+      IsValid = VC16AsmParser::classifySymbolRef(getImm(), VK, Imm);
+    else
+      IsValid = isInt<5>(Imm);
+    return IsValid &&
+           (VK == VC16MCExpr::VK_VC16_None || VK == VC16MCExpr::VK_VC16_LO);
   }
 
   bool isUImm6Lsb0() const {
-    return (isConstantImm() && isShiftedInt<5, 1>(getConstantImm()));
+    VC16MCExpr::VariantKind VK;
+    int64_t Imm;
+    bool IsValid;
+    if (!isImm())
+      return false;
+    bool IsConstantImm = evaluateConstantImm(Imm, VK);
+    if (!IsConstantImm)
+      IsValid = VC16AsmParser::classifySymbolRef(getImm(), VK, Imm);
+    else
+      IsValid = isShiftedUInt<5, 1>(Imm);
+    return IsValid &&
+           (VK == VC16MCExpr::VK_VC16_None || VK == VC16MCExpr::VK_VC16_LO);
   }
 
   bool isSImm9Lsb0() const {
-    return (isConstantImm() && isShiftedInt<8, 1>(getConstantImm()));
+    return isBareSimmNLsb0<9>();
+  }
+
+  bool isSImm11Lsb0() const {
+    return isBareSimmNLsb0<11>();
   }
 
 
@@ -224,8 +303,17 @@ public:
 
   void addExpr(MCInst &Inst, const MCExpr *Expr) const {
     assert(Expr && "Expr shouldn't be null!");
-    if (auto *CE = dyn_cast<MCConstantExpr>(Expr))
-      Inst.addOperand(MCOperand::createImm(CE->getValue()));
+    int64_t Imm = 0;
+    bool IsConstant = false;
+    if (auto *RE = dyn_cast<VC16MCExpr>(Expr)) {
+      IsConstant = RE->evaluateAsConstant(Imm);
+    } else if (auto *CE = dyn_cast<MCConstantExpr>(Expr)) {
+      IsConstant = true;
+      Imm = CE->getValue();
+    }
+
+    if (IsConstant)
+      Inst.addOperand(MCOperand::createImm(Imm));
     else
       Inst.addOperand(MCOperand::createExpr(Expr));
   }
@@ -383,9 +471,51 @@ OperandMatchResultTy VC16AsmParser::parseImmediate(OperandVector &Operands) {
     Res = MCSymbolRefExpr::create(Sym, MCSymbolRefExpr::VK_None, getContext());
     break;
   }
+  case AsmToken::Percent:
+    return parseOperandWithModifier(Operands);
   }
 
   Operands.push_back(VC16Operand::createImm(Res, S, E));
+  return MatchOperand_Success;
+}
+
+OperandMatchResultTy
+VC16AsmParser::parseOperandWithModifier(OperandVector &Operands) {
+  SMLoc S = getLoc();
+  SMLoc E = SMLoc::getFromPointer(S.getPointer() - 1);
+
+  if (getLexer().getKind() != AsmToken::Percent) {
+    Error(getLoc(), "expected '%' for operand modifier");
+    return MatchOperand_ParseFail;
+  }
+
+  getParser().Lex(); // Eat '%'
+
+  if (getLexer().getKind() != AsmToken::Identifier) {
+    Error(getLoc(), "expected valid identifier for operand modifier");
+    return MatchOperand_ParseFail;
+  }
+  StringRef Identifier = getParser().getTok().getIdentifier();
+  VC16MCExpr::VariantKind VK = VC16MCExpr::getVariantKindForName(Identifier);
+  if (VK == VC16MCExpr::VK_VC16_Invalid) {
+    Error(getLoc(), "unrecognized operand modifier");
+    return MatchOperand_ParseFail;
+  }
+
+  getParser().Lex(); // Eat the identifier
+  if (getLexer().getKind() != AsmToken::LParen) {
+    Error(getLoc(), "expected '('");
+    return MatchOperand_ParseFail;
+  }
+  getParser().Lex(); // Eat '('
+
+  const MCExpr *SubExpr;
+  if (getParser().parseParenExpression(SubExpr, E)) {
+    return MatchOperand_ParseFail;
+  }
+
+  const MCExpr *ModExpr = VC16MCExpr::create(SubExpr, VK, getContext());
+  Operands.push_back(VC16Operand::createImm(ModExpr, S, E));
   return MatchOperand_Success;
 }
 
@@ -469,6 +599,52 @@ bool VC16AsmParser::ParseInstruction(ParseInstructionInfo &Info,
   getParser().Lex(); // Consume the EndOfStatement.
   return false;
 }
+
+bool VC16AsmParser::classifySymbolRef(const MCExpr *Expr,
+                                       VC16MCExpr::VariantKind &Kind,
+                                       int64_t &Addend) {
+  Kind = VC16MCExpr::VK_VC16_None;
+  Addend = 0;
+
+  if (const VC16MCExpr *RE = dyn_cast<VC16MCExpr>(Expr)) {
+    Kind = RE->getKind();
+    Expr = RE->getSubExpr();
+  }
+
+  // It's a simple symbol reference or constant with no addend.
+  if (isa<MCConstantExpr>(Expr) || isa<MCSymbolRefExpr>(Expr))
+    return true;
+
+  const MCBinaryExpr *BE = dyn_cast<MCBinaryExpr>(Expr);
+  if (!BE)
+    return false;
+
+  if (!isa<MCSymbolRefExpr>(BE->getLHS()))
+    return false;
+
+  if (BE->getOpcode() != MCBinaryExpr::Add &&
+      BE->getOpcode() != MCBinaryExpr::Sub)
+    return false;
+
+  // We are able to support the subtraction of two symbol references
+  if (BE->getOpcode() == MCBinaryExpr::Sub &&
+      isa<MCSymbolRefExpr>(BE->getRHS()))
+    return true;
+
+  // See if the addend is is a constant, otherwise there's more going
+  // on here than we can deal with.
+  auto AddendExpr = dyn_cast<MCConstantExpr>(BE->getRHS());
+  if (!AddendExpr)
+    return false;
+
+  Addend = AddendExpr->getValue();
+  if (BE->getOpcode() == MCBinaryExpr::Sub)
+    Addend = -Addend;
+
+  // It's some symbol reference + a constant addend
+  return Kind != VC16MCExpr::VK_VC16_Invalid;
+}
+
 
 bool VC16AsmParser::ParseDirective(AsmToken DirectiveID) { return true; }
 
