@@ -1,5 +1,7 @@
 ; RUN: llvm-mc %s -triple=vc16 -show-encoding \
 ; RUN:     | FileCheck -check-prefixes=CHECK,CHECK-INST %s
+# RUN: llvm-mc -filetype=obj -triple vc16 < %s \
+# RUN:     | llvm-objdump -d - | FileCheck -check-prefix=CHECK-INST %s
 
 ; CHECK-INST: addi sp, 2
 ; CHECK: encoding: [0x5f,0x3a]

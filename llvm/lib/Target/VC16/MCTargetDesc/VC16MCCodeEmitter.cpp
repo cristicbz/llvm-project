@@ -55,6 +55,17 @@ public:
   unsigned getMachineOpValue(const MCInst &MI, const MCOperand &MO,
                              SmallVectorImpl<MCFixup> &Fixups,
                              const MCSubtargetInfo &STI) const;
+
+  int64_t getImmOpValueAsr1(const MCInst &MI, unsigned OpNo,
+                             SmallVectorImpl<MCFixup> &Fixups,
+                             const MCSubtargetInfo &STI) const;
+
+  uint64_t getImmOpValueLsr1(const MCInst &MI, unsigned OpNo,
+                             SmallVectorImpl<MCFixup> &Fixups,
+                             const MCSubtargetInfo &STI) const;
+  uint64_t getImmOpValue(const MCInst &MI, unsigned OpNo,
+                         SmallVectorImpl<MCFixup> &Fixups,
+                         const MCSubtargetInfo &STI) const;
 };
 } // end anonymous namespace
 
@@ -85,6 +96,53 @@ VC16MCCodeEmitter::getMachineOpValue(const MCInst &MI, const MCOperand &MO,
 
   llvm_unreachable("Unhandled expression!");
   return 0;
+}
+
+int64_t
+VC16MCCodeEmitter::getImmOpValueAsr1(const MCInst &MI, unsigned OpNo,
+                                      SmallVectorImpl<MCFixup> &Fixups,
+                                      const MCSubtargetInfo &STI) const {
+  const MCOperand &MO = MI.getOperand(OpNo);
+
+  if (MO.isImm()) {
+    int64_t Res = MO.getImm();
+    assert((Res & 1) == 0 && "LSB is non-zero");
+    return Res >> 1;
+  }
+
+  llvm_unreachable("Unhandled expression!");
+
+  return 0;
+}
+
+uint64_t VC16MCCodeEmitter::getImmOpValue(const MCInst &MI, unsigned OpNo,
+                                          SmallVectorImpl<MCFixup> &Fixups,
+                                          const MCSubtargetInfo &STI) const {
+
+  const MCOperand &MO = MI.getOperand(OpNo);
+
+  // If the destination is an immediate, there is nothing to do
+  if (MO.isImm())
+    return MO.getImm();
+
+  llvm_unreachable("Unhandled expression!");
+
+  return 0;
+}
+
+uint64_t
+VC16MCCodeEmitter::getImmOpValueLsr1(const MCInst &MI, unsigned OpNo,
+                                     SmallVectorImpl<MCFixup> &Fixups,
+                                     const MCSubtargetInfo &STI) const {
+  const MCOperand &MO = MI.getOperand(OpNo);
+
+  if (MO.isImm()) {
+    uint64_t Res = MO.getImm();
+    assert((Res & 1) == 0 && "LSB is non-zero");
+    return Res >> 1;
+  }
+
+  llvm_unreachable("Unhandled expression!");
 }
 
 #include "VC16GenMCCodeEmitter.inc"

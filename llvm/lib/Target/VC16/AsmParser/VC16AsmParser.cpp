@@ -30,6 +30,10 @@ struct VC16Operand;
 class VC16AsmParser : public MCTargetAsmParser {
   SMLoc getLoc() const { return getParser().getTok().getLoc(); }
 
+  bool generateImmOutOfRangeError(OperandVector &Operands, uint64_t ErrorInfo,
+                                  int Lower, int Upper, Twine Msg);
+
+
   bool MatchAndEmitInstruction(SMLoc IDLoc, unsigned &Opcode,
                                OperandVector &Operands, MCStreamer &Out,
                                uint64_t &ErrorInfo,
@@ -50,6 +54,7 @@ class VC16AsmParser : public MCTargetAsmParser {
 
   OperandMatchResultTy parseImmediate(OperandVector &Operands);
   OperandMatchResultTy parseRegister(OperandVector &Operands);
+  OperandMatchResultTy parseMemOpBaseReg(OperandVector &Operands);
 
   bool parseOperand(OperandVector &Operands);
 
@@ -127,8 +132,8 @@ public:
     return static_cast<const MCConstantExpr *>(Val)->getValue();
   }
 
-  bool isSImm10() const {
-    return (isConstantImm() && isInt<10>(getConstantImm()));
+  bool isSImm11Lsb0() const {
+    return (isConstantImm() && isShiftedInt<10, 1>(getConstantImm()));
   }
 
   bool isUImm11() const {
@@ -147,13 +152,14 @@ public:
     return (isConstantImm() && isUInt<5>(getConstantImm()));
   }
 
-  bool isUImm6() const {
-    return (isConstantImm() && isUInt<5>(getConstantImm()));
+  bool isUImm6Lsb0() const {
+    return (isConstantImm() && isShiftedInt<5, 1>(getConstantImm()));
   }
 
-  bool isSImm8() const {
-    return (isConstantImm() && isInt<8>(getConstantImm()));
+  bool isSImm9Lsb0() const {
+    return (isConstantImm() && isShiftedInt<8, 1>(getConstantImm()));
   }
+
 
   /// getStartLoc - Gets location of the first token of this operand
   SMLoc getStartLoc() const override { return StartLoc; }
@@ -241,6 +247,15 @@ public:
 #define GET_MATCHER_IMPLEMENTATION
 #include "VC16GenAsmMatcher.inc"
 
+
+bool VC16AsmParser::generateImmOutOfRangeError(
+    OperandVector &Operands, uint64_t ErrorInfo, int Lower, int Upper,
+    Twine Msg = "immediate must be an integer in the range") {
+  SMLoc ErrorLoc = ((VC16Operand &)*Operands[ErrorInfo]).getStartLoc();
+  return Error(ErrorLoc, Msg + " [" + Twine(Lower) + ", " + Twine(Upper) + "]");
+}
+
+
 bool VC16AsmParser::MatchAndEmitInstruction(SMLoc IDLoc, unsigned &Opcode,
                                              OperandVector &Operands,
                                              MCStreamer &Out,
@@ -271,38 +286,33 @@ bool VC16AsmParser::MatchAndEmitInstruction(SMLoc IDLoc, unsigned &Opcode,
         ErrorLoc = IDLoc;
     }
     return Error(ErrorLoc, "invalid operand for instruction");
-  case Match_InvalidSImm10:
-    ErrorLoc = ((VC16Operand &)*Operands[ErrorInfo]).getStartLoc();
-    return Error(ErrorLoc,
-                 "immediate must be an integer in the range [-512, 511]");
+  case Match_InvalidSImm11Lsb0:
+      return generateImmOutOfRangeError(
+          Operands, ErrorInfo, -(1 << 10), (1 << 10) - 2,
+          "immediate must be a multiple of 2 bytes in the range");
   case Match_InvalidUImm11:
-    ErrorLoc = ((VC16Operand &)*Operands[ErrorInfo]).getStartLoc();
-    return Error(ErrorLoc,
-                 "immediate must be an integer in the range [0, 2047]");
+      return generateImmOutOfRangeError(Operands, ErrorInfo, 0, (1 << 11) - 1);
   case Match_InvalidUImm4:
-    ErrorLoc = ((VC16Operand &)*Operands[ErrorInfo]).getStartLoc();
-    return Error(ErrorLoc,
-                 "immediate must be an integer in the range [0, 15]");
+      return generateImmOutOfRangeError(Operands, ErrorInfo, 0, (1 << 4) - 1);
   case Match_InvalidSImm5:
-    ErrorLoc = ((VC16Operand &)*Operands[ErrorInfo]).getStartLoc();
-    return Error(ErrorLoc,
-                 "immediate must be an integer in the range [-16, 15]");
+      return generateImmOutOfRangeError(Operands, ErrorInfo, -(1 << 4),
+                                        (1 << 4) - 1);
   case Match_InvalidUImm5:
-    ErrorLoc = ((VC16Operand &)*Operands[ErrorInfo]).getStartLoc();
-    return Error(ErrorLoc,
-                 "immediate must be an integer in the range [0, 31]");
-  case Match_InvalidUImm6:
-    ErrorLoc = ((VC16Operand &)*Operands[ErrorInfo]).getStartLoc();
-    return Error(ErrorLoc,
-                 "immediate must be an integer in the range [0, 63]");
-  case Match_InvalidSImm8:
-    ErrorLoc = ((VC16Operand &)*Operands[ErrorInfo]).getStartLoc();
-    return Error(ErrorLoc,
-                 "immediate must be an integer in the range [-128, 127]");
+      return generateImmOutOfRangeError(Operands, ErrorInfo, 0, (1 << 5) - 1);
+  case Match_InvalidUImm6Lsb0:
+      return generateImmOutOfRangeError(
+          Operands, ErrorInfo, 0, (1 << 6) - 2,
+          "immediate must be a multiple of 2 bytes in the range");
+  case Match_InvalidSImm9Lsb0:
+      return generateImmOutOfRangeError(
+          Operands, ErrorInfo, -(1 << 8), (1 << 8) - 2,
+          "immediate must be a multiple of 2 bytes in the range");
   }
 
   llvm_unreachable("Unknown match type detected!");
 }
+
+
 
 bool VC16AsmParser::ParseRegister(unsigned &RegNo, SMLoc &StartLoc,
                                    SMLoc &EndLoc) {
@@ -350,6 +360,10 @@ OperandMatchResultTy VC16AsmParser::parseRegister(OperandVector &Operands) {
 }
 
 OperandMatchResultTy VC16AsmParser::parseImmediate(OperandVector &Operands) {
+  SMLoc S = getLoc();
+  SMLoc E = SMLoc::getFromPointer(S.getPointer() - 1);
+  const MCExpr *Res;
+
   switch (getLexer().getKind()) {
   default:
     return MatchOperand_NoMatch;
@@ -358,16 +372,46 @@ OperandMatchResultTy VC16AsmParser::parseImmediate(OperandVector &Operands) {
   case AsmToken::Plus:
   case AsmToken::Integer:
   case AsmToken::String:
+    if (getParser().parseExpression(Res))
+      return MatchOperand_ParseFail;
+    break;
+  case AsmToken::Identifier: {
+    StringRef Identifier;
+    if (getParser().parseIdentifier(Identifier))
+      return MatchOperand_ParseFail;
+    MCSymbol *Sym = getContext().getOrCreateSymbol(Identifier);
+    Res = MCSymbolRefExpr::create(Sym, MCSymbolRefExpr::VK_None, getContext());
     break;
   }
+  }
 
-  const MCExpr *IdVal;
-  SMLoc S = getLoc();
-  if (getParser().parseExpression(IdVal))
+  Operands.push_back(VC16Operand::createImm(Res, S, E));
+  return MatchOperand_Success;
+}
+
+OperandMatchResultTy
+VC16AsmParser::parseMemOpBaseReg(OperandVector &Operands) {
+  if (getLexer().isNot(AsmToken::LParen)) {
+    Error(getLoc(), "expected '('");
     return MatchOperand_ParseFail;
+  }
 
-  SMLoc E = SMLoc::getFromPointer(S.getPointer() - 1);
-  Operands.push_back(VC16Operand::createImm(IdVal, S, E));
+  getParser().Lex(); // Eat '('
+  Operands.push_back(VC16Operand::createToken("(", getLoc()));
+
+  if (parseRegister(Operands) != MatchOperand_Success) {
+    Error(getLoc(), "expected register");
+    return MatchOperand_ParseFail;
+  }
+
+  if (getLexer().isNot(AsmToken::RParen)) {
+    Error(getLoc(), "expected ')'");
+    return MatchOperand_ParseFail;
+  }
+
+  getParser().Lex(); // Eat ')'
+  Operands.push_back(VC16Operand::createToken(")", getLoc()));
+
   return MatchOperand_Success;
 }
 
@@ -380,8 +424,12 @@ bool VC16AsmParser::parseOperand(OperandVector &Operands) {
     return false;
 
   // Attempt to parse token as an immediate
-  if (parseImmediate(Operands) == MatchOperand_Success)
+  if (parseImmediate(Operands) == MatchOperand_Success) {
+    // Parse memory base register if present
+    if (getLexer().is(AsmToken::LParen))
+      return parseMemOpBaseReg(Operands) != MatchOperand_Success;
     return false;
+  }
 
   // Finally we have exhausted all options and must declare defeat.
   Error(getLoc(), "unknown operand");

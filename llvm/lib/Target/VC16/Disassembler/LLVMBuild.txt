@@ -1,4 +1,4 @@
-;===- ./lib/Target/VC16/LLVMBuild.txt --------------------------*- Conf -*--===;
+;===- ./lib/Target/VC16/Disassembler/LLVMBuild.txt =------------*- Conf -*--===;
 ;
 ;                     The LLVM Compiler Infrastructure
 ;
@@ -15,20 +15,9 @@
 ;
 ;===------------------------------------------------------------------------===;
 
-[common]
-subdirectories = AsmParser Disassembler InstPrinter TargetInfo MCTargetDesc
-
 [component_0]
-type = TargetGroup
-name = VC16
-parent = Target
-has_asmparser = 1
-has_asmprinter = 1
-has_disassembler = 1
-
-[component_1]
 type = Library
-name = VC16CodeGen
+name = VC16Disassembler
 parent = VC16
-required_libraries = AsmPrinter Core CodeGen VC16Info VC16AsmPrinter VC16Desc Support Target
+required_libraries = MCDisassembler VC16Info Support
 add_to_library_groups = VC16
