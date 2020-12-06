@@ -22,12 +22,12 @@ def ABIRegAltName : RegAltNameIndex;
 
 
 let RegAltNameIndices = [ABIRegAltName] in {
-  def R0: VC16Reg<0, "r0", []>, DwarfRegNum<[0]>;
-  def R1: VC16Reg<1, "r1", []>, DwarfRegNum<[1]>;
-  def R2: VC16Reg<2, "r2", []>, DwarfRegNum<[2]>;
-  def R3: VC16Reg<3, "r3", []>, DwarfRegNum<[3]>;
-  def R4: VC16Reg<4, "r4", []>, DwarfRegNum<[4]>;
-  def R5: VC16Reg<5, "r5", []>, DwarfRegNum<[5]>;
+  def R0: VC16Reg<0, "r0", ["r0"]>, DwarfRegNum<[0]>;
+  def R1: VC16Reg<1, "r1", ["r1"]>, DwarfRegNum<[1]>;
+  def R2: VC16Reg<2, "r2", ["r2"]>, DwarfRegNum<[2]>;
+  def R3: VC16Reg<3, "r3", ["r3"]>, DwarfRegNum<[3]>;
+  def R4: VC16Reg<4, "r4", ["r4"]>, DwarfRegNum<[4]>;
+  def R5: VC16Reg<5, "r5", ["r5"]>, DwarfRegNum<[5]>;
   def R6: VC16Reg<6, "r6", ["ra"]>, DwarfRegNum<[6]>;
   def R7: VC16Reg<7, "r7", ["sp"]>, DwarfRegNum<[7]>;
 }
@@ -43,4 +43,3 @@ def GPR : RegisterClass<"VC16", [i16], 16, (add
 //{
 //  let CopyCost = -1;      // Don't allow copying of status registers
 //}
-

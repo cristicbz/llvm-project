@@ -19,5 +19,5 @@
 type = Library
 name = VC16Desc
 parent = VC16
-required_libraries = MC VC16Info Support
+required_libraries = MC VC16AsmPrinter VC16Info Support
 add_to_library_groups = VC16

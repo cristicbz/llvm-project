@@ -13,6 +13,7 @@
 
 #include "VC16MCTargetDesc.h"
 #include "VC16MCAsmInfo.h"
+#include "InstPrinter/VC16InstPrinter.h"
 #include "llvm/ADT/STLExtras.h"
 #include "llvm/MC/MCAsmInfo.h"
 #include "llvm/MC/MCInstrInfo.h"
@@ -60,6 +61,14 @@ static MCSubtargetInfo *createVC16MCSubtargetInfo(const Triple &TT,
   return createVC16MCSubtargetInfoImpl(TT, CPUName, FS);
 }
 
+static MCInstPrinter *createVC16MCInstPrinter(const Triple &T,
+                                              unsigned SyntaxVariant,
+                                              const MCAsmInfo &MAI,
+                                              const MCInstrInfo &MII,
+                                              const MCRegisterInfo &MRI) {
+  return new VC16InstPrinter(MAI, MII, MRI);
+}
+
 extern "C" void LLVMInitializeVC16TargetMC() {
   Target &T = getTheVC16Target();
   TargetRegistry::RegisterMCAsmInfo(T, createVC16MCAsmInfo);
@@ -68,4 +77,5 @@ extern "C" void LLVMInitializeVC16TargetMC() {
   TargetRegistry::RegisterMCAsmBackend(T, createVC16AsmBackend);
   TargetRegistry::RegisterMCCodeEmitter(T, createVC16MCCodeEmitter);
   TargetRegistry::RegisterMCSubtargetInfo(T, createVC16MCSubtargetInfo);
+  TargetRegistry::RegisterMCInstPrinter(T, createVC16MCInstPrinter);
 }
