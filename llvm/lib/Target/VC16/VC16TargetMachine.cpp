@@ -49,10 +49,31 @@ VC16TargetMachine::VC16TargetMachine(const Target &T, const Triple &TT,
     : LLVMTargetMachine(T, computeDataLayout(TT), TT, CPU, FS, Options,
                         getEffectiveRelocModel(TT, RM),
                         getEffectiveCodeModel(CM, CodeModel::Small), OL),
-      TLOF(std::make_unique<TargetLoweringObjectFileELF>()) {
+      TLOF(std::make_unique<TargetLoweringObjectFileELF>()),
+      Subtarget(TT, CPU, FS, *this) {
   initAsmInfo();
 }
 
+namespace {
+class VC16PassConfig : public TargetPassConfig {
+public:
+  VC16PassConfig(VC16TargetMachine &TM, PassManagerBase &PM)
+      : TargetPassConfig(TM, PM) {}
+
+  VC16TargetMachine &getVC16TargetMachine() const {
+    return getTM<VC16TargetMachine>();
+  }
+
+  bool addInstSelector() override;
+};
+}
+
 TargetPassConfig *VC16TargetMachine::createPassConfig(PassManagerBase &PM) {
-  return new TargetPassConfig(*this, PM);
+  return new VC16PassConfig(*this, PM);
+}
+
+bool VC16PassConfig::addInstSelector() {
+  addPass(createVC16ISelDag(getVC16TargetMachine()));
+
+  return false;
 }

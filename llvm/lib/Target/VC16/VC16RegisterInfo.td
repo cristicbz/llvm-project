@@ -22,24 +22,25 @@ def ABIRegAltName : RegAltNameIndex;
 
 
 let RegAltNameIndices = [ABIRegAltName] in {
-  def R0: VC16Reg<0, "r0", ["r0"]>, DwarfRegNum<[0]>;
-  def R1: VC16Reg<1, "r1", ["r1"]>, DwarfRegNum<[1]>;
-  def R2: VC16Reg<2, "r2", ["r2"]>, DwarfRegNum<[2]>;
-  def R3: VC16Reg<3, "r3", ["r3"]>, DwarfRegNum<[3]>;
-  def R4: VC16Reg<4, "r4", ["r4"]>, DwarfRegNum<[4]>;
-  def R5: VC16Reg<5, "r5", ["r5"]>, DwarfRegNum<[5]>;
+  def R0: VC16Reg<0, "r0", ["a0"]>, DwarfRegNum<[0]>;
+  def R1: VC16Reg<1, "r1", ["a1"]>, DwarfRegNum<[1]>;
+  def R2: VC16Reg<2, "r2", ["a2"]>, DwarfRegNum<[2]>;
+  def R3: VC16Reg<3, "r3", ["s0"]>, DwarfRegNum<[3]>;
+  def R4: VC16Reg<4, "r4", ["s1", "fp"]>, DwarfRegNum<[4]>;
+  def R5: VC16Reg<5, "r5", ["t0"]>, DwarfRegNum<[5]>;
   def R6: VC16Reg<6, "r6", ["ra"]>, DwarfRegNum<[6]>;
   def R7: VC16Reg<7, "r7", ["sp"]>, DwarfRegNum<[7]>;
 }
 
-// TODO(cristicbz): Order in order of how they should be allocated.
+// The order of registers represents the preferred allocation sequence.
+// Registers are listed in the order caller-save, callee-save, specials.
 def GPR : RegisterClass<"VC16", [i16], 16, (add
-  (sequence "R%u", 0, 7)
+  R0, R1, R2, R5, R3, R4, R6, R7
 )>;
 
 // Status register.
 def FLAGS : VC16Reg<4, "FLAGS", ["FLAGS"]>, DwarfRegNum<[8]>;
-def CSR : RegisterClass<"VC16", [i8], 8, (add FLAGS)>
+def SPCR : RegisterClass<"VC16", [i8], 8, (add FLAGS)>
 {
   let CopyCost = -1;      // Don't allow copying of status registers
 }

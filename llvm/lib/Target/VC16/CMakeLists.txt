@@ -1,18 +1,29 @@
 set(LLVM_TARGET_DEFINITIONS VC16.td)
 
-tablegen(LLVM VC16GenRegisterInfo.inc -gen-register-info)
-tablegen(LLVM VC16GenInstrInfo.inc -gen-instr-info)
-tablegen(LLVM VC16GenMCCodeEmitter.inc -gen-emitter)
-tablegen(LLVM VC16GenSubtargetInfo.inc -gen-subtarget)
 tablegen(LLVM VC16GenAsmMatcher.inc -gen-asm-matcher)
 tablegen(LLVM VC16GenAsmWriter.inc -gen-asm-writer)
+tablegen(LLVM VC16GenCallingConv.inc -gen-callingconv)
+tablegen(LLVM VC16GenDAGISel.inc -gen-dag-isel)
 tablegen(LLVM VC16GenDisassemblerTables.inc -gen-disassembler)
+tablegen(LLVM VC16GenInstrInfo.inc -gen-instr-info)
+tablegen(LLVM VC16GenMCCodeEmitter.inc -gen-emitter)
+tablegen(LLVM VC16GenMCPseudoLowering.inc -gen-pseudo-lowering)
+tablegen(LLVM VC16GenRegisterInfo.inc -gen-register-info)
+tablegen(LLVM VC16GenSubtargetInfo.inc -gen-subtarget)
 
 add_public_tablegen_target(VC16CommonTableGen)
 
 add_llvm_target(VC16CodeGen
+  VC16AsmPrinter.cpp
+  VC16FrameLowering.cpp
+  VC16InstrInfo.cpp
+  VC16ISelDAGToDAG.cpp
+  VC16ISelLowering.cpp
+  VC16MCInstLower.cpp
+  VC16RegisterInfo.cpp
+  VC16Subtarget.cpp
   VC16TargetMachine.cpp
- )
+  )
 
 add_subdirectory(AsmParser)
 add_subdirectory(Disassembler)

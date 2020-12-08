@@ -30,5 +30,5 @@ has_disassembler = 1
 type = Library
 name = VC16CodeGen
 parent = VC16
-required_libraries = AsmPrinter Core CodeGen VC16Info VC16AsmPrinter VC16Desc Support Target
+required_libraries = AsmPrinter Core CodeGen MC VC16AsmPrinter VC16Desc VC16Info SelectionDAG Support Target
 add_to_library_groups = VC16

@@ -14,6 +14,13 @@
 include "VC16InstrFormats.td"
 
 //===----------------------------------------------------------------------===//
+// VC16 specific DAG Nodes.
+//===----------------------------------------------------------------------===//
+
+def RetFlag : SDNode<"VC16ISD::RET_FLAG", SDTNone,
+                     [SDNPHasChain, SDNPOptInGlue, SDNPVariadic]>;
+
+//===----------------------------------------------------------------------===//
 // Operand and SDNode transformation definitions.
 //===----------------------------------------------------------------------===//
 class ImmAsmOperand<string prefix, int width, string suffix> : AsmOperandClass {
@@ -35,19 +42,19 @@ def simm11_lsb0 : Operand<i16> {
   let EncoderMethod = "getImmOpValueAsr1";
   let DecoderMethod = "decodeSImmOperandAndLsl1<11>";
 }
-def uimm11 : Operand<i16> {
+def uimm11 : Operand<i16>, ImmLeaf<i16, [{return isUInt<11>(Imm);}]> {
   let ParserMatchClass = UImmAsmOperand<11>;
   let DecoderMethod = "decodeUImmOperand<11>";
 }
-def uimm4 : Operand<i16> {
+def uimm4 : Operand<i16>, ImmLeaf<i16, [{return isUInt<4>(Imm);}]>  {
   let ParserMatchClass = UImmAsmOperand<4>;
   let DecoderMethod = "decodeUImmOperand<4>";
 }
-def simm5 : Operand<i16> {
+def simm5 : Operand<i16>, ImmLeaf<i16, [{return isInt<5>(Imm);}]>  {
   let ParserMatchClass = SImmAsmOperand<5>;
   let DecoderMethod = "decodeSImmOperand<5>";
 }
-def uimm5 : Operand<i16> {
+def uimm5 : Operand<i16>, ImmLeaf<i16, [{return isUInt<5>(Imm);}]>  {
   let ParserMatchClass = UImmAsmOperand<5>;
   let DecoderMethod = "decodeUImmOperand<5>";
 }
@@ -67,15 +74,31 @@ def simm9_lsb0 : Operand<i16> {
 //===----------------------------------------------------------------------===//
 let hasSideEffects = 0, mayLoad = 0, mayStore = 0 in
 class ALU_ri5<bits<8> op8, string opcodestr>
-    : VCInstRI5<op8, (outs GPR:$rd), (ins simm5:$imm5), opcodestr, "$rd, $imm5">;
+    : VCInstRI5<op8, (outs GPR:$rd_wb), (ins GPR:$rd, simm5:$imm5),
+                opcodestr, "$rd, $imm5"> {
+  let Constraints = "$rd = $rd_wb";
+}
 
 let hasSideEffects = 0, mayLoad = 0, mayStore = 0 in
 class ALU_ri4<bit arithshift, bits<8> op8, string opcodestr>
-    : VCInstRI4<arithshift, op8, (outs GPR:$rd), (ins uimm4:$shamt), opcodestr, "$rd, $shamt">;
+    : VCInstRI4<arithshift, op8, (outs GPR:$rd_wb), (ins GPR:$rd, uimm4:$shamt),
+                opcodestr, "$rd, $shamt"> {
+  let Constraints = "$rd = $rd_wb";
+}
 
 let hasSideEffects = 0, mayLoad = 0, mayStore = 0 in
-class ALU_rr<bits<2> op2, bits<8> op8, string opcodestr>
-    : VCInstRR<op2, op8, (outs GPR:$rd), (ins GPR:$rs), opcodestr, "$rd, $rs">;
+class ALU_Unary_rr<bits<2> op2, bits<8> op8, string opcodestr>
+    : VCInstRR<op2, op8, (outs GPR:$rd), (ins GPR:$rs),
+               opcodestr, "$rd, $rs">;
+
+let hasSideEffects = 0, mayLoad = 0, mayStore = 0 in
+class ALU_Binary_rr<bits<2> op2, bits<8> op8, string opcodestr>
+    : VCInstRR<op2, op8, (outs GPR:$rd_wb), (ins GPR:$rd, GPR:$rs),
+               opcodestr, "$rd, $rs"> {
+  let Constraints = "$rd = $rd_wb";
+}
+
+
 
 let hasSideEffects = 0, mayLoad = 0, mayStore = 0 in
 class BranchCC_i<bits<8> op8, string opcodestr>
@@ -129,25 +152,25 @@ def BGE  : BranchCC_i<0b11001111, "bge">;
 def BNC  : BranchCC_i<0b11101111, "bnc">;
 
 
-def  ADD : ALU_rr <0b00, 0b00110111, "add">;
-def  SLL : ALU_rr <0b00, 0b01110111, "sll">;
-def  SUB : ALU_rr <0b00, 0b10110111, "sub">;
-def  SRL : ALU_rr <0b00, 0b11110111, "srl">;
+def  ADD : ALU_Binary_rr <0b00, 0b00110111, "add">;
+def  SLL : ALU_Binary_rr <0b00, 0b01110111, "sll">;
+def  SUB : ALU_Binary_rr <0b00, 0b10110111, "sub">;
+def  SRL : ALU_Binary_rr <0b00, 0b11110111, "srl">;
 
-def  ADC : ALU_rr <0b01, 0b00110111, "adc">;
-def  NEG : ALU_rr <0b01, 0b01110111, "neg">;
-def  SBB : ALU_rr <0b01, 0b10110111, "sbb">;
+def  ADC : ALU_Binary_rr <0b01, 0b00110111, "adc">;
+def  NEG : ALU_Unary_rr  <0b01, 0b01110111, "neg">;
+def  SBB : ALU_Binary_rr <0b01, 0b10110111, "sbb">;
 // def   SX : ALU_rr <0b01, 0b11110111, "sx">;
 
-def  AND : ALU_rr <0b10, 0b00110111, "and">;
-def  XOR : ALU_rr <0b10, 0b01110111, "xor">;
-def   OR : ALU_rr <0b10, 0b10110111, "or">;
-def  NOT : ALU_rr <0b10, 0b11110111, "not">;
+def  AND : ALU_Binary_rr <0b10, 0b00110111, "and">;
+def  XOR : ALU_Binary_rr <0b10, 0b01110111, "xor">;
+def   OR : ALU_Binary_rr <0b10, 0b10110111, "or">;
+def  NOT : ALU_Unary_rr <0b10, 0b11110111, "not">;
 
-def TEST : ALU_rr <0b11, 0b00110111, "test">;
-def   MV : ALU_rr <0b11, 0b01110111, "mv">;
-def  CMP : ALU_rr <0b11, 0b10110111, "cmp">;
-def  SRA : ALU_rr <0b11, 0b11110111, "sra">;
+def TEST : ALU_Binary_rr <0b11, 0b00110111, "test">;
+def   MV : ALU_Unary_rr  <0b11, 0b01110111, "mv">;
+def  CMP : ALU_Binary_rr <0b11, 0b10110111, "cmp">;
+def  SRA : ALU_Binary_rr <0b11, 0b11110111, "sra">;
 
 
 def SLLI : ALU_ri4<0b0,  0b00011111, "slli">;
@@ -162,13 +185,64 @@ def  LLI : ALU_ri5<      0b10111111, "lli">;
 def ANDI : ALU_ri5<      0b11111111, "andi">;
 
 //===----------------------------------------------------------------------===//
-// Pseudo-nstructions
+// Pseudo-instructions and codegen patterns
+//
+// Naming convention: For 'generic' pattern classes, we use the naming
+// convention PatTy1Ty2. For pattern classes which offer a more complex
+// expension, prefix the class name, e.g. BccPat.
 //===----------------------------------------------------------------------===//
+
+/// Generic pattern classes
+
+class PatGprGpr<SDPatternOperator OpNode, VCInstRR Inst>
+    : Pat<(OpNode GPR:$rd, GPR:$rs), (Inst GPR:$rd, GPR:$rs)>;
+class PatGprSimm5<SDPatternOperator OpNode, VCInstRI5 Inst>
+    : Pat<(OpNode GPR:$rs, simm5:$imm5), (Inst GPR:$rs, simm5:$imm5)>;
+class PatGprUimm4<SDPatternOperator OpNode, VCInstRI4 Inst>
+    : Pat<(OpNode GPR:$rs, uimm4:$shamt), (Inst GPR:$rs, uimm4:$shamt)>;
+
+// def : PatGprGpr<addc,TEST : ALU_Binary_rr <0b11, 0b00110111, "test">;
+// def : PatGprGpr<addc, CMP : ALU_Binary_rr <0b11, 0b10110111, "cmp">;
+// def : PatGprGpr<addc,  MV : ALU_Unary_rr  <0b11, 0b01110111, "mv">;
+// def  LLI : ALU_ri5<      0b10111111, "lli">;
+
+def : PatGprGpr<add, ADD>;
+def : PatGprGpr<shl, SLL>;
+def : PatGprGpr<sub, SUB>;
+def : PatGprGpr<srl, SRL>;
+def : PatGprGpr<adde, ADC>;
+def : PatGprGpr<sube, SBB>;
+def : PatGprGpr<and, AND>;
+def : PatGprGpr<xor, XOR>;
+def : PatGprGpr<or,  OR>;
+def : PatGprGpr<sra, SRA>;
+
+def : Pat<(ineg GPR:$rs), (NEG GPR:$rs)>;
+def : Pat<(not GPR:$rs), (NOT GPR:$rs)>;
+
+def : PatGprSimm5<or, ORI>;
+def : PatGprSimm5<add, ADDI>;
+def : PatGprSimm5<adde, ADCI>;
+def : PatGprSimm5<and, ANDI>;
+def : PatGprSimm5<xor, XORI>;
+def : PatGprUimm4<shl, SLLI>;
+def : PatGprUimm4<srl, SRLI>;
+def : PatGprUimm4<sra, SRAI>;
+
+
+/// Branches and jumps
+
+let isBarrier = 1, isReturn = 1, isTerminator = 1 in
+def PseudoRET : Pseudo<(outs), (ins), [(RetFlag)]>,
+                PseudoInstExpansion<(JALR R5, R6, 0)>;
+
+
+/// Aliases
 def : InstAlias<"nop",                     (ANDI      R7,      -1)>;
 def : InstAlias<"jalr ${rs}",              (JALR      R6, GPR:$rs,       0), 3>;
 def : InstAlias<"jalr ${offset}(${rs})",   (JALR      R6, GPR:$rs, uimm6_lsb0:$offset)>;
 def : InstAlias<"jalr ${rd}, ${rs}",       (JALR GPR:$rd, GPR:$rs,       0), 2>;
-def : InstAlias<"ret",                     (JALR      R6,      R6,       0), 4>;
+def : InstAlias<"ret",                     (JALR      R5,      R6,       0), 4>;
 
 
 let EmitPriority = 0 in {
@@ -177,13 +251,14 @@ def : InstAlias<"lw $rd, (${rs1})",  (LW  GPR:$rd, GPR:$rs1, 0)>;
 def : InstAlias<"sb $rs2, (${rs1})", (SB  GPR:$rs2, GPR:$rs1, 0)>;
 def : InstAlias<"sw $rs2, (${rs1})", (SW  GPR:$rs2, GPR:$rs1, 0)>;
 
-def : InstAlias<"add $rd, $imm5",  (ADDI  GPR:$rd, simm5:$imm5)>;
-def : InstAlias<"and $rd, $imm5",  (ANDI  GPR:$rd, simm5:$imm5)>;
-def : InstAlias<"xor $rd, $imm5",  (XORI  GPR:$rd, simm5:$imm5)>;
-def : InstAlias<"or $rd, $imm5",   (ORI   GPR:$rd, simm5:$imm5)>;
-def : InstAlias<"sll $rd, $shamt", (SLLI  GPR:$rd, uimm4:$shamt)>;
-def : InstAlias<"srl $rd, $shamt", (SRLI  GPR:$rd, uimm4:$shamt)>;
-def : InstAlias<"sra $rd, $shamt", (SRAI  GPR:$rd, uimm4:$shamt)>;
+// TODO(cristicbz): getMachineOpValue() needs to be adjusted for this to work.
+// def : InstAlias<"add $rd, $imm5",  (ADDI  GPR:$rd, simm5:$imm5)>;
+// def : InstAlias<"and $rd, $imm5",  (ANDI  GPR:$rd, simm5:$imm5)>;
+// def : InstAlias<"xor $rd, $imm5",  (XORI  GPR:$rd, simm5:$imm5)>;
+// def : InstAlias<"or $rd, $imm5",   (ORI   GPR:$rd, simm5:$imm5)>;
+// def : InstAlias<"sll $rd, $shamt", (SLLI  GPR:$rd, uimm4:$shamt)>;
+// def : InstAlias<"srl $rd, $shamt", (SRLI  GPR:$rd, uimm4:$shamt)>;
+// def : InstAlias<"sra $rd, $shamt", (SRAI  GPR:$rd, uimm4:$shamt)>;
 }
 
 def : MnemonicAlias<"bltu", "bn">;

@@ -14,13 +14,16 @@ include "llvm/Target/Target.td"
 //===----------------------------------------------------------------------===//
 
 include "VC16RegisterInfo.td"
+include "VC16CallingConv.td"
 include "VC16InstrInfo.td"
 
 //===----------------------------------------------------------------------===//
 // VC16 processors supported.
 //===----------------------------------------------------------------------===//
 
-def VC16InstrInfo : InstrInfo;
+def VC16InstrInfo : InstrInfo {
+  let guessInstructionProperties = 0;
+}
 
 def VC16AsmParser : AsmParser {
   let ShouldEmitMatchRegisterAltName = 1;

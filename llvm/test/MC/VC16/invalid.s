@@ -11,7 +11,7 @@ nandi  r0,  0   ; CHECK: :[[@LINE]]:1: error: unrecognized instruction mnemonic
 ;; Invalid register names
 addi   foo, 10  ; CHECK: :[[@LINE]]:8: error: invalid operand for instruction
 xori   r8,  0x1 ; CHECK: :[[@LINE]]:8: error: invalid operand for instruction
-xor    r0,  r32 ; CHECK: :[[@LINE]]:13: error: immediate must be an integer in the range [-16, 15]
+xor    r0,  a4  ; CHECK: :[[@LINE]]:13: error: invalid operand for instruction
 
 ;; Invalid operand types
 xori   sp,  r0  ; CHECK: :[[@LINE]]:13: error: immediate must be an integer in the range [-16, 15]
