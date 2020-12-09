@@ -43,6 +43,11 @@ public:
 
   bool emitPseudoExpansionLowering(MCStreamer &OutStreamer,
                                    const MachineInstr *MI);
+
+  // Wrapper needed for tblgenned pseudo lowering.
+  bool lowerOperand(const MachineOperand &MO, MCOperand &MCOp) const {
+    return LowerVC16MachineOperandToMCOperand(MO, MCOp, *this);
+  }
 };
 }
 
@@ -56,7 +61,7 @@ void VC16AsmPrinter::emitInstruction(const MachineInstr *MI) {
     return;
 
   MCInst TmpInst;
-  LowerVC16MachineInstrToMCInst(MI, TmpInst);
+  LowerVC16MachineInstrToMCInst(MI, TmpInst, *this);
   EmitToStreamer(*OutStreamer, TmpInst);
 }
 

@@ -99,9 +99,34 @@ define i16 @load_sext_zext_anyext_i1(i1 *%a) nounwind {
   ret i16 %7
 }
 
+; Check load and store to a global
+@G = global i16 0
+
+define i16 @lw_sw_global(i16 %a) nounwind {
+; TODO(cristicbz): the addi should be folded in to the lw/sw operations
+; VC16I-LABEL: lw_sw_global:
+; VC16I:       ; %bb.0:
+; VC16I-NEXT:    lui a2, %his(G)
+; VC16I-NEXT:    addi a2, %lo(G)
+; VC16I-NEXT:    lw a1, 0(a2)
+; VC16I-NEXT:    sw a0, 0(a2)
+; VC16I-NEXT:    lui a2, %his(G+18)
+; VC16I-NEXT:    addi a2, %lo(G+18)
+; VC16I-NEXT:    lw t0, 0(a2)
+; VC16I-NEXT:    sw a0, 0(a2)
+; VC16I-NEXT:    mv a0, a1
+; VC16I-NEXT:    jalr t0, ra, 0
+  %1 = load volatile i16, i16* @G
+  store i16 %a, i16* @G
+  %2 = getelementptr i16, i16* @G, i16 9
+  %3 = load volatile i16, i16* %2
+  store i16 %a, i16* %2
+  ret i16 %1
+}
+
 ; Ensure that 1 is added to the high 11 bits if bit 4 of the low part is 1
 define i16 @lw_sw_constant(i16 %a) nounwind {
-; TODO: the addi should be folded in to the lw/sw
+; TODO(cristicbz): the addi should be folded in to the lw/sw
 ; VC16I-LABEL: lw_sw_constant:
 ; VC16I:      ; %bb.0:
 ; VC16I-NEXT:    lui a2, 1036

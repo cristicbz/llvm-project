@@ -50,6 +50,7 @@ VC16TargetLowering::VC16TargetLowering(const TargetMachine &TM,
     setLoadExtAction(N, MVT::i16, MVT::i1, Promote);
 
   // TODO: add all necessary setOperationAction calls.
+  setOperationAction(ISD::GlobalAddress, MVT::i16, Custom);
 
   setBooleanContents(ZeroOrOneBooleanContent);
 
@@ -63,6 +64,30 @@ SDValue VC16TargetLowering::LowerOperation(SDValue Op,
   switch (Op.getOpcode()) {
   default:
     report_fatal_error("unimplemented operand");
+  case ISD::GlobalAddress:
+    return lowerGlobalAddress(Op, DAG);
+  }
+}
+
+SDValue VC16TargetLowering::lowerGlobalAddress(SDValue Op,
+                                                SelectionDAG &DAG) const {
+  SDLoc DL(Op);
+  EVT Ty = Op.getValueType();
+  GlobalAddressSDNode *N = cast<GlobalAddressSDNode>(Op);
+  const GlobalValue *GV = N->getGlobal();
+  int64_t Offset = N->getOffset();
+
+  if (!isPositionIndependent()) {
+    SDValue GAHi =
+        DAG.getTargetGlobalAddress(GV, DL, Ty, Offset, VC16II::MO_HIS);
+    SDValue GALo =
+        DAG.getTargetGlobalAddress(GV, DL, Ty, Offset, VC16II::MO_LOS);
+    SDValue MNHi = SDValue(DAG.getMachineNode(VC16::LUI, DL, Ty, GAHi), 0);
+    SDValue MNLo =
+        SDValue(DAG.getMachineNode(VC16::ADDI, DL, Ty, MNHi, GALo), 0);
+    return MNLo;
+  } else {
+    report_fatal_error("Unable to lowerGlobalAddress");
   }
 }
 

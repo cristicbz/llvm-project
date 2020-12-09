@@ -239,11 +239,17 @@ def : PatGprUimm4<sra, SRAI>;
 // Materialize immediates
 def simm16 : ImmLeaf<i16, [{return isInt<16>(Imm);}]>;
 def simm16_shift5 : ImmLeaf<i16, [{return isShiftedInt<11, 5>(Imm);}]>;
+def uimm16_shift5 : ImmLeaf<i16, [{return isShiftedUInt<11, 5>(Imm);}]>;
 
 // Extract least significant 12 bits from an immediate value and sign extend
 // them.
 def LO5Sext : SDNodeXForm<imm, [{
   return CurDAG->getTargetConstant(SignExtend64<5>(N->getZExtValue()),
+                                   SDLoc(N), N->getValueType(0));
+}]>;
+
+def LO5Zext : SDNodeXForm<imm, [{
+  return CurDAG->getTargetConstant(N->getZExtValue() & 0b11111,
                                    SDLoc(N), N->getValueType(0));
 }]>;
 
@@ -276,9 +282,9 @@ def PseudoRET : Pseudo<(outs), (ins), [(RetFlag)]>,
                 PseudoInstExpansion<(JALR R5, R6, 0)>;
 
 /// Loads
-multiclass LdPat<PatFrag LoadOp, ImmLeaf ImmT, VCInst Inst> {
+multiclass LdPat<PatFrag LoadOp, ImmLeaf LoImmT, VCInst Inst> {
   def : Pat<(LoadOp GPR:$rs1), (Inst GPR:$rs1, 0)>;
-  def : Pat<(LoadOp (add GPR:$rs1, ImmT:$imm5)), (Inst GPR:$rs1, ImmT:$imm5)>;
+  def : Pat<(LoadOp (add GPR:$rs1, LoImmT:$imm5)), (Inst GPR:$rs1, LoImmT:$imm5)>;
 }
 
 def : Pat<(sextloadi8 GPR:$rs1), (SRAI (SLLI (LB GPR:$rs1, 0), 8), 8)>;

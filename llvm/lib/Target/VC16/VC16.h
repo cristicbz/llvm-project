@@ -15,15 +15,21 @@
 #ifndef LLVM_LIB_TARGET_VC16_VC16_H
 #define LLVM_LIB_TARGET_VC16_VC16_H
 
-#include "MCTargetDesc/VC16MCTargetDesc.h"
-#include "llvm/Target/TargetMachine.h"
+#include "MCTargetDesc/VC16BaseInfo.h"
 
 namespace llvm {
 class VC16TargetMachine;
+class AsmPrinter;
+class FunctionPass;
 class MCInst;
+class MCOperand;
 class MachineInstr;
+class MachineOperand;
 
-void LowerVC16MachineInstrToMCInst(const MachineInstr *MI, MCInst &OutMI);
+void LowerVC16MachineInstrToMCInst(const MachineInstr *MI, MCInst &OutMI,
+                                   const AsmPrinter &AP);
+bool LowerVC16MachineOperandToMCOperand(const MachineOperand &MO,
+                                        MCOperand &MCOp, const AsmPrinter &AP);
 
 FunctionPass *createVC16ISelDag(VC16TargetMachine &TM);
 }

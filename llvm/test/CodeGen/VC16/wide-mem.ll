@@ -27,3 +27,22 @@ define i32 @load_i64(i64 *%a) nounwind {
   %2 = trunc i64 %1 to i32
   ret i32 %2
 }
+
+
+@val32 = local_unnamed_addr global i32 2863311530, align 2
+
+; TODO(cristicbz): codegen on this should be improved. It shouldn't be necessary
+; to generate two addi
+define i32 @load_i32_global() nounwind {
+; VC16I-LABEL: load_i32_global:
+; VC16I:       ; %bb.0:
+; VC16I-NEXT:    lui a0, %his(val32)
+; VC16I-NEXT:    addi a0, %lo(val32)
+; VC16I-NEXT:    lw a0, 0(a0)
+; VC16I-NEXT:    lui a1, %his(val32+2)
+; VC16I-NEXT:    addi a1, %lo(val32+2)
+; VC16I-NEXT:    lw a1, 0(a1)
+; VC16I-NEXT:    jalr t0, ra, 0
+  %1 = load i32, i32* @val32
+  ret i32 %1
+}
