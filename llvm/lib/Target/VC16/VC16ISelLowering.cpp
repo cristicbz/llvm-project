@@ -51,6 +51,7 @@ VC16TargetLowering::VC16TargetLowering(const TargetMachine &TM,
 
   // TODO: add all necessary setOperationAction calls.
   setOperationAction(ISD::GlobalAddress, MVT::i16, Custom);
+  setOperationAction(ISD::BR_CC, MVT::i16, Expand);
 
   setBooleanContents(ZeroOrOneBooleanContent);
 

@@ -40,3 +40,36 @@ void VC16InstrInfo::copyPhysReg(MachineBasicBlock &MBB,
   BuildMI(MBB, MBBI, DL, get(VC16::MV), DstReg)
       .addReg(SrcReg, getKillRegState(KillSrc));
 }
+
+void VC16InstrInfo::storeRegToStackSlot(MachineBasicBlock &MBB,
+                                        MachineBasicBlock::iterator I,
+                                        Register SrcReg, bool IsKill, int FI,
+                                        const TargetRegisterClass *RC,
+                                        const TargetRegisterInfo *TRI) const {
+  DebugLoc DL;
+  if (I != MBB.end())
+    DL = I->getDebugLoc();
+
+  if (VC16::GPRRegClass.hasSubClassEq(RC))
+    BuildMI(MBB, I, DL, get(VC16::SW))
+        .addReg(SrcReg, getKillRegState(IsKill))
+        .addFrameIndex(FI)
+        .addImm(0);
+  else
+    llvm_unreachable("Can't store this register to stack slot");
+}
+
+void VC16InstrInfo::loadRegFromStackSlot(MachineBasicBlock &MBB,
+                                         MachineBasicBlock::iterator I,
+                                         Register DstReg, int FI,
+                                         const TargetRegisterClass *RC,
+                                         const TargetRegisterInfo *TRI) const {
+  DebugLoc DL;
+  if (I != MBB.end())
+    DL = I->getDebugLoc();
+
+  if (VC16::GPRRegClass.hasSubClassEq(RC))
+    BuildMI(MBB, I, DL, get(VC16::LW), DstReg).addFrameIndex(FI).addImm(0);
+  else
+    llvm_unreachable("Can't load this register from stack slot");
+}
