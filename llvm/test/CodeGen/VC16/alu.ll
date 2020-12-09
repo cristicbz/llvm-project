@@ -141,6 +141,4 @@ define i16 @not(i16 %a) nounwind {
   ret i16 %1
 }
 
-
-; TODO(cristicbz): Test bigger immediates.
 ; TODO(cristicbz): Test carry.

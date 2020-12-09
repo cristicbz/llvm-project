@@ -58,7 +58,7 @@ def uimm5 : Operand<i16>, ImmLeaf<i16, [{return isUInt<5>(Imm);}]>  {
   let ParserMatchClass = UImmAsmOperand<5>;
   let DecoderMethod = "decodeUImmOperand<5>";
 }
-def uimm6_lsb0 : Operand<i16> {
+def uimm6_lsb0 : Operand<i16>, ImmLeaf<i16, [{return isShiftedUInt<5, 1>(Imm);}]> {
   let ParserMatchClass = UImmAsmOperand<6, "Lsb0">;
   let EncoderMethod = "getImmOpValueLsr1";
   let DecoderMethod = "decodeSImmOperandAndLsl1<6>";
@@ -73,11 +73,15 @@ def simm9_lsb0 : Operand<i16> {
 // Instruction Class Templates
 //===----------------------------------------------------------------------===//
 let hasSideEffects = 0, mayLoad = 0, mayStore = 0 in
-class ALU_ri5<bits<8> op8, string opcodestr>
+class ALU_Binary_ri5<bits<8> op8, string opcodestr>
     : VCInstRI5<op8, (outs GPR:$rd_wb), (ins GPR:$rd, simm5:$imm5),
                 opcodestr, "$rd, $imm5"> {
   let Constraints = "$rd = $rd_wb";
 }
+
+class ALU_Unary_ri5<bits<8> op8, string opcodestr>
+    : VCInstRI5<op8, (outs GPR:$rd), (ins simm5:$imm5),
+                opcodestr, "$rd, $imm5">;
 
 let hasSideEffects = 0, mayLoad = 0, mayStore = 0 in
 class ALU_ri4<bit arithshift, bits<8> op8, string opcodestr>
@@ -141,6 +145,7 @@ def SB : VCInstM<0b110, (outs), (ins GPR:$rs2, GPR:$rs1, uimm5:$imm5),
                  "sb", "$rs2, ${imm5}(${rs1})">;
 } // hasSideEffects = 0, mayLoad = 0, mayStore = 1
 
+// def   SX : ALU_rr <0b01, 0b11110111, "sx">;
 
 def   J  : BranchCC_i<0b00001111, "j">;
 def  BZ  : BranchCC_i<0b00101111, "bz">;
@@ -152,37 +157,35 @@ def BGE  : BranchCC_i<0b11001111, "bge">;
 def BNC  : BranchCC_i<0b11101111, "bnc">;
 
 
-def  ADD : ALU_Binary_rr <0b00, 0b00110111, "add">;
-def  SLL : ALU_Binary_rr <0b00, 0b01110111, "sll">;
-def  SUB : ALU_Binary_rr <0b00, 0b10110111, "sub">;
-def  SRL : ALU_Binary_rr <0b00, 0b11110111, "srl">;
+def  ADD : ALU_Binary_rr  <0b00, 0b00110111, "add">;
+def  SLL : ALU_Binary_rr  <0b00, 0b01110111, "sll">;
+def  SUB : ALU_Binary_rr  <0b00, 0b10110111, "sub">;
+def  SRL : ALU_Binary_rr  <0b00, 0b11110111, "srl">;
 
-def  ADC : ALU_Binary_rr <0b01, 0b00110111, "adc">;
-def  NEG : ALU_Unary_rr  <0b01, 0b01110111, "neg">;
-def  SBB : ALU_Binary_rr <0b01, 0b10110111, "sbb">;
-// def   SX : ALU_rr <0b01, 0b11110111, "sx">;
+def  ADC : ALU_Binary_rr  <0b01, 0b00110111, "adc">;
+def  NEG : ALU_Unary_rr   <0b01, 0b01110111, "neg">;
+def  SBB : ALU_Binary_rr  <0b01, 0b10110111, "sbb">;
 
-def  AND : ALU_Binary_rr <0b10, 0b00110111, "and">;
-def  XOR : ALU_Binary_rr <0b10, 0b01110111, "xor">;
-def   OR : ALU_Binary_rr <0b10, 0b10110111, "or">;
-def  NOT : ALU_Unary_rr <0b10, 0b11110111, "not">;
+def  AND : ALU_Binary_rr  <0b10, 0b00110111, "and">;
+def  XOR : ALU_Binary_rr  <0b10, 0b01110111, "xor">;
+def   OR : ALU_Binary_rr  <0b10, 0b10110111, "or">;
+def  NOT : ALU_Unary_rr   <0b10, 0b11110111, "not">;
 
-def TEST : ALU_Binary_rr <0b11, 0b00110111, "test">;
-def   MV : ALU_Unary_rr  <0b11, 0b01110111, "mv">;
-def  CMP : ALU_Binary_rr <0b11, 0b10110111, "cmp">;
-def  SRA : ALU_Binary_rr <0b11, 0b11110111, "sra">;
+def TEST : ALU_Binary_rr  <0b11, 0b00110111, "test">;
+def   MV : ALU_Unary_rr   <0b11, 0b01110111, "mv">;
+def  CMP : ALU_Binary_rr  <0b11, 0b10110111, "cmp">;
+def  SRA : ALU_Binary_rr  <0b11, 0b11110111, "sra">;
 
+def SLLI : ALU_ri4        <0b0,  0b00011111, "slli">;
+def SRLI : ALU_ri4        <0b0,  0b10011111, "srli">;
+def SRAI : ALU_ri4        <0b1,  0b10011111, "srai">;
 
-def SLLI : ALU_ri4<0b0,  0b00011111, "slli">;
-def SRLI : ALU_ri4<0b0,  0b10011111, "srli">;
-def SRAI : ALU_ri4<0b1,  0b10011111, "srai">;
-
-def ADDI : ALU_ri5<      0b01011111, "addi">;
-def ADCI : ALU_ri5<      0b11011111, "adci">;
-def  ORI : ALU_ri5<      0b00111111, "ori">;
-def XORI : ALU_ri5<      0b01111111, "xori">;
-def  LLI : ALU_ri5<      0b10111111, "lli">;
-def ANDI : ALU_ri5<      0b11111111, "andi">;
+def ADDI : ALU_Binary_ri5 <      0b01011111, "addi">;
+def ADCI : ALU_Binary_ri5 <      0b11011111, "adci">;
+def  ORI : ALU_Binary_ri5 <      0b00111111, "ori">;
+def XORI : ALU_Binary_ri5 <      0b01111111, "xori">;
+def  LLI : ALU_Unary_ri5  <      0b10111111, "lli">;
+def ANDI : ALU_Binary_ri5 <      0b11111111, "andi">;
 
 //===----------------------------------------------------------------------===//
 // Pseudo-instructions and codegen patterns
@@ -206,6 +209,8 @@ class PatGprUimm4<SDPatternOperator OpNode, VCInstRI4 Inst>
 // def : PatGprGpr<addc,  MV : ALU_Unary_rr  <0b11, 0b01110111, "mv">;
 // def  LLI : ALU_ri5<      0b10111111, "lli">;
 
+
+// ALU binary
 def : PatGprGpr<add, ADD>;
 def : PatGprGpr<shl, SLL>;
 def : PatGprGpr<sub, SUB>;
@@ -217,9 +222,11 @@ def : PatGprGpr<xor, XOR>;
 def : PatGprGpr<or,  OR>;
 def : PatGprGpr<sra, SRA>;
 
+// ALU unary
 def : Pat<(ineg GPR:$rs), (NEG GPR:$rs)>;
 def : Pat<(not GPR:$rs), (NOT GPR:$rs)>;
 
+// ALU immediate
 def : PatGprSimm5<or, ORI>;
 def : PatGprSimm5<add, ADDI>;
 def : PatGprSimm5<adde, ADCI>;
@@ -229,12 +236,68 @@ def : PatGprUimm4<shl, SLLI>;
 def : PatGprUimm4<srl, SRLI>;
 def : PatGprUimm4<sra, SRAI>;
 
+// Materialize immediates
+def simm16 : ImmLeaf<i16, [{return isInt<16>(Imm);}]>;
+def simm16_shift5 : ImmLeaf<i16, [{return isShiftedInt<11, 5>(Imm);}]>;
+
+// Extract least significant 12 bits from an immediate value and sign extend
+// them.
+def LO5Sext : SDNodeXForm<imm, [{
+  return CurDAG->getTargetConstant(SignExtend64<5>(N->getZExtValue()),
+                                   SDLoc(N), N->getValueType(0));
+}]>;
+
+// Extract the most significant 11 bits from an unsigned immediate value.
+def HI20U : SDNodeXForm<imm, [{
+  return CurDAG->getTargetConstant((N->getZExtValue() >> 5) & 0x7ff,
+                                   SDLoc(N), N->getValueType(0));
+}]>;
+
+// Extract the most significant 11 bits from an signed immediate value. Add 1
+// if bit 4 is 1, to compensate for the low 11 bits in the matching immediate
+// `addi` being negative.
+def HI20S : SDNodeXForm<imm, [{
+  return CurDAG->getTargetConstant(
+    (((N->getZExtValue() + (1 << 4)) >> 5)) & 0x7ff,
+    SDLoc(N),
+    N->getValueType(0)
+  );
+}]>;
+
+def : Pat<(simm5:$imm), (LLI simm5:$imm)>;
+def : Pat<(simm16_shift5:$imm), (LUI (HI20U $imm))>;
+def : Pat<(simm16:$imm), (ADDI (LUI (HI20S imm:$imm)), (LO5Sext imm:$imm))>;
+
 
 /// Branches and jumps
 
 let isBarrier = 1, isReturn = 1, isTerminator = 1 in
 def PseudoRET : Pseudo<(outs), (ins), [(RetFlag)]>,
                 PseudoInstExpansion<(JALR R5, R6, 0)>;
+
+/// Loads
+multiclass LdPat<PatFrag LoadOp, ImmLeaf ImmT, VCInst Inst> {
+  def : Pat<(LoadOp GPR:$rs1), (Inst GPR:$rs1, 0)>;
+  def : Pat<(LoadOp (add GPR:$rs1, ImmT:$imm5)), (Inst GPR:$rs1, ImmT:$imm5)>;
+}
+
+def : Pat<(sextloadi8 GPR:$rs1), (SRAI (SLLI (LB GPR:$rs1, 0), 8), 8)>;
+def : Pat<(sextloadi8 (add GPR:$rs1, uimm5:$imm5)),
+          (SRAI (SLLI (LB GPR:$rs1, uimm5:$imm5), 8), 8)>;
+
+defm : LdPat<extloadi8, uimm5, LB>;
+defm : LdPat<zextloadi8, uimm5, LB>;
+defm : LdPat<load, uimm6_lsb0, LW>;
+
+/// Stores
+multiclass StPat<PatFrag StoreOp, VCInst Inst> {
+  def : Pat<(StoreOp GPR:$rs2, GPR:$rs1), (Inst GPR:$rs2, GPR:$rs1, 0)>;
+  def : Pat<(StoreOp GPR:$rs2, (add GPR:$rs1, uimm5:$imm5)),
+            (Inst GPR:$rs2, GPR:$rs1, uimm5:$imm5)>;
+}
+
+defm : StPat<truncstorei8, SB>;
+defm : StPat<store, SW>;
 
 
 /// Aliases
