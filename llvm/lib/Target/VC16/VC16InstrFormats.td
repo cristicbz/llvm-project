@@ -155,3 +155,15 @@ class VCInstRI5<bits<8> op8, dag outs, dag ins,
   let Inst{10-8} = imm5{2-0};
   let Inst{7-0} = op8;
 }
+
+class VCInstChk<bits<8> op8, dag outs, dag ins,
+    string opcodestr, string argstr>
+    : VCInst<outs, ins, opcodestr, argstr, [], InstFormatRI5>
+{
+  bits<3> rs;
+
+  let Inst{15-14} = 0;
+  let Inst{13-11} = rs;
+  let Inst{10-8} = 0;
+  let Inst{7-0} = op8;
+}

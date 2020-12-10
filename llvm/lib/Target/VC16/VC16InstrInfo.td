@@ -37,7 +37,7 @@ class UImmAsmOperand<int width, string suffix = "">
     : ImmAsmOperand<"U", width, suffix> {
 }
 
-def simm11_lsb0 : Operand<i16> {
+def simm11_lsb0 : Operand<OtherVT> {
   let ParserMatchClass = SImmAsmOperand<11, "Lsb0">;
   let EncoderMethod = "getImmOpValueAsr1";
   let DecoderMethod = "decodeSImmOperandAndLsl1<11>";
@@ -63,7 +63,7 @@ def uimm6_lsb0 : Operand<i16>, ImmLeaf<i16, [{return isShiftedUInt<5, 1>(Imm);}]
   let EncoderMethod = "getImmOpValueLsr1";
   let DecoderMethod = "decodeSImmOperandAndLsl1<6>";
 }
-def simm9_lsb0 : Operand<i16> {
+def simm9_lsb0 : Operand<OtherVT> {
   let ParserMatchClass = SImmAsmOperand<9, "Lsb0">;
   let EncoderMethod = "getImmOpValueAsr1";
   let DecoderMethod = "decodeSImmOperandAndLsl1<9>";
@@ -72,11 +72,13 @@ def simm9_lsb0 : Operand<i16> {
 //===----------------------------------------------------------------------===//
 // Instruction Class Templates
 //===----------------------------------------------------------------------===//
+
 let hasSideEffects = 0, mayLoad = 0, mayStore = 0 in
-class ALU_Binary_ri5<bits<8> op8, string opcodestr>
+class ALU_BinaryCC_ri5<bits<8> op8, string opcodestr>
     : VCInstRI5<op8, (outs GPR:$rd_wb), (ins GPR:$rd, simm5:$imm5),
                 opcodestr, "$rd, $imm5"> {
   let Constraints = "$rd = $rd_wb";
+  let Defs = [FR];
 }
 
 class ALU_Unary_ri5<bits<8> op8, string opcodestr>
@@ -102,11 +104,22 @@ class ALU_Binary_rr<bits<2> op2, bits<8> op8, string opcodestr>
   let Constraints = "$rd = $rd_wb";
 }
 
+let hasSideEffects = 0, mayLoad = 0, mayStore = 0 in
+class ALU_BinaryCC_rr<bits<2> op2, bits<8> op8, string opcodestr>
+    : VCInstRR<op2, op8, (outs GPR:$rd_wb), (ins GPR:$rd, GPR:$rs),
+               opcodestr, "$rd, $rs"> {
+  let Constraints = "$rd = $rd_wb";
+  let Defs = [FR];
+}
 
+let hasSideEffects = 0, mayLoad = 0, mayStore = 0 in
+class ALU_SetCC_rr<bits<2> op2, bits<8> op8, string opcodestr>
+    : VCInstRR<op2, op8, (outs CCR:$fr), (ins GPR:$rs1, GPR:$rs2),
+               opcodestr, "$rs1, $rs2">;
 
 let hasSideEffects = 0, mayLoad = 0, mayStore = 0 in
 class BranchCC_i<bits<8> op8, string opcodestr>
-    : VCInstB<op8, (outs), (ins simm9_lsb0:$imm8), opcodestr, "$imm8"> {
+    : VCInstB<op8, (outs), (ins CCR:$fr, simm9_lsb0:$imm8), opcodestr, "$imm8"> {
     let isBranch = 1;
     let isTerminator = 1;
 }
@@ -145,9 +158,13 @@ def SB : VCInstM<0b110, (outs), (ins GPR:$rs2, GPR:$rs1, uimm5:$imm5),
                  "sb", "$rs2, ${imm5}(${rs1})">;
 } // hasSideEffects = 0, mayLoad = 0, mayStore = 1
 
-// def   SX : ALU_rr <0b01, 0b11110111, "sx">;
+let hasSideEffects = 0, mayLoad = 0, mayStore = 0 in
+def J  : VCInstB<0b00001111, (outs), (ins simm9_lsb0:$imm8), "j", "$imm8"> {
+    let isBranch = 1;
+    let isTerminator = 1;
+    let isBarrier = 1;
+}
 
-def   J  : BranchCC_i<0b00001111, "j">;
 def  BZ  : BranchCC_i<0b00101111, "bz">;
 def BNZ  : BranchCC_i<0b01001111, "bnz">;
 def  BN  : BranchCC_i<0b01101111, "bn">;
@@ -157,35 +174,38 @@ def BGE  : BranchCC_i<0b11001111, "bge">;
 def BNC  : BranchCC_i<0b11101111, "bnc">;
 
 
-def  ADD : ALU_Binary_rr  <0b00, 0b00110111, "add">;
-def  SLL : ALU_Binary_rr  <0b00, 0b01110111, "sll">;
-def  SUB : ALU_Binary_rr  <0b00, 0b10110111, "sub">;
-def  SRL : ALU_Binary_rr  <0b00, 0b11110111, "srl">;
+def  ADD : ALU_BinaryCC_rr  <0b00, 0b00110111, "add">;
+def  SLL : ALU_Binary_rr    <0b00, 0b01110111, "sll">;
+def  SUB : ALU_BinaryCC_rr  <0b00, 0b10110111, "sub">;
+def  SRL : ALU_Binary_rr    <0b00, 0b11110111, "srl">;
 
-def  ADC : ALU_Binary_rr  <0b01, 0b00110111, "adc">;
-def  NEG : ALU_Unary_rr   <0b01, 0b01110111, "neg">;
-def  SBB : ALU_Binary_rr  <0b01, 0b10110111, "sbb">;
+def  ADC : ALU_BinaryCC_rr  <0b01, 0b00110111, "adc">;
+def  NEG : ALU_Unary_rr     <0b01, 0b01110111, "neg">;
+def  SBB : ALU_BinaryCC_rr  <0b01, 0b10110111, "sbb">;
 
-def  AND : ALU_Binary_rr  <0b10, 0b00110111, "and">;
-def  XOR : ALU_Binary_rr  <0b10, 0b01110111, "xor">;
-def   OR : ALU_Binary_rr  <0b10, 0b10110111, "or">;
-def  NOT : ALU_Unary_rr   <0b10, 0b11110111, "not">;
+def  AND : ALU_BinaryCC_rr  <0b10, 0b00110111, "and">;
+def  XOR : ALU_BinaryCC_rr  <0b10, 0b01110111, "xor">;
+def   OR : ALU_BinaryCC_rr  <0b10, 0b10110111, "or">;
+def  NOT : ALU_Unary_rr     <0b10, 0b11110111, "not">;
 
-def TEST : ALU_Binary_rr  <0b11, 0b00110111, "test">;
-def   MV : ALU_Unary_rr   <0b11, 0b01110111, "mv">;
-def  CMP : ALU_Binary_rr  <0b11, 0b10110111, "cmp">;
-def  SRA : ALU_Binary_rr  <0b11, 0b11110111, "sra">;
+def TEST : ALU_SetCC_rr     <0b11, 0b00110111, "test">;
+def  CMP : ALU_SetCC_rr     <0b11, 0b10110111, "cmp">;
+def   MV : ALU_Unary_rr     <0b11, 0b01110111, "mv">;
+def  SRA : ALU_Binary_rr    <0b11, 0b11110111, "sra">;
 
-def SLLI : ALU_ri4        <0b0,  0b00011111, "slli">;
-def SRLI : ALU_ri4        <0b0,  0b10011111, "srli">;
-def SRAI : ALU_ri4        <0b1,  0b10011111, "srai">;
+def SLLI : ALU_ri4          <0b0,  0b00011111, "slli">;
+def SRLI : ALU_ri4          <0b0,  0b10011111, "srli">;
+def SRAI : ALU_ri4          <0b1,  0b10011111, "srai">;
 
-def ADDI : ALU_Binary_ri5 <      0b01011111, "addi">;
-def ADCI : ALU_Binary_ri5 <      0b11011111, "adci">;
-def  ORI : ALU_Binary_ri5 <      0b00111111, "ori">;
-def XORI : ALU_Binary_ri5 <      0b01111111, "xori">;
-def  LLI : ALU_Unary_ri5  <      0b10111111, "lli">;
-def ANDI : ALU_Binary_ri5 <      0b11111111, "andi">;
+def ADDI : ALU_BinaryCC_ri5 <      0b01011111, "addi">;
+def ADCI : ALU_BinaryCC_ri5 <      0b11011111, "adci">;
+def  ORI : ALU_BinaryCC_ri5 <      0b00111111, "ori">;
+def XORI : ALU_BinaryCC_ri5 <      0b01111111, "xori">;
+def ANDI : ALU_BinaryCC_ri5 <      0b11111111, "andi">;
+def  LLI : ALU_Unary_ri5    <      0b10111111, "lli">;
+
+let hasSideEffects = 0, mayLoad = 0, mayStore = 0 in
+def CHK : VCInstChk<0b01011111, (outs CCR:$fr), (ins GPR:$rs), "addi", "$rs, 0">;
 
 //===----------------------------------------------------------------------===//
 // Pseudo-instructions and codegen patterns
@@ -205,9 +225,6 @@ class PatGprUimm4<SDPatternOperator OpNode, VCInstRI4 Inst>
     : Pat<(OpNode GPR:$rs, uimm4:$shamt), (Inst GPR:$rs, uimm4:$shamt)>;
 
 // def : PatGprGpr<addc,TEST : ALU_Binary_rr <0b11, 0b00110111, "test">;
-// def : PatGprGpr<addc, CMP : ALU_Binary_rr <0b11, 0b10110111, "cmp">;
-// def : PatGprGpr<addc,  MV : ALU_Unary_rr  <0b11, 0b01110111, "mv">;
-// def  LLI : ALU_ri5<      0b10111111, "lli">;
 
 
 // ALU binary
@@ -276,6 +293,41 @@ def : Pat<(simm16:$imm), (ADDI (LUI (HI20S imm:$imm)), (LO5Sext imm:$imm))>;
 
 
 /// Branches and jumps
+// Match `(brcond (CondOp ..), ..)` and lower to the appropriate CMP + branch
+// sequence.
+class BccPat<PatFrag CondOp, VCInstB Inst>
+    : Pat<(brcond (i16 (CondOp GPR:$rs1, GPR:$rs2)), bb:$imm8),
+          (Inst (CMP GPR:$rs1, GPR:$rs2), simm9_lsb0:$imm8)>;
+
+def : BccPat<seteq, BZ>;
+def : BccPat<setne, BNZ>;
+def : BccPat<setlt, BLT>;
+def : BccPat<setge, BGE>;
+def : BccPat<setult, BN>;
+def : BccPat<setuge, BNN>;
+
+class BccSwapPat<PatFrag CondOp, VCInstB InstBcc>
+    : Pat<(brcond (i16 (CondOp GPR:$rs1, GPR:$rs2)), bb:$imm8),
+          (InstBcc (CMP GPR:$rs2, GPR:$rs1), bb:$imm8)>;
+
+// Condition codes that don't have matching RISC-V branch instructions, but
+// are trivially supported by swapping the two input operands
+def : BccSwapPat<setgt, BLT>;
+def : BccSwapPat<setle, BGE>;
+def : BccSwapPat<setugt, BN>;
+def : BccSwapPat<setule, BNN>;
+
+// An extra pattern is needed for a brcond without a setcc (i.e. where the
+// condition was calculated elsewhere).
+def : Pat<(brcond GPR:$cond, bb:$imm8),
+          (BNZ (CHK GPR:$cond), bb:$imm8)>;
+
+def : Pat<(br bb:$imm8), (J bb:$imm8)>;
+
+
+let isBarrier = 1, isBranch = 1, isTerminator = 1, mayStore = 0, mayLoad = 0, hasSideEffects = 0 in
+def PseudoBR : Pseudo<(outs), (ins simm11_lsb0:$imm10), [(br bb:$imm10)]>,
+               PseudoInstExpansion<(JAL R5, simm11_lsb0:$imm10)>;
 
 let isBarrier = 1, isReturn = 1, isTerminator = 1 in
 def PseudoRET : Pseudo<(outs), (ins), [(RetFlag)]>,

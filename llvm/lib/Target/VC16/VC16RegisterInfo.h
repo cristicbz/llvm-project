@@ -28,6 +28,7 @@ struct VC16RegisterInfo : public VC16GenRegisterInfo {
   const MCPhysReg *getCalleeSavedRegs(const MachineFunction *MF) const override;
 
   BitVector getReservedRegs(const MachineFunction &MF) const override;
+  const uint32_t *getNoPreservedMask() const override;
 
   void eliminateFrameIndex(MachineBasicBlock::iterator MI, int SPAdj,
                            unsigned FIOperandNum,
