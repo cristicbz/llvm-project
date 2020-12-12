@@ -12,8 +12,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "VC16.h"
 #include "MCTargetDesc/VC16MCExpr.h"
+#include "VC16.h"
 #include "llvm/CodeGen/AsmPrinter.h"
 #include "llvm/CodeGen/MachineBasicBlock.h"
 #include "llvm/CodeGen/MachineInstr.h"
@@ -61,8 +61,8 @@ static MCOperand lowerSymbolOperand(const MachineOperand &MO, MCSymbol *Sym,
 }
 
 bool llvm::LowerVC16MachineOperandToMCOperand(const MachineOperand &MO,
-                                               MCOperand &MCOp,
-                                               const AsmPrinter &AP) {
+                                              MCOperand &MCOp,
+                                              const AsmPrinter &AP) {
   switch (MO.getType()) {
   default:
     report_fatal_error("LowerVC16MachineInstrToMCInst: unknown operand type");
@@ -82,12 +82,15 @@ bool llvm::LowerVC16MachineOperandToMCOperand(const MachineOperand &MO,
   case MachineOperand::MO_GlobalAddress:
     MCOp = lowerSymbolOperand(MO, AP.getSymbol(MO.getGlobal()), AP);
     break;
+  case MachineOperand::MO_RegisterMask:
+    // Regmasks are like implicit defs.
+    return false;
   }
   return true;
 }
 
 void llvm::LowerVC16MachineInstrToMCInst(const MachineInstr *MI, MCInst &OutMI,
-                                          const AsmPrinter &AP) {
+                                         const AsmPrinter &AP) {
   OutMI.setOpcode(MI->getOpcode());
 
   for (const MachineOperand &MO : MI->operands()) {

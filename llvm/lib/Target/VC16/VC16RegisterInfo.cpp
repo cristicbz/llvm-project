@@ -83,3 +83,9 @@ void VC16RegisterInfo::eliminateFrameIndex(MachineBasicBlock::iterator II,
 Register VC16RegisterInfo::getFrameRegister(const MachineFunction &MF) const {
   return VC16::R4;
 }
+
+const uint32_t *
+VC16RegisterInfo::getCallPreservedMask(const MachineFunction & /*MF*/,
+                                       CallingConv::ID /*CC*/) const {
+  return CSR_RegMask;
+}

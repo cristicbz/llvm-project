@@ -28,12 +28,13 @@
 
 using namespace llvm;
 
-VC16InstrInfo::VC16InstrInfo() : VC16GenInstrInfo() {}
+VC16InstrInfo::VC16InstrInfo()
+    : VC16GenInstrInfo(VC16::ADJCALLSTACKDOWN, VC16::ADJCALLSTACKUP) {}
 
 void VC16InstrInfo::copyPhysReg(MachineBasicBlock &MBB,
-                                 MachineBasicBlock::iterator MBBI,
-                                 const DebugLoc &DL, MCRegister DstReg,
-                                 MCRegister SrcReg, bool KillSrc) const {
+                                MachineBasicBlock::iterator MBBI,
+                                const DebugLoc &DL, MCRegister DstReg,
+                                MCRegister SrcReg, bool KillSrc) const {
   assert(VC16::GPRRegClass.contains(DstReg, SrcReg) &&
          "Impossible reg-to-reg copy");
 

@@ -25,6 +25,9 @@ struct VC16RegisterInfo : public VC16GenRegisterInfo {
 
   VC16RegisterInfo(unsigned HwMode);
 
+  const uint32_t *getCallPreservedMask(const MachineFunction &MF,
+                                       CallingConv::ID) const override;
+
   const MCPhysReg *getCalleeSavedRegs(const MachineFunction *MF) const override;
 
   BitVector getReservedRegs(const MachineFunction &MF) const override;
@@ -36,6 +39,6 @@ struct VC16RegisterInfo : public VC16GenRegisterInfo {
 
   Register getFrameRegister(const MachineFunction &MF) const override;
 };
-}
+} // namespace llvm
 
 #endif

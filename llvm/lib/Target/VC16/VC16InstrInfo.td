@@ -17,8 +17,27 @@ include "VC16InstrFormats.td"
 // VC16 specific DAG Nodes.
 //===----------------------------------------------------------------------===//
 
-def RetFlag : SDNode<"VC16ISD::RET_FLAG", SDTNone,
-                     [SDNPHasChain, SDNPOptInGlue, SDNPVariadic]>;
+def SDT_VC16Call         : SDTypeProfile<0, -1, [SDTCisVT<0, i16>]>;
+def SDT_VC16CallSeqStart : SDCallSeqStart<[SDTCisVT<0, i16>,
+                                            SDTCisVT<1, i16>]>;
+def SDT_VC16CallSeqEnd   : SDCallSeqEnd<[SDTCisVT<0, i16>,
+                                          SDTCisVT<1, i16>]>;
+def SDT_VC16SelectCC     : SDTypeProfile<1, 5, [SDTCisSameAs<1, 2>,
+                                                SDTCisSameAs<0, 4>,
+                                                SDTCisSameAs<4, 5>]>;
+
+
+def Call         : SDNode<"VC16ISD::CALL", SDT_VC16Call,
+                          [SDNPHasChain, SDNPOptInGlue, SDNPOutGlue,
+                           SDNPVariadic]>;
+def CallSeqStart : SDNode<"ISD::CALLSEQ_START", SDT_VC16CallSeqStart,
+                          [SDNPHasChain, SDNPOutGlue]>;
+def CallSeqEnd   : SDNode<"ISD::CALLSEQ_END", SDT_VC16CallSeqEnd,
+                          [SDNPHasChain, SDNPOptInGlue, SDNPOutGlue]>;
+def RetFlag      : SDNode<"VC16ISD::RET_FLAG", SDTNone,
+                          [SDNPHasChain, SDNPOptInGlue, SDNPVariadic]>;
+def SelectCC     : SDNode<"VC16ISD::SELECT_CC", SDT_VC16SelectCC,
+                          [SDNPInGlue]>;
 
 //===----------------------------------------------------------------------===//
 // Operand and SDNode transformation definitions.
@@ -291,6 +310,13 @@ def : Pat<(simm5:$imm), (LLI simm5:$imm)>;
 def : Pat<(simm16_shift5:$imm), (LUI (HI20U $imm))>;
 def : Pat<(simm16:$imm), (ADDI (LUI (HI20S imm:$imm)), (LO5Sext imm:$imm))>;
 
+let usesCustomInserter = 1 in
+def Select_GPR_Using_CC_GPR
+    : Pseudo<(outs GPR:$dst),
+             (ins GPR:$lhs, GPR:$rhs, i16imm:$imm, GPR:$src, GPR:$src2),
+             [(set i16:$dst, (SelectCC GPR:$lhs, GPR:$rhs,
+              (i16 imm:$imm), GPR:$src, GPR:$src2))]>;
+
 
 /// Branches and jumps
 // Match `(brcond (CondOp ..), ..)` and lower to the appropriate CMP + branch
@@ -324,12 +350,15 @@ def : Pat<(brcond GPR:$cond, bb:$imm8),
 
 def : Pat<(br bb:$imm8), (J bb:$imm8)>;
 
-
-let isBarrier = 1, isBranch = 1, isTerminator = 1, mayStore = 0, mayLoad = 0, hasSideEffects = 0 in
+let isBarrier = 1, isBranch = 1, isTerminator = 1, mayStore = 0, mayLoad = 0, hasSideEffects = 0, Defs=[R5] in
 def PseudoBR : Pseudo<(outs), (ins simm11_lsb0:$imm10), [(br bb:$imm10)]>,
                PseudoInstExpansion<(JAL R5, simm11_lsb0:$imm10)>;
 
-let isBarrier = 1, isReturn = 1, isTerminator = 1 in
+let isCall = 1, Defs=[R6] in
+def PseudoCALL : Pseudo<(outs), (ins GPR:$rs1), [(Call GPR:$rs1)]>,
+                 PseudoInstExpansion<(JALR R6, GPR:$rs1, 0)>;
+
+let isBarrier = 1, isReturn = 1, isTerminator = 1, Defs=[R5], Uses=[R6] in
 def PseudoRET : Pseudo<(outs), (ins), [(RetFlag)]>,
                 PseudoInstExpansion<(JALR R5, R6, 0)>;
 
@@ -357,6 +386,15 @@ multiclass StPat<PatFrag StoreOp, VCInst Inst> {
 defm : StPat<truncstorei8, SB>;
 defm : StPat<store, SW>;
 
+/// Other pseudo-instructions
+
+// Pessimistically assume the stack pointer will be clobbered
+let Defs = [R7], Uses = [R7] in {
+def ADJCALLSTACKDOWN : Pseudo<(outs), (ins i16imm:$amt1, i16imm:$amt2),
+                              [(CallSeqStart timm:$amt1, timm:$amt2)]>;
+def ADJCALLSTACKUP   : Pseudo<(outs), (ins i16imm:$amt1, i16imm:$amt2),
+                              [(CallSeqEnd timm:$amt1, timm:$amt2)]>;
+} // Defs = [R7], Uses = [R7]
 
 /// Aliases
 def : InstAlias<"nop",                     (ANDI      R7,      -1)>;
