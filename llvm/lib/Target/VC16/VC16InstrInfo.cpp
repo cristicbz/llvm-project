@@ -74,3 +74,27 @@ void VC16InstrInfo::loadRegFromStackSlot(MachineBasicBlock &MBB,
   else
     llvm_unreachable("Can't load this register from stack slot");
 }
+
+void VC16InstrInfo::movImm16(MachineBasicBlock &MBB,
+                             MachineBasicBlock::iterator MBBI,
+                             const DebugLoc &DL, Register DstReg, uint64_t Val,
+                             MachineInstr::MIFlag Flag) const {
+  assert(isInt<16>(Val) && "Can only materialize 16-bit constants");
+
+  uint64_t Hi11 = ((Val + (1 << 4)) >> 5) & 0x7ff;
+  uint64_t Lo5 = SignExtend64<5>(Val);
+  if (Hi11 != 0) {
+    BuildMI(MBB, MBBI, DL, get(VC16::LUI), DstReg).addImm(Hi11).setMIFlag(Flag);
+    if (Lo5 != 0) {
+      BuildMI(MBB, MBBI, DL, get(VC16::ADDI), DstReg)
+          .addReg(DstReg, RegState::Kill)
+          .addImm(Lo5)
+          .setMIFlag(Flag);
+    }
+  } else {
+    BuildMI(MBB, MBBI, DL, get(VC16::LLI), DstReg)
+        .addReg(DstReg, RegState::Kill)
+        .addImm(Lo5)
+        .setMIFlag(Flag);
+  }
+}

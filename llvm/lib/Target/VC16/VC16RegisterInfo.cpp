@@ -58,6 +58,8 @@ void VC16RegisterInfo::eliminateFrameIndex(MachineBasicBlock::iterator II,
 
   MachineInstr &MI = *II;
   MachineFunction &MF = *MI.getParent()->getParent();
+  MachineRegisterInfo &MRI = MF.getRegInfo();
+  const VC16InstrInfo *TII = MF.getSubtarget<VC16Subtarget>().getInstrInfo();
   DebugLoc DL = MI.getDebugLoc();
 
   int FrameIndex = MI.getOperand(FIOperandNum).getIndex();
@@ -69,13 +71,29 @@ void VC16RegisterInfo::eliminateFrameIndex(MachineBasicBlock::iterator II,
   assert(MF.getSubtarget().getFrameLowering()->hasFP(MF) &&
          "eliminateFrameIndex currently requires hasFP");
 
-  // Offsets must be directly encoded in a 12-bit immediate field
-  if (!isUInt<5>(Offset)) {
-    report_fatal_error(
-        "Frame offsets outside of the unsigned 5-bit range not supported");
+  if (!isInt<16>(Offset)) {
+    report_fatal_error("Frame offsets outside of the unsigned 16-bit range.");
   }
 
-  MI.getOperand(FIOperandNum).ChangeToRegister(FrameReg, false);
+  MachineBasicBlock &MBB = *MI.getParent();
+  bool FrameRegIsKill = false;
+
+  if (!isInt<12>(Offset)) {
+    assert(isInt<32>(Offset) && "Int32 expected");
+    // The offset won't fit in an immediate, so use a scratch register instead
+    // Modify Offset and FrameReg appropriately
+    unsigned ScratchReg = MRI.createVirtualRegister(&VC16::GPRRegClass);
+    TII->movImm16(MBB, II, DL, ScratchReg, Offset);
+    BuildMI(MBB, II, DL, TII->get(VC16::ADD), ScratchReg)
+        .addReg(ScratchReg, RegState::Kill)
+        .addReg(FrameReg);
+    Offset = 0;
+    FrameReg = ScratchReg;
+    FrameRegIsKill = true;
+  }
+
+  MI.getOperand(FIOperandNum)
+      .ChangeToRegister(FrameReg, false, false, FrameRegIsKill);
   MI.getOperand(FIOperandNum + 1).ChangeToImmediate(Offset);
 }
 

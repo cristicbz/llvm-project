@@ -53,7 +53,12 @@ public:
                             MachineBasicBlock::iterator MBBI, Register DstReg,
                             int FrameIndex, const TargetRegisterClass *RC,
                             const TargetRegisterInfo *TRI) const override;
+
+  void movImm16(MachineBasicBlock &MBB, MachineBasicBlock::iterator MBBI,
+                const DebugLoc &DL, Register DstReg, uint64_t Val,
+                MachineInstr::MIFlag Flag = MachineInstr::NoFlags) const;
 };
+
 } // namespace llvm
 
 #endif

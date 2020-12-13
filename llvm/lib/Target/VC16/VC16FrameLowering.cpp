@@ -185,21 +185,49 @@ void VC16FrameLowering::adjustReg(MachineBasicBlock &MBB,
                                   const DebugLoc &DL, unsigned DestReg,
                                   unsigned SrcReg, int64_t Val,
                                   MachineInstr::MIFlag Flag) const {
+  MachineRegisterInfo &MRI = MBB.getParent()->getRegInfo();
   const VC16InstrInfo *TII = STI.getInstrInfo();
-
-  if (!isInt<5>(Val))
-    report_fatal_error("adjustReg cannot yet handle adjustments >5 bits");
-
   if (DestReg != SrcReg) {
     BuildMI(MBB, MBBI, DL, TII->get(VC16::MV), DestReg)
         .addReg(SrcReg)
         .setMIFlag(Flag);
   }
 
-  if (Val != 0) {
-    BuildMI(MBB, MBBI, DL, TII->get(VC16::ADDI), SrcReg)
-        .addReg(SrcReg)
-        .addImm(Val)
+  if (isInt<6>(Val)) {
+    if (Val < -16) {
+      BuildMI(MBB, MBBI, DL, TII->get(VC16::ADDI), SrcReg)
+          .addReg(SrcReg)
+          .addImm(-16)
+          .setMIFlag(Flag);
+      Val += 16;
+    } else if (Val > 15) {
+      BuildMI(MBB, MBBI, DL, TII->get(VC16::ADDI), SrcReg)
+          .addReg(SrcReg)
+          .addImm(15)
+          .setMIFlag(Flag);
+      Val -= 15;
+    }
+    if (Val != 0) {
+      BuildMI(MBB, MBBI, DL, TII->get(VC16::ADDI), SrcReg)
+          .addReg(SrcReg)
+          .addImm(Val)
+          .setMIFlag(Flag);
+    }
+  } else if (isInt<16>(Val)) {
+    unsigned Opc = VC16::ADD;
+    bool isSub = Val < 0;
+    if (isSub) {
+      Val = -Val;
+      Opc = VC16::SUB;
+    }
+
+    unsigned ScratchReg = MRI.createVirtualRegister(&VC16::GPRRegClass);
+    TII->movImm16(MBB, MBBI, DL, ScratchReg, Val, Flag);
+    BuildMI(MBB, MBBI, DL, TII->get(Opc), DestReg)
+        .addReg(DestReg)
+        .addReg(ScratchReg, RegState::Kill)
         .setMIFlag(Flag);
+  } else {
+    report_fatal_error("adjustReg cannot yet handle adjustments >32 bits");
   }
 }
