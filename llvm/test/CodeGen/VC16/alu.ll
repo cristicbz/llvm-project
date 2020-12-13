@@ -7,7 +7,15 @@
 define i16 @ori(i16 %a) nounwind {
 ; VC16I-LABEL: ori:
 ; VC16I:       ; %bb.0:
+; VC16I-NEXT:    addi sp, -4
+; VC16I-NEXT:    sw s1, 2(sp)
+; VC16I-NEXT:    sw ra, 0(sp)
+; VC16I-NEXT:    mv s1, sp
+; VC16I-NEXT:    addi sp, 4
 ; VC16I-NEXT:    ori a0, 1
+; VC16I-NEXT:    lw ra, 0(sp)
+; VC16I-NEXT:    lw s1, 2(sp)
+; VC16I-NEXT:    addi sp, 4
 ; VC16I-NEXT:    jalr t0, ra, 0
   %1 = or i16 %a, 1
   ret i16 %1
@@ -16,7 +24,15 @@ define i16 @ori(i16 %a) nounwind {
 define i16 @addi(i16 %a) nounwind {
 ; VC16I-LABEL: addi:
 ; VC16I:       ; %bb.0:
+; VC16I-NEXT:    addi sp, -4
+; VC16I-NEXT:    sw s1, 2(sp)
+; VC16I-NEXT:    sw ra, 0(sp)
+; VC16I-NEXT:    mv s1, sp
+; VC16I-NEXT:    addi sp, 4
 ; VC16I-NEXT:    addi a0, 1
+; VC16I-NEXT:    lw ra, 0(sp)
+; VC16I-NEXT:    lw s1, 2(sp)
+; VC16I-NEXT:    addi sp, 4
 ; VC16I-NEXT:    jalr t0, ra, 0
   %1 = add i16 %a, 1
   ret i16 %1
@@ -25,7 +41,15 @@ define i16 @addi(i16 %a) nounwind {
 define i16 @slli(i16 %a) nounwind {
 ; VC16I-LABEL: slli:
 ; VC16I:       ; %bb.0:
+; VC16I-NEXT:    addi sp, -4
+; VC16I-NEXT:    sw s1, 2(sp)
+; VC16I-NEXT:    sw ra, 0(sp)
+; VC16I-NEXT:    mv s1, sp
+; VC16I-NEXT:    addi sp, 4
 ; VC16I-NEXT:    slli a0, 1
+; VC16I-NEXT:    lw ra, 0(sp)
+; VC16I-NEXT:    lw s1, 2(sp)
+; VC16I-NEXT:    addi sp, 4
 ; VC16I-NEXT:    jalr t0, ra, 0
   %1 = shl i16 %a, 1
   ret i16 %1
@@ -34,7 +58,15 @@ define i16 @slli(i16 %a) nounwind {
 define i16 @srli(i16 %a) nounwind {
 ; VC16I-LABEL: srli:
 ; VC16I:       ; %bb.0:
+; VC16I-NEXT:    addi sp, -4
+; VC16I-NEXT:    sw s1, 2(sp)
+; VC16I-NEXT:    sw ra, 0(sp)
+; VC16I-NEXT:    mv s1, sp
+; VC16I-NEXT:    addi sp, 4
 ; VC16I-NEXT:    srli a0, 1
+; VC16I-NEXT:    lw ra, 0(sp)
+; VC16I-NEXT:    lw s1, 2(sp)
+; VC16I-NEXT:    addi sp, 4
 ; VC16I-NEXT:    jalr t0, ra, 0
   %1 = lshr i16 %a, 1
   ret i16 %1
@@ -43,7 +75,15 @@ define i16 @srli(i16 %a) nounwind {
 define i16 @srai(i16 %a) nounwind {
 ; VC16I-LABEL: srai:
 ; VC16I:       ; %bb.0:
+; VC16I-NEXT:    addi sp, -4
+; VC16I-NEXT:    sw s1, 2(sp)
+; VC16I-NEXT:    sw ra, 0(sp)
+; VC16I-NEXT:    mv s1, sp
+; VC16I-NEXT:    addi sp, 4
 ; VC16I-NEXT:    srai a0, 1
+; VC16I-NEXT:    lw ra, 0(sp)
+; VC16I-NEXT:    lw s1, 2(sp)
+; VC16I-NEXT:    addi sp, 4
 ; VC16I-NEXT:    jalr t0, ra, 0
   %1 = ashr i16 %a, 1
   ret i16 %1
@@ -53,7 +93,15 @@ define i16 @srai(i16 %a) nounwind {
 define i16 @add(i16 %a, i16 %b) nounwind {
 ; VC16I-LABEL: add:
 ; VC16I:       ; %bb.0:
+; VC16I-NEXT:    addi sp, -4
+; VC16I-NEXT:    sw s1, 2(sp)
+; VC16I-NEXT:    sw ra, 0(sp)
+; VC16I-NEXT:    mv s1, sp
+; VC16I-NEXT:    addi sp, 4
 ; VC16I-NEXT:    add a0, a1
+; VC16I-NEXT:    lw ra, 0(sp)
+; VC16I-NEXT:    lw s1, 2(sp)
+; VC16I-NEXT:    addi sp, 4
 ; VC16I-NEXT:    jalr t0, ra, 0
   %1 = add i16 %a, %b
   ret i16 %1
@@ -62,7 +110,15 @@ define i16 @add(i16 %a, i16 %b) nounwind {
 define i16 @sll(i16 %a, i16 %b) nounwind {
 ; VC16I-LABEL: sll:
 ; VC16I:       ; %bb.0:
+; VC16I-NEXT:    addi sp, -4
+; VC16I-NEXT:    sw s1, 2(sp)
+; VC16I-NEXT:    sw ra, 0(sp)
+; VC16I-NEXT:    mv s1, sp
+; VC16I-NEXT:    addi sp, 4
 ; VC16I-NEXT:    sll a0, a1
+; VC16I-NEXT:    lw ra, 0(sp)
+; VC16I-NEXT:    lw s1, 2(sp)
+; VC16I-NEXT:    addi sp, 4
 ; VC16I-NEXT:    jalr t0, ra, 0
   %1 = shl i16 %a, %b
   ret i16 %1
@@ -71,7 +127,15 @@ define i16 @sll(i16 %a, i16 %b) nounwind {
 define i16 @sub(i16 %a, i16 %b) nounwind {
 ; VC16I-LABEL: sub:
 ; VC16I:       ; %bb.0:
+; VC16I-NEXT:    addi sp, -4
+; VC16I-NEXT:    sw s1, 2(sp)
+; VC16I-NEXT:    sw ra, 0(sp)
+; VC16I-NEXT:    mv s1, sp
+; VC16I-NEXT:    addi sp, 4
 ; VC16I-NEXT:    sub a0, a1
+; VC16I-NEXT:    lw ra, 0(sp)
+; VC16I-NEXT:    lw s1, 2(sp)
+; VC16I-NEXT:    addi sp, 4
 ; VC16I-NEXT:    jalr t0, ra, 0
   %1 = sub i16 %a, %b
   ret i16 %1
@@ -80,7 +144,15 @@ define i16 @sub(i16 %a, i16 %b) nounwind {
 define i16 @srl(i16 %a, i16 %b) nounwind {
 ; VC16I-LABEL: srl:
 ; VC16I:       ; %bb.0:
+; VC16I-NEXT:    addi sp, -4
+; VC16I-NEXT:    sw s1, 2(sp)
+; VC16I-NEXT:    sw ra, 0(sp)
+; VC16I-NEXT:    mv s1, sp
+; VC16I-NEXT:    addi sp, 4
 ; VC16I-NEXT:    srl a0, a1
+; VC16I-NEXT:    lw ra, 0(sp)
+; VC16I-NEXT:    lw s1, 2(sp)
+; VC16I-NEXT:    addi sp, 4
 ; VC16I-NEXT:    jalr t0, ra, 0
   %1 = lshr i16 %a, %b
   ret i16 %1
@@ -89,7 +161,15 @@ define i16 @srl(i16 %a, i16 %b) nounwind {
 define i16 @and(i16 %a, i16 %b) nounwind {
 ; VC16I-LABEL: and:
 ; VC16I:       ; %bb.0:
+; VC16I-NEXT:    addi sp, -4
+; VC16I-NEXT:    sw s1, 2(sp)
+; VC16I-NEXT:    sw ra, 0(sp)
+; VC16I-NEXT:    mv s1, sp
+; VC16I-NEXT:    addi sp, 4
 ; VC16I-NEXT:    and a0, a1
+; VC16I-NEXT:    lw ra, 0(sp)
+; VC16I-NEXT:    lw s1, 2(sp)
+; VC16I-NEXT:    addi sp, 4
 ; VC16I-NEXT:    jalr t0, ra, 0
   %1 = and i16 %a, %b
   ret i16 %1
@@ -98,7 +178,15 @@ define i16 @and(i16 %a, i16 %b) nounwind {
 define i16 @xor(i16 %a, i16 %b) nounwind {
 ; VC16I-LABEL: xor:
 ; VC16I:       ; %bb.0:
+; VC16I-NEXT:    addi sp, -4
+; VC16I-NEXT:    sw s1, 2(sp)
+; VC16I-NEXT:    sw ra, 0(sp)
+; VC16I-NEXT:    mv s1, sp
+; VC16I-NEXT:    addi sp, 4
 ; VC16I-NEXT:    xor a0, a1
+; VC16I-NEXT:    lw ra, 0(sp)
+; VC16I-NEXT:    lw s1, 2(sp)
+; VC16I-NEXT:    addi sp, 4
 ; VC16I-NEXT:    jalr t0, ra, 0
   %1 = xor i16 %a, %b
   ret i16 %1
@@ -108,7 +196,15 @@ define i16 @xor(i16 %a, i16 %b) nounwind {
 define i16 @or(i16 %a, i16 %b) nounwind {
 ; VC16I-LABEL: or:
 ; VC16I:       ; %bb.0:
+; VC16I-NEXT:    addi sp, -4
+; VC16I-NEXT:    sw s1, 2(sp)
+; VC16I-NEXT:    sw ra, 0(sp)
+; VC16I-NEXT:    mv s1, sp
+; VC16I-NEXT:    addi sp, 4
 ; VC16I-NEXT:    or a0, a1
+; VC16I-NEXT:    lw ra, 0(sp)
+; VC16I-NEXT:    lw s1, 2(sp)
+; VC16I-NEXT:    addi sp, 4
 ; VC16I-NEXT:    jalr t0, ra, 0
   %1 = or i16 %a, %b
   ret i16 %1
@@ -117,7 +213,15 @@ define i16 @or(i16 %a, i16 %b) nounwind {
 define i16 @sra(i16 %a, i16 %b) nounwind {
 ; VC16I-LABEL: sra:
 ; VC16I:       ; %bb.0:
+; VC16I-NEXT:    addi sp, -4
+; VC16I-NEXT:    sw s1, 2(sp)
+; VC16I-NEXT:    sw ra, 0(sp)
+; VC16I-NEXT:    mv s1, sp
+; VC16I-NEXT:    addi sp, 4
 ; VC16I-NEXT:    sra a0, a1
+; VC16I-NEXT:    lw ra, 0(sp)
+; VC16I-NEXT:    lw s1, 2(sp)
+; VC16I-NEXT:    addi sp, 4
 ; VC16I-NEXT:    jalr t0, ra, 0
   %1 = ashr i16 %a, %b
   ret i16 %1
@@ -126,7 +230,15 @@ define i16 @sra(i16 %a, i16 %b) nounwind {
 define i16 @neg(i16 %a) nounwind {
 ; VC16I-LABEL: neg:
 ; VC16I:       ; %bb.0:
+; VC16I-NEXT:    addi sp, -4
+; VC16I-NEXT:    sw s1, 2(sp)
+; VC16I-NEXT:    sw ra, 0(sp)
+; VC16I-NEXT:    mv s1, sp
+; VC16I-NEXT:    addi sp, 4
 ; VC16I-NEXT:    neg a0, a0
+; VC16I-NEXT:    lw ra, 0(sp)
+; VC16I-NEXT:    lw s1, 2(sp)
+; VC16I-NEXT:    addi sp, 4
 ; VC16I-NEXT:    jalr t0, ra, 0
   %1 = sub i16 0, %a
   ret i16 %1
@@ -135,7 +247,15 @@ define i16 @neg(i16 %a) nounwind {
 define i16 @not(i16 %a) nounwind {
 ; VC16I-LABEL: not:
 ; VC16I:       ; %bb.0:
+; VC16I-NEXT:    addi sp, -4
+; VC16I-NEXT:    sw s1, 2(sp)
+; VC16I-NEXT:    sw ra, 0(sp)
+; VC16I-NEXT:    mv s1, sp
+; VC16I-NEXT:    addi sp, 4
 ; VC16I-NEXT:    not a0, a0
+; VC16I-NEXT:    lw ra, 0(sp)
+; VC16I-NEXT:    lw s1, 2(sp)
+; VC16I-NEXT:    addi sp, 4
 ; VC16I-NEXT:    jalr t0, ra, 0
   %1 = xor i16 %a, -1
   ret i16 %1

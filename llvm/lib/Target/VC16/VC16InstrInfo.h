@@ -22,6 +22,19 @@
 
 namespace llvm {
 
+namespace VC16Cond {
+enum Code {
+  Z = 1,
+  NZ = 2,
+  N = 3,
+  NN = 4,
+  LT = 5,
+  GE = 6,
+  NC = 7,
+  INVALID = 8,
+};
+}
+
 class VC16InstrInfo : public VC16GenInstrInfo {
 
 public:
@@ -41,6 +54,6 @@ public:
                             int FrameIndex, const TargetRegisterClass *RC,
                             const TargetRegisterInfo *TRI) const override;
 };
-}
+} // namespace llvm
 
 #endif

@@ -39,8 +39,8 @@ def GPR : RegisterClass<"VC16", [i16], 16, (add
 )>;
 
 // Status register.
-def FR : VC16Reg<4, "FR", ["FR"]>, DwarfRegNum<[8]>;
-def CCR : RegisterClass<"VC16", [i16], 16, (add FR)>
+def FLAGS : VC16Reg<4, "FLAGS", ["FLAGS"]>, DwarfRegNum<[8]>;
+def CCR : RegisterClass<"VC16", [i16], 16, (add FLAGS)>
 {
   let CopyCost = -1;      // Don't allow copying of status registers
 }

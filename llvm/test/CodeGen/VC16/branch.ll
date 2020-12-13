@@ -5,6 +5,11 @@
 define void @foo(i16 %a, i16 *%b, i1 %c) {
 ; VC16I-LABEL: foo:
 ; VC16I:       ; %bb.0:
+; VC16I-NEXT:    addi sp, -4
+; VC16I-NEXT:    sw s1, 2(sp)
+; VC16I-NEXT:    sw ra, 0(sp)
+; VC16I-NEXT:    mv s1, sp
+; VC16I-NEXT:    addi sp, 4
 ; VC16I-NEXT:    lw t0, 0(a1)
 ; VC16I-NEXT:    cmp t0, a0
 ; VC16I-NEXT:    bz .LBB0_12
@@ -55,14 +60,17 @@ define void @foo(i16 %a, i16 *%b, i1 %c) {
 ; VC16I-NEXT:    bnn .LBB0_12
 ; VC16I-NEXT:    j .LBB0_10
 ; VC16I-NEXT:  .LBB0_10: ; %test11
+; VC16I-NEXT:    lli a0, 1
+; VC16I-NEXT:    test a2, a0
 ; VC16I-NEXT:    lw a0, 0(a1)
-; VC16I-NEXT:    andi a2, 1
-; VC16I-NEXT:    addi a2, 0
 ; VC16I-NEXT:    bnz .LBB0_12
 ; VC16I-NEXT:    j .LBB0_11
 ; VC16I-NEXT:  .LBB0_11: ; %test12
 ; VC16I-NEXT:    lw a0, 0(a1)
 ; VC16I-NEXT:  .LBB0_12: ; %end
+; VC16I-NEXT:    lw ra, 0(sp)
+; VC16I-NEXT:    lw s1, 2(sp)
+; VC16I-NEXT:    addi sp, 4
 ; VC16I-NEXT:    jalr t0, ra, 0
 
   %val1 = load volatile i16, i16* %b

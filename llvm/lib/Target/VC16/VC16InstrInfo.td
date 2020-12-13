@@ -26,6 +26,32 @@ def SDT_VC16SelectCC     : SDTypeProfile<1, 5, [SDTCisSameAs<1, 2>,
                                                 SDTCisSameAs<0, 4>,
                                                 SDTCisSameAs<4, 5>]>;
 
+// Unary and binary operator instructions that set EFLAGS as a side-effect.
+def SDTUnaryArithWithFlags : SDTypeProfile<2, 1,
+                                           [SDTCisSameAs<0, 2>,
+                                            SDTCisInt<0>, SDTCisVT<1, i16>]>;
+
+def SDTBinaryArithWithFlags : SDTypeProfile<2, 2,
+                                            [SDTCisSameAs<0, 2>,
+                                             SDTCisSameAs<0, 3>,
+                                             SDTCisInt<0>, SDTCisVT<1, i16>]>;
+
+// SDTBinaryArithWithFlagsInOut - RES1, EFLAGS = op LHS, RHS, EFLAGS
+def SDTBinaryArithWithFlagsInOut : SDTypeProfile<2, 3,
+                                            [SDTCisSameAs<0, 2>,
+                                             SDTCisSameAs<0, 3>,
+                                             SDTCisInt<0>,
+                                             SDTCisVT<1, i16>,
+                                             SDTCisVT<4, i16>]>;
+
+
+// (target, condition code, flags)
+def SDT_VC16Brcond : SDTypeProfile<0, 3,
+                                  [SDTCisVT<0, OtherVT>,
+                                   SDTCisVT<1, i8>,
+                                   SDTCisVT<2, i16>]>;
+def SDT_VC16Cmp : SDTypeProfile<0, 2, [SDTCisSameAs<0, 1>]>;
+
 
 def Call         : SDNode<"VC16ISD::CALL", SDT_VC16Call,
                           [SDNPHasChain, SDNPOptInGlue, SDNPOutGlue,
@@ -38,6 +64,15 @@ def RetFlag      : SDNode<"VC16ISD::RET_FLAG", SDTNone,
                           [SDNPHasChain, SDNPOptInGlue, SDNPVariadic]>;
 def SelectCC     : SDNode<"VC16ISD::SELECT_CC", SDT_VC16SelectCC,
                           [SDNPInGlue]>;
+
+def VC16brcond   : SDNode<"VC16ISD::BRCOND", SDT_VC16Brcond, [SDNPHasChain]>;
+def VC16cmp      : SDNode<"VC16ISD::CMP", SDT_VC16Cmp>;
+
+def ccode : Operand<i8> {
+  let PrintMethod = "printCondCode";
+  let OperandNamespace = "VC16";
+  let OperandType = "OPERAND_COND_CODE";
+}
 
 //===----------------------------------------------------------------------===//
 // Operand and SDNode transformation definitions.
@@ -97,7 +132,7 @@ class ALU_BinaryCC_ri5<bits<8> op8, string opcodestr>
     : VCInstRI5<op8, (outs GPR:$rd_wb), (ins GPR:$rd, simm5:$imm5),
                 opcodestr, "$rd, $imm5"> {
   let Constraints = "$rd = $rd_wb";
-  let Defs = [FR];
+  let Defs = [FLAGS];
 }
 
 class ALU_Unary_ri5<bits<8> op8, string opcodestr>
@@ -113,35 +148,36 @@ class ALU_ri4<bit arithshift, bits<8> op8, string opcodestr>
 
 let hasSideEffects = 0, mayLoad = 0, mayStore = 0 in
 class ALU_Unary_rr<bits<2> op2, bits<8> op8, string opcodestr>
-    : VCInstRR<op2, op8, (outs GPR:$rd), (ins GPR:$rs),
-               opcodestr, "$rd, $rs">;
+    : VCInstRR<op2, op8, (outs GPR:$r1), (ins GPR:$r2),
+               opcodestr>;
 
 let hasSideEffects = 0, mayLoad = 0, mayStore = 0 in
 class ALU_Binary_rr<bits<2> op2, bits<8> op8, string opcodestr>
-    : VCInstRR<op2, op8, (outs GPR:$rd_wb), (ins GPR:$rd, GPR:$rs),
-               opcodestr, "$rd, $rs"> {
-  let Constraints = "$rd = $rd_wb";
+    : VCInstRR<op2, op8, (outs GPR:$rd), (ins GPR:$r1, GPR:$r2),
+               opcodestr> {
+  let Constraints = "$rd = $r1";
 }
 
 let hasSideEffects = 0, mayLoad = 0, mayStore = 0 in
 class ALU_BinaryCC_rr<bits<2> op2, bits<8> op8, string opcodestr>
-    : VCInstRR<op2, op8, (outs GPR:$rd_wb), (ins GPR:$rd, GPR:$rs),
-               opcodestr, "$rd, $rs"> {
-  let Constraints = "$rd = $rd_wb";
-  let Defs = [FR];
+    : VCInstRR<op2, op8, (outs GPR:$rd), (ins GPR:$r1, GPR:$r2),
+               opcodestr> {
+  let Constraints = "$rd = $r1";
+  let Defs = [FLAGS];
 }
 
-let hasSideEffects = 0, mayLoad = 0, mayStore = 0 in
-class ALU_SetCC_rr<bits<2> op2, bits<8> op8, string opcodestr>
-    : VCInstRR<op2, op8, (outs CCR:$fr), (ins GPR:$rs1, GPR:$rs2),
-               opcodestr, "$rs1, $rs2">;
+// Updated with FLAGS register
+
+let hasSideEffects = 0, mayLoad = 0, mayStore = 0, Defs=[FLAGS] in
+class ALU_Binary_F_RR<bits<2> op2, bits<8> op8, string opcodestr, list<dag> pattern>
+    : VCInstRR<op2, op8, (outs), (ins GPR:$r1, GPR:$r2),
+               opcodestr, pattern>;
 
 let hasSideEffects = 0, mayLoad = 0, mayStore = 0 in
-class BranchCC_i<bits<8> op8, string opcodestr>
-    : VCInstB<op8, (outs), (ins CCR:$fr, simm9_lsb0:$imm8), opcodestr, "$imm8"> {
-    let isBranch = 1;
-    let isTerminator = 1;
-}
+let isBranch = 1, isTerminator = 1, Uses=[FLAGS] in
+class BranchCC_i<bits<8> op8, string opcodestr, bits<8> cond>
+    : VCInstB<op8, (outs), (ins simm9_lsb0:$imm8),
+              opcodestr, "$imm8", [(VC16brcond bb:$imm8, (i8 cond), FLAGS)]>;
 
 //===----------------------------------------------------------------------===//
 // Instructions
@@ -178,19 +214,19 @@ def SB : VCInstM<0b110, (outs), (ins GPR:$rs2, GPR:$rs1, uimm5:$imm5),
 } // hasSideEffects = 0, mayLoad = 0, mayStore = 1
 
 let hasSideEffects = 0, mayLoad = 0, mayStore = 0 in
-def J  : VCInstB<0b00001111, (outs), (ins simm9_lsb0:$imm8), "j", "$imm8"> {
+def J  : VCInstB<0b00001111, (outs), (ins simm9_lsb0:$imm8), "j", "$imm8", []> {
     let isBranch = 1;
     let isTerminator = 1;
     let isBarrier = 1;
 }
 
-def  BZ  : BranchCC_i<0b00101111, "bz">;
-def BNZ  : BranchCC_i<0b01001111, "bnz">;
-def  BN  : BranchCC_i<0b01101111, "bn">;
-def BNN  : BranchCC_i<0b10001111, "bnn">;
-def BLT  : BranchCC_i<0b10101111, "blt">;
-def BGE  : BranchCC_i<0b11001111, "bge">;
-def BNC  : BranchCC_i<0b11101111, "bnc">;
+def  BZ  : BranchCC_i<0b00101111, "bz", 1>;
+def BNZ  : BranchCC_i<0b01001111, "bnz", 2>;
+def  BN  : BranchCC_i<0b01101111, "bn", 3>;
+def BNN  : BranchCC_i<0b10001111, "bnn", 4>;
+def BLT  : BranchCC_i<0b10101111, "blt", 5>;
+def BGE  : BranchCC_i<0b11001111, "bge", 6>;
+def BNC  : BranchCC_i<0b11101111, "bnc", 7>;
 
 
 def  ADD : ALU_BinaryCC_rr  <0b00, 0b00110111, "add">;
@@ -207,8 +243,11 @@ def  XOR : ALU_BinaryCC_rr  <0b10, 0b01110111, "xor">;
 def   OR : ALU_BinaryCC_rr  <0b10, 0b10110111, "or">;
 def  NOT : ALU_Unary_rr     <0b10, 0b11110111, "not">;
 
-def TEST : ALU_SetCC_rr     <0b11, 0b00110111, "test">;
-def  CMP : ALU_SetCC_rr     <0b11, 0b10110111, "cmp">;
+let isCompare = 1 in
+def TEST : ALU_Binary_F_RR  <0b11, 0b00110111, "test", []>;
+let isCompare = 1 in
+def  CMP : ALU_Binary_F_RR  <0b11, 0b10110111, "cmp",
+                             [(set FLAGS, (VC16cmp GPR:$r1, GPR:$r2))]>;
 def   MV : ALU_Unary_rr     <0b11, 0b01110111, "mv">;
 def  SRA : ALU_Binary_rr    <0b11, 0b11110111, "sra">;
 
@@ -222,9 +261,6 @@ def  ORI : ALU_BinaryCC_ri5 <      0b00111111, "ori">;
 def XORI : ALU_BinaryCC_ri5 <      0b01111111, "xori">;
 def ANDI : ALU_BinaryCC_ri5 <      0b11111111, "andi">;
 def  LLI : ALU_Unary_ri5    <      0b10111111, "lli">;
-
-let hasSideEffects = 0, mayLoad = 0, mayStore = 0 in
-def CHK : VCInstChk<0b01011111, (outs CCR:$fr), (ins GPR:$rs), "addi", "$rs, 0">;
 
 //===----------------------------------------------------------------------===//
 // Pseudo-instructions and codegen patterns
@@ -243,11 +279,10 @@ class PatGprSimm5<SDPatternOperator OpNode, VCInstRI5 Inst>
 class PatGprUimm4<SDPatternOperator OpNode, VCInstRI4 Inst>
     : Pat<(OpNode GPR:$rs, uimm4:$shamt), (Inst GPR:$rs, uimm4:$shamt)>;
 
-// def : PatGprGpr<addc,TEST : ALU_Binary_rr <0b11, 0b00110111, "test">;
+// def : PatGprGpr<addc, TEST : ALU_Binary_rr <0b11, 0b00110111, "test">;
 
 // Define pattern expansions for setcc operations that aren't directly
 // handled by a RISC-V instruction.
-
 
 //def : Pat<(setult GPR:$rd, GPR:$rs), (SRAI (SUB GPR:$rd, GPR:$rs), 15)>;
 //def : Pat<(seteq GPR:$rd, GPR:$rs), (SRLI (OR (SUB GPR:$rd, GPR:$rs) (SUB GPR:$rs GPR:$rd)), 15)>;
@@ -288,12 +323,17 @@ def : PatGprUimm4<shl, SLLI>;
 def : PatGprUimm4<srl, SRLI>;
 def : PatGprUimm4<sra, SRAI>;
 
+def : Pat<(VC16cmp (and GPR:$r1, GPR:$r2), 0), (TEST GPR:$r1, GPR:$r2)>;
+def : Pat<(VC16cmp GPR:$r1, 0), (TEST GPR:$r1, GPR:$r1)>;
 
-
-// Materialize immediates
+// Codegen-only immleafs.
 def simm16 : ImmLeaf<i16, [{return isInt<16>(Imm);}]>;
 def simm16_shift5 : ImmLeaf<i16, [{return isShiftedInt<11, 5>(Imm);}]>;
 def uimm16_shift5 : ImmLeaf<i16, [{return isShiftedUInt<11, 5>(Imm);}]>;
+
+// Addressing modes.
+// Necessary because a frameindex can't be matched directly in a pattern.
+def AddrFI : ComplexPattern<iPTR, 1, "SelectAddrFI", [frameindex], []>;
 
 // Extract least significant 12 bits from an immediate value and sign extend
 // them.
@@ -324,6 +364,13 @@ def HI20S : SDNodeXForm<imm, [{
   );
 }]>;
 
+/// Predicates
+def IsOrAdd: PatFrag<(ops node:$A, node:$B), (or node:$A, node:$B), [{
+  return isOrEquivalentToAdd(N);
+}]>;
+
+
+/// Immediates.
 def : Pat<(simm5:$imm), (LLI simm5:$imm)>;
 def : Pat<(simm16_shift5:$imm), (LUI (HI20U $imm))>;
 def : Pat<(simm16:$imm), (ADDI (LUI (HI20S imm:$imm)), (LO5Sext imm:$imm))>;
@@ -338,35 +385,6 @@ def Select_GPR_Using_CC_GPR
 
 
 /// Branches and jumps
-// Match `(brcond (CondOp ..), ..)` and lower to the appropriate CMP + branch
-// sequence.
-class BccPat<PatFrag CondOp, VCInstB Inst>
-    : Pat<(brcond (i16 (CondOp GPR:$rs1, GPR:$rs2)), bb:$imm8),
-          (Inst (CMP GPR:$rs1, GPR:$rs2), simm9_lsb0:$imm8)>;
-
-def : BccPat<seteq, BZ>;
-def : BccPat<setne, BNZ>;
-def : BccPat<setlt, BLT>;
-def : BccPat<setge, BGE>;
-def : BccPat<setult, BN>;
-def : BccPat<setuge, BNN>;
-
-class BccSwapPat<PatFrag CondOp, VCInstB InstBcc>
-    : Pat<(brcond (i16 (CondOp GPR:$rs1, GPR:$rs2)), bb:$imm8),
-          (InstBcc (CMP GPR:$rs2, GPR:$rs1), bb:$imm8)>;
-
-// Condition codes that don't have matching RISC-V branch instructions, but
-// are trivially supported by swapping the two input operands
-def : BccSwapPat<setgt, BLT>;
-def : BccSwapPat<setle, BGE>;
-def : BccSwapPat<setugt, BN>;
-def : BccSwapPat<setule, BNN>;
-
-// An extra pattern is needed for a brcond without a setcc (i.e. where the
-// condition was calculated elsewhere).
-def : Pat<(brcond GPR:$cond, bb:$imm8),
-          (BNZ (CHK GPR:$cond), bb:$imm8)>;
-
 def : Pat<(br bb:$imm8), (J bb:$imm8)>;
 
 let Defs=[R5], isBarrier = 1, isBranch = 1, isTerminator = 1 in
@@ -374,7 +392,7 @@ let mayStore = 0, mayLoad = 0, hasSideEffects = 0 in
 def PseudoBR : Pseudo<(outs), (ins simm11_lsb0:$imm10), [(br bb:$imm10)]>,
                PseudoInstExpansion<(JAL R5, simm11_lsb0:$imm10)>;
 
-let isCall = 1, Defs=[R5] in
+let Defs=[R5] in
 let isBarrier = 1, isBranch = 1, isIndirectBranch = 1, isTerminator = 1 in
 def PseudoBRIND : Pseudo<(outs), (ins GPR:$rs1, uimm6_lsb0:$imm5), []>,
                   PseudoInstExpansion<(JALR R5, GPR:$rs1, uimm6_lsb0:$imm5)>;
@@ -395,26 +413,39 @@ def PseudoRET : Pseudo<(outs), (ins), [(RetFlag)]>,
 /// Loads
 multiclass LdPat<PatFrag LoadOp, ImmLeaf LoImmT, VCInst Inst> {
   def : Pat<(LoadOp GPR:$rs1), (Inst GPR:$rs1, 0)>;
+  def : Pat<(LoadOp AddrFI:$rs1), (Inst AddrFI:$rs1, 0)>;
   def : Pat<(LoadOp (add GPR:$rs1, LoImmT:$imm5)), (Inst GPR:$rs1, LoImmT:$imm5)>;
+  def : Pat<(LoadOp (add AddrFI:$rs1, LoImmT:$imm5)),
+            (Inst AddrFI:$rs1, LoImmT:$imm5)>;
+  def : Pat<(LoadOp (IsOrAdd AddrFI:$rs1, LoImmT:$imm5)),
+            (Inst AddrFI:$rs1, LoImmT:$imm5)>;
 }
-
-def : Pat<(sextloadi8 GPR:$rs1), (SRAI (SLLI (LB GPR:$rs1, 0), 8), 8)>;
-def : Pat<(sextloadi8 (add GPR:$rs1, uimm5:$imm5)),
-          (SRAI (SLLI (LB GPR:$rs1, uimm5:$imm5), 8), 8)>;
 
 defm : LdPat<extloadi8, uimm5, LB>;
 defm : LdPat<zextloadi8, uimm5, LB>;
 defm : LdPat<load, uimm6_lsb0, LW>;
 
 /// Stores
-multiclass StPat<PatFrag StoreOp, VCInst Inst> {
+multiclass StPat<PatFrag StoreOp, ImmLeaf LoImmT, VCInst Inst> {
   def : Pat<(StoreOp GPR:$rs2, GPR:$rs1), (Inst GPR:$rs2, GPR:$rs1, 0)>;
-  def : Pat<(StoreOp GPR:$rs2, (add GPR:$rs1, uimm5:$imm5)),
-            (Inst GPR:$rs2, GPR:$rs1, uimm5:$imm5)>;
+  def : Pat<(StoreOp GPR:$rs2, AddrFI:$rs1), (Inst GPR:$rs2, AddrFI:$rs1, 0)>;
+  def : Pat<(StoreOp GPR:$rs2, (add GPR:$rs1, LoImmT:$imm5)),
+            (Inst GPR:$rs2, GPR:$rs1, LoImmT:$imm5)>;
+  def : Pat<(StoreOp GPR:$rs2, (add AddrFI:$rs1, LoImmT:$imm12)),
+            (Inst GPR:$rs2, AddrFI:$rs1, LoImmT:$imm12)>;
+  def : Pat<(StoreOp GPR:$rs2, (IsOrAdd AddrFI:$rs1, LoImmT:$imm12)),
+            (Inst GPR:$rs2, AddrFI:$rs1, LoImmT:$imm12)>;
 }
 
-defm : StPat<truncstorei8, SB>;
-defm : StPat<store, SW>;
+defm : StPat<truncstorei8, uimm5, SB>;
+defm : StPat<store, uimm6_lsb0, SW>;
+
+/// FrameIndex calculations
+
+def : Pat<(add (i16 AddrFI:$Rs), simm5:$imm5),
+          (ADDI (i16 AddrFI:$Rs), simm5:$imm5)>;
+def : Pat<(IsOrAdd (i16 AddrFI:$Rs), simm5:$imm5),
+          (ADDI (i16 AddrFI:$Rs), simm5:$imm5)>;
 
 /// Other pseudo-instructions
 

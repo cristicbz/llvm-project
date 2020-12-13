@@ -14,6 +14,7 @@
 
 #include "VC16ISelLowering.h"
 #include "VC16.h"
+#include "VC16InstrInfo.h"
 #include "VC16RegisterInfo.h"
 #include "VC16Subtarget.h"
 #include "VC16TargetMachine.h"
@@ -46,47 +47,50 @@ VC16TargetLowering::VC16TargetLowering(const TargetMachine &TM,
   computeRegisterProperties(STI.getRegisterInfo());
 
   setStackPointerRegisterToSaveRestore(VC16::R7);
-  for (auto N : {ISD::EXTLOAD, ISD::SEXTLOAD, ISD::ZEXTLOAD})
+  for (auto N : {ISD::EXTLOAD, ISD::SEXTLOAD, ISD::ZEXTLOAD}) {
     setLoadExtAction(N, MVT::i16, MVT::i1, Promote);
+  }
+  setLoadExtAction(ISD::SEXTLOAD, MVT::i16, MVT::i8, Expand);
 
   // TODO: add all necessary setOperationAction calls.
   setOperationAction(ISD::BR_JT, MVT::i16, Expand);
   setOperationAction(ISD::BR_CC, MVT::i16, Expand);
   setOperationAction(ISD::SELECT, MVT::i16, Custom);
   setOperationAction(ISD::SELECT_CC, MVT::i16, Expand);
-  // setOperationAction(ISD::SETCC, MVT::i16, Expand);
+  setOperationAction(ISD::BRCOND, MVT::Other, Custom);
+  setOperationAction(ISD::SETCC, MVT::i16, Custom);
 
   for (auto VT : {MVT::i1, MVT::i8})
     setOperationAction(ISD::SIGN_EXTEND_INREG, VT, Expand);
 
-  // setOperationAction(ISD::ADDC, MVT::i16, Expand);
-  // setOperationAction(ISD::ADDE, MVT::i16, Expand);
-  // setOperationAction(ISD::SUBC, MVT::i16, Expand);
-  // setOperationAction(ISD::SUBE, MVT::i16, Expand);
+  setOperationAction(ISD::ADDC, MVT::i16, Expand);
+  setOperationAction(ISD::ADDE, MVT::i16, Expand);
+  setOperationAction(ISD::SUBC, MVT::i16, Expand);
+  setOperationAction(ISD::SUBE, MVT::i16, Expand);
 
-  // setOperationAction(ISD::SREM, MVT::i16, Expand);
-  // setOperationAction(ISD::SDIVREM, MVT::i16, Expand);
-  // setOperationAction(ISD::SDIV, MVT::i16, Expand);
-  // setOperationAction(ISD::UREM, MVT::i16, Expand);
-  // setOperationAction(ISD::UDIVREM, MVT::i16, Expand);
-  // setOperationAction(ISD::UDIV, MVT::i16, Expand);
+  setOperationAction(ISD::SREM, MVT::i16, Expand);
+  setOperationAction(ISD::SDIVREM, MVT::i16, Expand);
+  setOperationAction(ISD::SDIV, MVT::i16, Expand);
+  setOperationAction(ISD::UREM, MVT::i16, Expand);
+  setOperationAction(ISD::UDIVREM, MVT::i16, Expand);
+  setOperationAction(ISD::UDIV, MVT::i16, Expand);
 
-  // setOperationAction(ISD::MUL, MVT::i16, Expand);
-  // setOperationAction(ISD::SMUL_LOHI, MVT::i16, Expand);
-  // setOperationAction(ISD::UMUL_LOHI, MVT::i16, Expand);
-  // setOperationAction(ISD::MULHS, MVT::i16, Expand);
-  // setOperationAction(ISD::MULHU, MVT::i16, Expand);
+  setOperationAction(ISD::MUL, MVT::i16, Expand);
+  setOperationAction(ISD::SMUL_LOHI, MVT::i16, Expand);
+  setOperationAction(ISD::UMUL_LOHI, MVT::i16, Expand);
+  setOperationAction(ISD::MULHS, MVT::i16, Expand);
+  setOperationAction(ISD::MULHU, MVT::i16, Expand);
 
-  // setOperationAction(ISD::SHL_PARTS, MVT::i16, Expand);
-  // setOperationAction(ISD::SRL_PARTS, MVT::i16, Expand);
-  // setOperationAction(ISD::SRA_PARTS, MVT::i16, Expand);
+  setOperationAction(ISD::SHL_PARTS, MVT::i16, Expand);
+  setOperationAction(ISD::SRL_PARTS, MVT::i16, Expand);
+  setOperationAction(ISD::SRA_PARTS, MVT::i16, Expand);
 
-  // setOperationAction(ISD::ROTL, MVT::i16, Expand);
-  // setOperationAction(ISD::ROTR, MVT::i16, Expand);
-  // setOperationAction(ISD::BSWAP, MVT::i16, Expand);
-  // setOperationAction(ISD::CTTZ, MVT::i16, Expand);
-  // setOperationAction(ISD::CTLZ, MVT::i16, Expand);
-  // setOperationAction(ISD::CTPOP, MVT::i16, Expand);
+  setOperationAction(ISD::ROTL, MVT::i16, Expand);
+  setOperationAction(ISD::ROTR, MVT::i16, Expand);
+  setOperationAction(ISD::BSWAP, MVT::i16, Expand);
+  setOperationAction(ISD::CTTZ, MVT::i16, Expand);
+  setOperationAction(ISD::CTLZ, MVT::i16, Expand);
+  setOperationAction(ISD::CTPOP, MVT::i16, Expand);
 
   setOperationAction(ISD::GlobalAddress, MVT::i16, Custom);
   setOperationAction(ISD::BlockAddress, MVT::i16, Custom);
@@ -103,18 +107,50 @@ VC16TargetLowering::VC16TargetLowering(const TargetMachine &TM,
 
 // Changes the condition code and swaps operands if necessary, so the SetCC
 // operation matches one of the comparisons supported directly in the VC16 ISA.
-static void normaliseSetCC(SDValue &LHS, SDValue &RHS, ISD::CondCode &CC) {
+static VC16Cond::Code translateCC(SDValue &LHS, SDValue &RHS,
+                                  ISD::CondCode CC) {
+  bool Swap = false;
+  VC16Cond::Code Translated = VC16Cond::INVALID;
   switch (CC) {
   default:
+    llvm_unreachable("Unexpected SETCC condition");
+  case ISD::SETEQ:
+    Translated = VC16Cond::Z;
+    break;
+  case ISD::SETNE:
+    Translated = VC16Cond::NZ;
     break;
   case ISD::SETGT:
-  case ISD::SETLE:
-  case ISD::SETUGT:
-  case ISD::SETULE:
-    CC = ISD::getSetCCSwappedOperands(CC);
-    std::swap(LHS, RHS);
+    Swap = true;
+    LLVM_FALLTHROUGH;
+  case ISD::SETLT:
+    Translated = VC16Cond::LT;
     break;
+  case ISD::SETLE:
+    Swap = true;
+    LLVM_FALLTHROUGH;
+  case ISD::SETGE:
+    Translated = VC16Cond::GE;
+    break;
+  case ISD::SETUGT:
+    Swap = true;
+    LLVM_FALLTHROUGH;
+  case ISD::SETULT:
+    Translated = VC16Cond::N;
+    break;
+  case ISD::SETULE:
+    Swap = true;
+    LLVM_FALLTHROUGH;
+  case ISD::SETUGE:
+    Translated = VC16Cond::NN;
   }
+
+  if (Swap) {
+    using std::swap;
+    swap(LHS, RHS);
+  }
+
+  return Translated;
 }
 
 // Return the VC16 branch opcode that matches the given DAG integer condition
@@ -139,6 +175,22 @@ static unsigned getBranchOpcodeForIntCondCode(ISD::CondCode CC) {
   }
 }
 
+// Changes the condition code and swaps operands if necessary, so the SetCC
+// operation matches one of the comparisons supported directly in the VC16 ISA.
+static void normaliseSetCC(SDValue &LHS, SDValue &RHS, ISD::CondCode &CC) {
+  switch (CC) {
+  default:
+    break;
+  case ISD::SETGT:
+  case ISD::SETLE:
+  case ISD::SETUGT:
+  case ISD::SETULE:
+    CC = ISD::getSetCCSwappedOperands(CC);
+    std::swap(LHS, RHS);
+    break;
+  }
+}
+
 SDValue VC16TargetLowering::LowerOperation(SDValue Op,
                                            SelectionDAG &DAG) const {
   switch (Op.getOpcode()) {
@@ -150,6 +202,10 @@ SDValue VC16TargetLowering::LowerOperation(SDValue Op,
     return lowerBlockAddress(Op, DAG);
   case ISD::SELECT:
     return lowerSELECT(Op, DAG);
+  case ISD::BRCOND:
+    return lowerBRCOND(Op, DAG);
+  case ISD::SETCC:
+    return lowerSETCC(Op, DAG);
   }
 }
 
@@ -211,6 +267,50 @@ SDValue VC16TargetLowering::lowerExternalSymbol(SDValue Op,
   return MNLo;
 }
 
+static VC16Cond::Code oppositeCC(VC16Cond::Code CC) {
+  switch (CC) {
+  default:
+    llvm_unreachable("CC has no inverse.");
+  case VC16Cond::GE:
+    return VC16Cond::LT;
+  case VC16Cond::LT:
+    return VC16Cond::GE;
+  case VC16Cond::N:
+    return VC16Cond::NN;
+  case VC16Cond::NN:
+    return VC16Cond::N;
+  case VC16Cond::Z:
+    return VC16Cond::NZ;
+  case VC16Cond::NZ:
+    return VC16Cond::Z;
+  }
+}
+
+SDValue VC16TargetLowering::lowerBRCOND(SDValue Op, SelectionDAG &DAG) const {
+  SDValue Chain = Op.getOperand(0);
+  SDValue CondV = Op.getOperand(1);
+  SDValue Dest = Op.getOperand(2);
+  SDLoc DL(Op);
+
+  VC16Cond::Code Code = VC16Cond::NZ;
+  SDValue LHS = CondV;
+  SDValue RHS = DAG.getTargetConstant(0, DL, MVT::i16);
+
+  if (CondV.getOpcode() == ISD::SETCC &&
+      CondV.getOperand(0).getSimpleValueType() == MVT::i16) {
+    LHS = CondV.getOperand(0);
+    RHS = CondV.getOperand(1);
+    auto CC = cast<CondCodeSDNode>(CondV.getOperand(2));
+    Code = translateCC(LHS, RHS, CC->get());
+  }
+
+  // Perform a comparison
+  SDValue FLAGS = DAG.getNode(VC16ISD::CMP, DL, MVT::i16, LHS, RHS).getValue(0);
+
+  return DAG.getNode(VC16ISD::BRCOND, DL, MVT::Other, Chain, Dest,
+                     DAG.getTargetConstant(Code, DL, MVT::i8), FLAGS);
+}
+
 SDValue VC16TargetLowering::lowerSELECT(SDValue Op, SelectionDAG &DAG) const {
   SDValue CondV = Op.getOperand(0);
   SDValue TrueV = Op.getOperand(1);
@@ -250,11 +350,27 @@ SDValue VC16TargetLowering::lowerSELECT(SDValue Op, SelectionDAG &DAG) const {
   return DAG.getNode(VC16ISD::SELECT_CC, DL, VTs, Ops);
 }
 
+SDValue VC16TargetLowering::lowerSETCC(SDValue Op, SelectionDAG &DAG) const {
+  SDLoc DL(Op);
+  SDValue LHS = Op.getOperand(0);
+  SDValue RHS = Op.getOperand(1);
+  auto CC = cast<CondCodeSDNode>(Op.getOperand(2));
+  ISD::CondCode CCVal = CC->get();
+
+  normaliseSetCC(LHS, RHS, CCVal);
+
+  SDValue TargetCC = DAG.getConstant(CCVal, DL, MVT::i16);
+  SDVTList VTs = DAG.getVTList(Op.getValueType(), MVT::Glue);
+  SDValue TrueV = DAG.getConstant(1, DL, Op.getValueType());
+  SDValue FalseV = DAG.getConstant(0, DL, Op.getValueType());
+  SDValue Ops[] = {LHS, RHS, TargetCC, TrueV, FalseV};
+  return DAG.getNode(VC16ISD::SELECT_CC, DL, VTs, Ops);
+}
+
 MachineBasicBlock *
 VC16TargetLowering::EmitInstrWithCustomInserter(MachineInstr &MI,
                                                 MachineBasicBlock *BB) const {
   const TargetInstrInfo &TII = *BB->getParent()->getSubtarget().getInstrInfo();
-  MachineRegisterInfo &RI = BB->getParent()->getRegInfo();
   DebugLoc DL = MI.getDebugLoc();
 
   assert(MI.getOpcode() == VC16::Select_GPR_Using_CC_GPR &&
@@ -297,9 +413,8 @@ VC16TargetLowering::EmitInstrWithCustomInserter(MachineInstr &MI,
   auto CC = static_cast<ISD::CondCode>(MI.getOperand(3).getImm());
   unsigned Opcode = getBranchOpcodeForIntCondCode(CC);
 
-  Register Flags = RI.createVirtualRegister(&VC16::CCRRegClass);
-  BuildMI(HeadMBB, DL, TII.get(VC16::CMP), Flags).addReg(LHS).addReg(RHS);
-  BuildMI(HeadMBB, DL, TII.get(Opcode)).addReg(Flags).addMBB(TailMBB);
+  BuildMI(HeadMBB, DL, TII.get(VC16::CMP)).addReg(LHS).addReg(RHS);
+  BuildMI(HeadMBB, DL, TII.get(Opcode)).addMBB(TailMBB);
 
   // IfFalseMBB just falls through to TailMBB.
   IfFalseMBB->addSuccessor(TailMBB);
@@ -543,6 +658,10 @@ const char *VC16TargetLowering::getTargetNodeName(unsigned Opcode) const {
     return "VC16ISD::CALL";
   case VC16ISD::SELECT_CC:
     return "VC16ISD::SELECT_CC";
+  case VC16ISD::CMP:
+    return "VC16ISD::CMP";
+  case VC16ISD::BRCOND:
+    return "VC16ISD::BRCOND";
   }
   return nullptr;
 }
