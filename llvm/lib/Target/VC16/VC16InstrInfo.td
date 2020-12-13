@@ -245,6 +245,22 @@ class PatGprUimm4<SDPatternOperator OpNode, VCInstRI4 Inst>
 
 // def : PatGprGpr<addc,TEST : ALU_Binary_rr <0b11, 0b00110111, "test">;
 
+// Define pattern expansions for setcc operations that aren't directly
+// handled by a RISC-V instruction.
+
+
+//def : Pat<(setult GPR:$rd, GPR:$rs), (SRAI (SUB GPR:$rd, GPR:$rs), 15)>;
+//def : Pat<(seteq GPR:$rd, GPR:$rs), (SRLI (OR (SUB GPR:$rd, GPR:$rs) (SUB GPR:$rs GPR:$rd)), 15)>;
+
+// def : Pat<(seteq GPR:$rs1, GPR:$rs2), (SLTIU (XOR GPR:$rs1, GPR:$rs2), 1)>;
+// def : Pat<(setne GPR:$rs1, GPR:$rs2), (SLTU X0, (XOR GPR:$rs1, GPR:$rs2))>;
+// def : Pat<(setugt GPR:$rs1, GPR:$rs2), (SLTU GPR:$rs2, GPR:$rs1)>;
+// def : Pat<(setuge GPR:$rs1, GPR:$rs2), (XORI (SLTU GPR:$rs1, GPR:$rs2), 1)>;
+// def : Pat<(setule GPR:$rs1, GPR:$rs2), (XORI (SLTU GPR:$rs2, GPR:$rs1), 1)>;
+// def : Pat<(setgt GPR:$rs1, GPR:$rs2), (SLT GPR:$rs2, GPR:$rs1)>;
+// def : Pat<(setge GPR:$rs1, GPR:$rs2), (XORI (SLT GPR:$rs1, GPR:$rs2), 1)>;
+// def : Pat<(setle GPR:$rs1, GPR:$rs2), (XORI (SLT GPR:$rs2, GPR:$rs1), 1)>;
+
 
 // ALU binary
 def : PatGprGpr<add, ADD>;
@@ -271,6 +287,8 @@ def : PatGprSimm5<xor, XORI>;
 def : PatGprUimm4<shl, SLLI>;
 def : PatGprUimm4<srl, SRLI>;
 def : PatGprUimm4<sra, SRAI>;
+
+
 
 // Materialize immediates
 def simm16 : ImmLeaf<i16, [{return isInt<16>(Imm);}]>;
@@ -309,6 +327,7 @@ def HI20S : SDNodeXForm<imm, [{
 def : Pat<(simm5:$imm), (LLI simm5:$imm)>;
 def : Pat<(simm16_shift5:$imm), (LUI (HI20U $imm))>;
 def : Pat<(simm16:$imm), (ADDI (LUI (HI20S imm:$imm)), (LO5Sext imm:$imm))>;
+
 
 let usesCustomInserter = 1 in
 def Select_GPR_Using_CC_GPR
@@ -350,9 +369,20 @@ def : Pat<(brcond GPR:$cond, bb:$imm8),
 
 def : Pat<(br bb:$imm8), (J bb:$imm8)>;
 
-let isBarrier = 1, isBranch = 1, isTerminator = 1, mayStore = 0, mayLoad = 0, hasSideEffects = 0, Defs=[R5] in
+let Defs=[R5], isBarrier = 1, isBranch = 1, isTerminator = 1 in
+let mayStore = 0, mayLoad = 0, hasSideEffects = 0 in
 def PseudoBR : Pseudo<(outs), (ins simm11_lsb0:$imm10), [(br bb:$imm10)]>,
                PseudoInstExpansion<(JAL R5, simm11_lsb0:$imm10)>;
+
+let isCall = 1, Defs=[R5] in
+let isBarrier = 1, isBranch = 1, isIndirectBranch = 1, isTerminator = 1 in
+def PseudoBRIND : Pseudo<(outs), (ins GPR:$rs1, uimm6_lsb0:$imm5), []>,
+                  PseudoInstExpansion<(JALR R5, GPR:$rs1, uimm6_lsb0:$imm5)>;
+
+def : Pat<(brind GPR:$rs1), (PseudoBRIND GPR:$rs1, 0)>;
+def : Pat<(brind (add GPR:$rs1, uimm6_lsb0:$imm5)),
+          (PseudoBRIND GPR:$rs1, uimm6_lsb0:$imm5)>;
+
 
 let isCall = 1, Defs=[R6] in
 def PseudoCALL : Pseudo<(outs), (ins GPR:$rs1), [(Call GPR:$rs1)]>,

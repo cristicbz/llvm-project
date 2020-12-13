@@ -82,6 +82,14 @@ bool llvm::LowerVC16MachineOperandToMCOperand(const MachineOperand &MO,
   case MachineOperand::MO_GlobalAddress:
     MCOp = lowerSymbolOperand(MO, AP.getSymbol(MO.getGlobal()), AP);
     break;
+  case MachineOperand::MO_BlockAddress:
+    MCOp = lowerSymbolOperand(
+        MO, AP.GetBlockAddressSymbol(MO.getBlockAddress()), AP);
+    break;
+  case MachineOperand::MO_ExternalSymbol:
+    MCOp = lowerSymbolOperand(
+        MO, AP.GetExternalSymbolSymbol(MO.getSymbolName()), AP);
+    break;
   case MachineOperand::MO_RegisterMask:
     // Regmasks are like implicit defs.
     return false;

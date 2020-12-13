@@ -66,6 +66,8 @@ private:
   }
   SDValue lowerGlobalAddress(SDValue Op, SelectionDAG &DAG) const;
   SDValue lowerSELECT(SDValue Op, SelectionDAG &DAG) const;
+  SDValue lowerBlockAddress(SDValue Op, SelectionDAG &DAG) const;
+  SDValue lowerExternalSymbol(SDValue Op, SelectionDAG &DAG) const;
 };
 } // namespace llvm
 

@@ -11,8 +11,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "RISCV.h"
 #include "MCTargetDesc/RISCVMCExpr.h"
+#include "RISCV.h"
 #include "llvm/CodeGen/AsmPrinter.h"
 #include "llvm/CodeGen/MachineBasicBlock.h"
 #include "llvm/CodeGen/MachineInstr.h"
