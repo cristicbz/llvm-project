@@ -71,23 +71,26 @@ void VC16RegisterInfo::eliminateFrameIndex(MachineBasicBlock::iterator II,
   assert(MF.getSubtarget().getFrameLowering()->hasFP(MF) &&
          "eliminateFrameIndex currently requires hasFP");
 
-  if (!isInt<16>(Offset)) {
+  if (!isUInt<16>(Offset)) {
     report_fatal_error("Frame offsets outside of the unsigned 16-bit range.");
   }
 
   MachineBasicBlock &MBB = *MI.getParent();
   bool FrameRegIsKill = false;
+  unsigned OpCode = MI.getOpcode();
+  bool isWordBased = OpCode == VC16::LW || OpCode == VC16::SW;
 
-  if (!isInt<12>(Offset)) {
-    assert(isInt<32>(Offset) && "Int32 expected");
+  if ((!isWordBased && !isUInt<5>(Offset)) || !isUInt<6>(Offset)) {
+    assert(isUInt<16>(Offset) && "Uint16 expected");
     // The offset won't fit in an immediate, so use a scratch register instead
     // Modify Offset and FrameReg appropriately
     unsigned ScratchReg = MRI.createVirtualRegister(&VC16::GPRRegClass);
-    TII->movImm16(MBB, II, DL, ScratchReg, Offset);
+    unsigned Hiu11 = Offset >> 5;
+    BuildMI(MBB, II, DL, TII->get(VC16::LUI), ScratchReg).addImm(Hiu11);
     BuildMI(MBB, II, DL, TII->get(VC16::ADD), ScratchReg)
         .addReg(ScratchReg, RegState::Kill)
         .addReg(FrameReg);
-    Offset = 0;
+    Offset -= Hiu11 << 5;
     FrameReg = ScratchReg;
     FrameRegIsKill = true;
   }

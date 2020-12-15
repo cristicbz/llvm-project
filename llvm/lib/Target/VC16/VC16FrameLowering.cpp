@@ -111,28 +111,13 @@ void VC16FrameLowering::emitEpilogue(MachineFunction &MF,
 int VC16FrameLowering::getFrameIndexReference(const MachineFunction &MF, int FI,
                                               Register &FrameReg) const {
   const MachineFrameInfo &MFI = MF.getFrameInfo();
-  const TargetRegisterInfo *RI = MF.getSubtarget().getRegisterInfo();
-
   // Callee-saved registers should be referenced relative to the stack
-  // pointer (positive offset), otherwise use the frame pointer (negative
-  // offset).
-  const std::vector<CalleeSavedInfo> &CSI = MFI.getCalleeSavedInfo();
-  int MinCSFI = 0;
-  int MaxCSFI = -1;
-
+  // pointer (positive offset). We can't use frame pointer due to the lack of
+  // negative offsets.
   int Offset = MFI.getObjectOffset(FI) - getOffsetOfLocalArea() +
                MFI.getOffsetAdjustment();
-
-  if (CSI.size()) {
-    MinCSFI = CSI[0].getFrameIdx();
-    MaxCSFI = CSI[CSI.size() - 1].getFrameIdx();
-  }
-
-  FrameReg = RI->getFrameRegister(MF);
-  if (FI >= MinCSFI && FI <= MaxCSFI) {
-    FrameReg = VC16::R7;
-    Offset += MF.getFrameInfo().getStackSize();
-  }
+  FrameReg = VC16::R7;
+  Offset += MF.getFrameInfo().getStackSize();
   return Offset;
 }
 

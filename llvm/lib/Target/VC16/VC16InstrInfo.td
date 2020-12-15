@@ -385,7 +385,7 @@ def Select_GPR_Using_CC_GPR
 
 
 /// Branches and jumps
-def : Pat<(br bb:$imm8), (J bb:$imm8)>;
+// def : Pat<(br bb:$imm8), (J bb:$imm8)>;
 
 let Defs=[R5], isBarrier = 1, isBranch = 1, isTerminator = 1 in
 let mayStore = 0, mayLoad = 0, hasSideEffects = 0 in

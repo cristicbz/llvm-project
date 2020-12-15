@@ -2,7 +2,6 @@ set(LLVM_TARGET_DEFINITIONS VC16.td)
 
 tablegen(LLVM VC16GenAsmMatcher.inc -gen-asm-matcher)
 tablegen(LLVM VC16GenAsmWriter.inc -gen-asm-writer)
-tablegen(LLVM VC16GenCallingConv.inc -gen-callingconv)
 tablegen(LLVM VC16GenDAGISel.inc -gen-dag-isel)
 tablegen(LLVM VC16GenDisassemblerTables.inc -gen-disassembler)
 tablegen(LLVM VC16GenInstrInfo.inc -gen-instr-info)
