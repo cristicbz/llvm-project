@@ -78,26 +78,45 @@ void VC16RegisterInfo::eliminateFrameIndex(MachineBasicBlock::iterator II,
   MachineBasicBlock &MBB = *MI.getParent();
   bool FrameRegIsKill = false;
   unsigned OpCode = MI.getOpcode();
-  bool isWordBased = OpCode == VC16::LW || OpCode == VC16::SW;
+  dbgs() << "CCC B4:" << MI << "\n";
 
-  if ((!isWordBased && !isUInt<5>(Offset)) || !isUInt<6>(Offset)) {
-    assert(isUInt<16>(Offset) && "Uint16 expected");
-    // The offset won't fit in an immediate, so use a scratch register instead
-    // Modify Offset and FrameReg appropriately
-    unsigned ScratchReg = MRI.createVirtualRegister(&VC16::GPRRegClass);
-    unsigned Hiu11 = Offset >> 5;
-    BuildMI(MBB, II, DL, TII->get(VC16::LUI), ScratchReg).addImm(Hiu11);
-    BuildMI(MBB, II, DL, TII->get(VC16::ADD), ScratchReg)
-        .addReg(ScratchReg, RegState::Kill)
-        .addReg(FrameReg);
-    Offset -= Hiu11 << 5;
-    FrameReg = ScratchReg;
-    FrameRegIsKill = true;
+  if (OpCode == VC16::FRMIDX) {
+    Register DestReg = MI.getOperand(0).getReg();
+    if (Offset != 0) {
+      TII->movImm16(MBB, II, DL, DestReg, Offset);
+
+      MI.setDesc(TII->get(VC16::ADD));
+      MI.getOperand(1).ChangeToRegister(DestReg, false, false, true);
+      MI.getOperand(2).ChangeToRegister(FrameReg, false);
+    } else {
+      MI.setDesc(TII->get(VC16::MV));
+      MI.getOperand(1).ChangeToRegister(FrameReg, false);
+      MI.RemoveOperand(2);
+    }
+  } else {
+    bool isWordBased = OpCode == VC16::LW || OpCode == VC16::SW;
+
+    if ((!isWordBased && !isUInt<5>(Offset)) || !isUInt<6>(Offset)) {
+      assert(isUInt<16>(Offset) && "Uint16 expected");
+      // The offset won't fit in an immediate, so use a scratch register
+      // instead Modify Offset and FrameReg appropriately
+      Register ScratchReg = MRI.createVirtualRegister(&VC16::GPRRegClass);
+      unsigned Hiu11 = Offset >> 5;
+      BuildMI(MBB, II, DL, TII->get(VC16::LUI), ScratchReg).addImm(Hiu11);
+      BuildMI(MBB, II, DL, TII->get(VC16::ADD), ScratchReg)
+          .addReg(ScratchReg, RegState::Kill)
+          .addReg(FrameReg);
+      Offset -= Hiu11 << 5;
+      FrameReg = ScratchReg;
+      FrameRegIsKill = true;
+    }
+
+    MI.getOperand(FIOperandNum)
+        .ChangeToRegister(FrameReg, false, false, FrameRegIsKill);
+    MI.getOperand(FIOperandNum + 1).ChangeToImmediate(Offset);
   }
 
-  MI.getOperand(FIOperandNum)
-      .ChangeToRegister(FrameReg, false, false, FrameRegIsKill);
-  MI.getOperand(FIOperandNum + 1).ChangeToImmediate(Offset);
+  dbgs() << "CCC AF:" << MI << "\n";
 }
 
 Register VC16RegisterInfo::getFrameRegister(const MachineFunction &MF) const {

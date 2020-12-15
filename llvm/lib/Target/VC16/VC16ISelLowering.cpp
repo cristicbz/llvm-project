@@ -739,7 +739,6 @@ SDValue VC16TargetLowering::LowerCall(TargetLowering::CallLoweringInfo &CLI,
     ISD::ArgFlagsTy Flags = Outs[i].Flags;
     if (!Flags.isByVal())
       continue;
-    report_fatal_error("Passing arguments byval not yet implemented");
 
     SDValue Arg = OutVals[i];
     unsigned Size = Flags.getByValSize();

@@ -180,21 +180,21 @@ void VC16FrameLowering::adjustReg(MachineBasicBlock &MBB,
 
   if (isInt<6>(Val)) {
     if (Val < -16) {
-      BuildMI(MBB, MBBI, DL, TII->get(VC16::ADDI), SrcReg)
-          .addReg(SrcReg)
+      BuildMI(MBB, MBBI, DL, TII->get(VC16::ADDI), DestReg)
+          .addReg(DestReg)
           .addImm(-16)
           .setMIFlag(Flag);
       Val += 16;
     } else if (Val > 15) {
-      BuildMI(MBB, MBBI, DL, TII->get(VC16::ADDI), SrcReg)
-          .addReg(SrcReg)
+      BuildMI(MBB, MBBI, DL, TII->get(VC16::ADDI), DestReg)
+          .addReg(DestReg)
           .addImm(15)
           .setMIFlag(Flag);
       Val -= 15;
     }
     if (Val != 0) {
-      BuildMI(MBB, MBBI, DL, TII->get(VC16::ADDI), SrcReg)
-          .addReg(SrcReg)
+      BuildMI(MBB, MBBI, DL, TII->get(VC16::ADDI), DestReg)
+          .addReg(DestReg)
           .addImm(Val)
           .setMIFlag(Flag);
     }

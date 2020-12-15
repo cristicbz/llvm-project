@@ -11,7 +11,7 @@ define i16 @zero() nounwind {
 ; VC16I-NEXT:    sw s1, 2(sp)
 ; VC16I-NEXT:    sw ra, 0(sp)
 ; VC16I-NEXT:    mv s1, sp
-; VC16I-NEXT:    addi sp, 4
+; VC16I-NEXT:    addi s1, 4
 ; VC16I-NEXT:    lli a0, 0
 ; VC16I-NEXT:    lw ra, 0(sp)
 ; VC16I-NEXT:    lw s1, 2(sp)
@@ -27,7 +27,7 @@ define i16 @pos_small() nounwind {
 ; VC16I-NEXT:    sw s1, 2(sp)
 ; VC16I-NEXT:    sw ra, 0(sp)
 ; VC16I-NEXT:    mv s1, sp
-; VC16I-NEXT:    addi sp, 4
+; VC16I-NEXT:    addi s1, 4
 ; VC16I-NEXT:    lli a0, 15
 ; VC16I-NEXT:    lw ra, 0(sp)
 ; VC16I-NEXT:    lw s1, 2(sp)
@@ -43,7 +43,7 @@ define i16 @neg_small() nounwind {
 ; VC16I-NEXT:    sw s1, 2(sp)
 ; VC16I-NEXT:    sw ra, 0(sp)
 ; VC16I-NEXT:    mv s1, sp
-; VC16I-NEXT:    addi sp, 4
+; VC16I-NEXT:    addi s1, 4
 ; VC16I-NEXT:    lli a0, -16
 ; VC16I-NEXT:    lw ra, 0(sp)
 ; VC16I-NEXT:    lw s1, 2(sp)
@@ -59,7 +59,7 @@ define i16 @pos_one_too_big() nounwind {
 ; VC16I-NEXT:    sw s1, 2(sp)
 ; VC16I-NEXT:    sw ra, 0(sp)
 ; VC16I-NEXT:    mv s1, sp
-; VC16I-NEXT:    addi sp, 4
+; VC16I-NEXT:    addi s1, 4
 ; VC16I-NEXT:    lui a0, 1
 ; VC16I-NEXT:    addi a0, -16
 ; VC16I-NEXT:    lw ra, 0(sp)
@@ -76,7 +76,7 @@ define i16 @neg_one_too_big() nounwind {
 ; VC16I-NEXT:    sw s1, 2(sp)
 ; VC16I-NEXT:    sw ra, 0(sp)
 ; VC16I-NEXT:    mv s1, sp
-; VC16I-NEXT:    addi sp, 4
+; VC16I-NEXT:    addi s1, 4
 ; VC16I-NEXT:    lui a0, 2047
 ; VC16I-NEXT:    addi a0, 15
 ; VC16I-NEXT:    lw ra, 0(sp)
@@ -93,7 +93,7 @@ define i16 @pos_i16() nounwind {
 ; VC16I-NEXT:    sw s1, 2(sp)
 ; VC16I-NEXT:    sw ra, 0(sp)
 ; VC16I-NEXT:    mv s1, sp
-; VC16I-NEXT:    addi sp, 4
+; VC16I-NEXT:    addi s1, 4
 ; VC16I-NEXT:    lui a0, 1021
 ; VC16I-NEXT:    addi a0, -14
 ; VC16I-NEXT:    lw ra, 0(sp)
@@ -110,7 +110,7 @@ define i16 @neg_i16() nounwind {
 ; VC16I-NEXT:    sw s1, 2(sp)
 ; VC16I-NEXT:    sw ra, 0(sp)
 ; VC16I-NEXT:    mv s1, sp
-; VC16I-NEXT:    addi sp, 4
+; VC16I-NEXT:    addi s1, 4
 ; VC16I-NEXT:    lui a0, 1025
 ; VC16I-NEXT:    addi a0, -10
 ; VC16I-NEXT:    lw ra, 0(sp)
@@ -127,7 +127,7 @@ define i16 @pos_multiple_of_32() nounwind {
 ; VC16I-NEXT:    sw s1, 2(sp)
 ; VC16I-NEXT:    sw ra, 0(sp)
 ; VC16I-NEXT:    mv s1, sp
-; VC16I-NEXT:    addi sp, 4
+; VC16I-NEXT:    addi s1, 4
 ; VC16I-NEXT:    lui a0, 125
 ; VC16I-NEXT:    lw ra, 0(sp)
 ; VC16I-NEXT:    lw s1, 2(sp)
@@ -143,7 +143,7 @@ define i16 @neg_multiple_of_32() nounwind {
 ; VC16I-NEXT:    sw s1, 2(sp)
 ; VC16I-NEXT:    sw ra, 0(sp)
 ; VC16I-NEXT:    mv s1, sp
-; VC16I-NEXT:    addi sp, 4
+; VC16I-NEXT:    addi s1, 4
 ; VC16I-NEXT:    lui a0, 1025
 ; VC16I-NEXT:    lw ra, 0(sp)
 ; VC16I-NEXT:    lw s1, 2(sp)
@@ -159,7 +159,7 @@ define i16 @unsigned_multiple_of_32() nounwind {
 ; VC16I-NEXT:    sw s1, 2(sp)
 ; VC16I-NEXT:    sw ra, 0(sp)
 ; VC16I-NEXT:    mv s1, sp
-; VC16I-NEXT:    addi sp, 4
+; VC16I-NEXT:    addi s1, 4
 ; VC16I-NEXT:    lui a0, 1025
 ; VC16I-NEXT:    lw ra, 0(sp)
 ; VC16I-NEXT:    lw s1, 2(sp)

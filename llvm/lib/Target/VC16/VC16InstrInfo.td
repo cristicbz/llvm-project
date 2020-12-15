@@ -384,8 +384,12 @@ def Select_GPR_Using_CC_GPR
               (i16 imm:$imm), GPR:$src, GPR:$src2))]>;
 
 
+// This pseudo gets expanded into a mv+addi thus it clobbers FLAGS.
+let Defs = [FLAGS], hasSideEffects = 0, mayStore = 0, mayLoad = 0 in
+def FRMIDX : Pseudo<(outs GPR:$rd), (ins GPR:$rs1, i16imm:$imm5), []>;
+
 /// Branches and jumps
-// def : Pat<(br bb:$imm8), (J bb:$imm8)>;
+def : Pat<(br bb:$imm8), (J bb:$imm8)>;
 
 let Defs=[R5], isBarrier = 1, isBranch = 1, isTerminator = 1 in
 let mayStore = 0, mayLoad = 0, hasSideEffects = 0 in
@@ -442,10 +446,10 @@ defm : StPat<store, uimm6_lsb0, SW>;
 
 /// FrameIndex calculations
 
-def : Pat<(add (i16 AddrFI:$Rs), simm5:$imm5),
-          (ADDI (i16 AddrFI:$Rs), simm5:$imm5)>;
-def : Pat<(IsOrAdd (i16 AddrFI:$Rs), simm5:$imm5),
-          (ADDI (i16 AddrFI:$Rs), simm5:$imm5)>;
+def : Pat<(add (i16 AddrFI:$rs), simm5:$imm5),
+          (ADDI (i16 AddrFI:$rs), simm5:$imm5)>;
+def : Pat<(IsOrAdd (i16 AddrFI:$rs), simm5:$imm5),
+          (ADDI (i16 AddrFI:$rs), simm5:$imm5)>;
 
 /// Other pseudo-instructions
 

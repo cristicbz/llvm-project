@@ -11,7 +11,7 @@ define i16 @test_call_external(i16 %a) nounwind {
 ; VC16I-NEXT:    sw s1, 2(sp)
 ; VC16I-NEXT:    sw ra, 0(sp)
 ; VC16I-NEXT:    mv s1, sp
-; VC16I-NEXT:    addi sp, 4
+; VC16I-NEXT:    addi s1, 4
 ; VC16I-NEXT:    lui a1, %his(external_function)
 ; VC16I-NEXT:    addi a1, %lo(external_function)
 ; VC16I-NEXT:    jalr ra, a1, 0
@@ -31,7 +31,7 @@ define i16 @defined_function(i16 %a) nounwind {
 ; VC16I-NEXT:    sw s1, 2(sp)
 ; VC16I-NEXT:    sw ra, 0(sp)
 ; VC16I-NEXT:    mv s1, sp
-; VC16I-NEXT:    addi sp, 4
+; VC16I-NEXT:    addi s1, 4
 ; VC16I-NEXT:    addi a0, 1
 ; VC16I-NEXT:    lw ra, 0(sp)
 ; VC16I-NEXT:    lw s1, 2(sp)
@@ -48,7 +48,7 @@ define i16 @test_call_defined(i16 %a) nounwind {
 ; VC16I-NEXT:    sw s1, 2(sp)
 ; VC16I-NEXT:    sw ra, 0(sp)
 ; VC16I-NEXT:    mv s1, sp
-; VC16I-NEXT:    addi sp, 4
+; VC16I-NEXT:    addi s1, 4
 ; VC16I-NEXT:    lui a1, %his(defined_function)
 ; VC16I-NEXT:    addi a1, %lo(defined_function)
 ; VC16I-NEXT:    jalr ra, a1, 0
@@ -67,7 +67,7 @@ define i16 @test_call_indirect(i16 (i16)* %a, i16 %b) nounwind {
 ; VC16I-NEXT:    sw s1, 2(sp)
 ; VC16I-NEXT:    sw ra, 0(sp)
 ; VC16I-NEXT:    mv s1, sp
-; VC16I-NEXT:    addi sp, 4
+; VC16I-NEXT:    addi s1, 4
 ; VC16I-NEXT:    mv a2, a0
 ; VC16I-NEXT:    mv a0, a1
 ; VC16I-NEXT:    jalr ra, a2, 0
@@ -90,7 +90,7 @@ define fastcc i16 @fastcc_function(i16 %a, i16 %b) nounwind {
 ; VC16I-NEXT:    sw s1, 2(sp)
 ; VC16I-NEXT:    sw ra, 0(sp)
 ; VC16I-NEXT:    mv s1, sp
-; VC16I-NEXT:    addi sp, 4
+; VC16I-NEXT:    addi s1, 4
 ; VC16I-NEXT:    add a0, a1
 ; VC16I-NEXT:    lw ra, 0(sp)
 ; VC16I-NEXT:    lw s1, 2(sp)
@@ -108,7 +108,7 @@ define i16 @test_call_fastcc(i16 %a, i16 %b) nounwind {
 ; VC16I-NEXT:    sw s1, 2(sp)
 ; VC16I-NEXT:    sw ra, 0(sp)
 ; VC16I-NEXT:    mv s1, sp
-; VC16I-NEXT:    addi sp, 6
+; VC16I-NEXT:    addi s1, 6
 ; VC16I-NEXT:    mv s0, a0
 ; VC16I-NEXT:    lui a2, %his(fastcc_function)
 ; VC16I-NEXT:    addi a2, %lo(fastcc_function)

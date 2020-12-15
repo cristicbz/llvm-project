@@ -62,7 +62,7 @@ void VC16DAGToDAGISel::Select(SDNode *Node) {
     int FI = dyn_cast<FrameIndexSDNode>(Node)->getIndex();
     EVT VT = Node->getValueType(0);
     SDValue TFI = CurDAG->getTargetFrameIndex(FI, VT);
-    ReplaceNode(Node, CurDAG->getMachineNode(VC16::ADDI, DL, VT, TFI, Imm));
+    ReplaceNode(Node, CurDAG->getMachineNode(VC16::FRMIDX, DL, VT, TFI, Imm));
     return;
   }
 

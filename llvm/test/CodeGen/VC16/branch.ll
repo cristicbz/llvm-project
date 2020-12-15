@@ -9,7 +9,7 @@ define void @foo(i16 %a, i16 *%b, i1 %c) {
 ; VC16I-NEXT:    sw s1, 2(sp)
 ; VC16I-NEXT:    sw ra, 0(sp)
 ; VC16I-NEXT:    mv s1, sp
-; VC16I-NEXT:    addi sp, 4
+; VC16I-NEXT:    addi s1, 4
 ; VC16I-NEXT:    lw t0, 0(a1)
 ; VC16I-NEXT:    cmp t0, a0
 ; VC16I-NEXT:    bz .LBB0_12

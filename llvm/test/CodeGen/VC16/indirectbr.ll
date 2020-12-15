@@ -9,7 +9,7 @@ define i16 @indirectbr(i8* %target) nounwind {
 ; VC16I-NEXT:    sw s1, 2(sp)
 ; VC16I-NEXT:    sw ra, 0(sp)
 ; VC16I-NEXT:    mv s1, sp
-; VC16I-NEXT:    addi sp, 4
+; VC16I-NEXT:    addi s1, 4
 ; VC16I-NEXT:    jalr t0, a0, 0
 ; VC16I-NEXT:  .LBB0_1: ; %test_label
 ; VC16I-NEXT:    lli a0, 0
@@ -31,7 +31,7 @@ define i16 @indirectbr_with_offset(i8* %a) nounwind {
 ; VC16I-NEXT:    sw s1, 2(sp)
 ; VC16I-NEXT:    sw ra, 0(sp)
 ; VC16I-NEXT:    mv s1, sp
-; VC16I-NEXT:    addi sp, 4
+; VC16I-NEXT:    addi s1, 4
 ; VC16I-NEXT:    jalr t0, a0, 20
 ; VC16I-NEXT:  .LBB1_1: ; %test_label
 ; VC16I-NEXT:    lli a0, 0

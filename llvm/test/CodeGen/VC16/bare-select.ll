@@ -9,7 +9,7 @@ define i16 @bare_select(i1 %a, i16 %b, i16 %c) {
 ; VC16I-NEXT:    sw s1, 2(sp)
 ; VC16I-NEXT:    sw ra, 0(sp)
 ; VC16I-NEXT:    mv s1, sp
-; VC16I-NEXT:    addi sp, 4
+; VC16I-NEXT:    addi s1, 4
 ; VC16I-NEXT:    andi a0, 1
 ; VC16I-NEXT:    lli t0, 0
 ; VC16I-NEXT:    cmp a0, t0
