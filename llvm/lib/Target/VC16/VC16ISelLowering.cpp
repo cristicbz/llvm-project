@@ -15,6 +15,7 @@
 #include "VC16ISelLowering.h"
 #include "VC16.h"
 #include "VC16InstrInfo.h"
+#include "VC16MachineFunctionInfo.h"
 #include "VC16RegisterInfo.h"
 #include "VC16Subtarget.h"
 #include "VC16TargetMachine.h"
@@ -64,6 +65,11 @@ VC16TargetLowering::VC16TargetLowering(const TargetMachine &TM,
 
   setOperationAction(ISD::STACKSAVE, MVT::Other, Expand);
   setOperationAction(ISD::STACKRESTORE, MVT::Other, Expand);
+
+  setOperationAction(ISD::VASTART, MVT::Other, Custom);
+  setOperationAction(ISD::VAARG, MVT::Other, Expand);
+  setOperationAction(ISD::VACOPY, MVT::Other, Expand);
+  setOperationAction(ISD::VAEND, MVT::Other, Expand);
 
   for (auto VT : {MVT::i1, MVT::i8})
     setOperationAction(ISD::SIGN_EXTEND_INREG, VT, Expand);
@@ -211,6 +217,8 @@ SDValue VC16TargetLowering::LowerOperation(SDValue Op,
     return lowerBRCOND(Op, DAG);
   case ISD::SETCC:
     return lowerSETCC(Op, DAG);
+  case ISD::VASTART:
+    return lowerVASTART(Op, DAG);
   }
 }
 
@@ -372,6 +380,21 @@ SDValue VC16TargetLowering::lowerSETCC(SDValue Op, SelectionDAG &DAG) const {
   return DAG.getNode(VC16ISD::SELECT_CC, DL, VTs, Ops);
 }
 
+SDValue VC16TargetLowering::lowerVASTART(SDValue Op, SelectionDAG &DAG) const {
+  MachineFunction &MF = DAG.getMachineFunction();
+  VC16MachineFunctionInfo *FuncInfo = MF.getInfo<VC16MachineFunctionInfo>();
+
+  SDLoc DL(Op);
+  SDValue FI = DAG.getFrameIndex(FuncInfo->getVarArgsFrameIndex(),
+                                 getPointerTy(MF.getDataLayout()));
+
+  // vastart just stores the address of the VarArgsFrameIndex slot into the
+  // memory location argument.
+  const Value *SV = cast<SrcValueSDNode>(Op.getOperand(2))->getValue();
+  return DAG.getStore(Op.getOperand(0), DL, FI, Op.getOperand(1),
+                      MachinePointerInfo(SV));
+}
+
 MachineBasicBlock *
 VC16TargetLowering::EmitInstrWithCustomInserter(MachineInstr &MI,
                                                 MachineBasicBlock *BB) const {
@@ -484,7 +507,6 @@ static bool CC_VC16(const DataLayout &DL, unsigned ValNo, MVT ValVT, MVT LocVT,
                     CCState &State, bool IsFixed, bool IsRet) {
   assert(ValVT == MVT::i16 && "Unexpected ValVT");
   assert(LocVT == MVT::i16 && "Unexpected LocVT");
-  assert(IsFixed && "Vararg support not yet implemented");
 
   // Any return value split in to more than two values can't be returned
   // directly.
@@ -661,8 +683,8 @@ SDValue VC16TargetLowering::LowerFormalArguments(
   MachineFunction &MF = DAG.getMachineFunction();
   EVT PtrVT = getPointerTy(DAG.getDataLayout());
 
-  if (IsVarArg)
-    report_fatal_error("VarArg not supported");
+  // Used with vargs to acumulate store chains.
+  std::vector<SDValue> OutChains;
 
   // Assign locations to all of the incoming arguments.
   SmallVector<CCValAssign, 16> ArgLocs;
@@ -698,6 +720,61 @@ SDValue VC16TargetLowering::LowerFormalArguments(
       }
       continue;
     }
+
+    if (IsVarArg) {
+      ArrayRef<MCPhysReg> ArgRegs = makeArrayRef(ArgGPRs);
+      unsigned Idx = CCInfo.getFirstUnallocated(ArgRegs);
+      const TargetRegisterClass *RC = &VC16::GPRRegClass;
+      MachineFrameInfo &MFI = MF.getFrameInfo();
+      MachineRegisterInfo &RegInfo = MF.getRegInfo();
+      VC16MachineFunctionInfo *VCFI = MF.getInfo<VC16MachineFunctionInfo>();
+
+      // Offset of the first variable argument from stack pointer, and size of
+      // the vararg save area. For now, the varargs save area is either zero or
+      // large enough to hold a0-a7.
+      int VaArgOffset, VarArgsSaveSize;
+
+      // If all registers are allocated, then all varargs must be passed on the
+      // stack and we don't need to save any argregs.
+      if (ArgRegs.size() == Idx) {
+        VaArgOffset = CCInfo.getNextStackOffset();
+        VarArgsSaveSize = 0;
+      } else {
+        VarArgsSaveSize = 2 * (ArgRegs.size() - Idx);
+        VaArgOffset = -VarArgsSaveSize;
+      }
+
+      // Record the frame index of the first variable argument
+      // which is a value necessary to VASTART.
+      int FI = MFI.CreateFixedObject(2, VaArgOffset, true);
+      VCFI->setVarArgsFrameIndex(FI);
+
+      // Copy the integer registers that may have been used for passing varargs
+      // to the vararg save area.
+      for (unsigned I = Idx; I < ArgRegs.size(); ++I, VaArgOffset += 2) {
+        const Register Reg = RegInfo.createVirtualRegister(RC);
+        RegInfo.addLiveIn(ArgRegs[I], Reg);
+        SDValue ArgValue = DAG.getCopyFromReg(Chain, DL, Reg, MVT::i16);
+        FI = MFI.CreateFixedObject(2, VaArgOffset, true);
+        SDValue PtrOff =
+            DAG.getFrameIndex(FI, getPointerTy(DAG.getDataLayout()));
+        SDValue Store = DAG.getStore(Chain, DL, ArgValue, PtrOff,
+                                     MachinePointerInfo::getFixedStack(MF, FI));
+        cast<StoreSDNode>(Store.getNode())
+            ->getMemOperand()
+            ->setValue((Value *)nullptr);
+        OutChains.push_back(Store);
+      }
+      VCFI->setVarArgsSaveSize(VarArgsSaveSize);
+    }
+
+    // All stores are grouped in one node to allow the matching between
+    // the size of Ins and InVals. This only happens for vararg functions.
+    if (!OutChains.empty()) {
+      OutChains.push_back(Chain);
+      Chain = DAG.getNode(ISD::TokenFactor, DL, MVT::Other, OutChains);
+    }
+
     InVals.push_back(ArgValue);
   }
   return Chain;
@@ -718,10 +795,6 @@ SDValue VC16TargetLowering::LowerCall(TargetLowering::CallLoweringInfo &CLI,
   CallingConv::ID CallConv = CLI.CallConv;
   bool IsVarArg = CLI.IsVarArg;
   EVT PtrVT = getPointerTy(DAG.getDataLayout());
-
-  if (IsVarArg) {
-    report_fatal_error("LowerCall with varargs not implemented");
-  }
 
   MachineFunction &MF = DAG.getMachineFunction();
 
@@ -911,10 +984,6 @@ VC16TargetLowering::LowerReturn(SDValue Chain, CallingConv::ID CallConv,
                                 const SmallVectorImpl<ISD::OutputArg> &Outs,
                                 const SmallVectorImpl<SDValue> &OutVals,
                                 const SDLoc &DL, SelectionDAG &DAG) const {
-  if (IsVarArg) {
-    report_fatal_error("VarArg not supported");
-  }
-
   // Stores the assignment of the return value to a location.
   SmallVector<CCValAssign, 16> RVLocs;
 

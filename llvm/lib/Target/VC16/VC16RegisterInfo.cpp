@@ -78,8 +78,6 @@ void VC16RegisterInfo::eliminateFrameIndex(MachineBasicBlock::iterator II,
   MachineBasicBlock &MBB = *MI.getParent();
   bool FrameRegIsKill = false;
   unsigned OpCode = MI.getOpcode();
-  dbgs() << "CCC B4:" << MI << "\n";
-
   if (OpCode == VC16::FRMIDX) {
     Register DestReg = MI.getOperand(0).getReg();
     if (Offset != 0) {
@@ -88,6 +86,7 @@ void VC16RegisterInfo::eliminateFrameIndex(MachineBasicBlock::iterator II,
       MI.setDesc(TII->get(VC16::ADD));
       MI.getOperand(1).ChangeToRegister(DestReg, false, false, true);
       MI.getOperand(2).ChangeToRegister(FrameReg, false);
+      MI.tieOperands(0, 1);
     } else {
       MI.setDesc(TII->get(VC16::MV));
       MI.getOperand(1).ChangeToRegister(FrameReg, false);
@@ -109,14 +108,12 @@ void VC16RegisterInfo::eliminateFrameIndex(MachineBasicBlock::iterator II,
       Offset -= Hiu11 << 5;
       FrameReg = ScratchReg;
       FrameRegIsKill = true;
-    }
 
+    }
     MI.getOperand(FIOperandNum)
         .ChangeToRegister(FrameReg, false, false, FrameRegIsKill);
     MI.getOperand(FIOperandNum + 1).ChangeToImmediate(Offset);
   }
-
-  dbgs() << "CCC AF:" << MI << "\n";
 }
 
 Register VC16RegisterInfo::getFrameRegister(const MachineFunction &MF) const {

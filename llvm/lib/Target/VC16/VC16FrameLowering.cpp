@@ -12,6 +12,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "VC16FrameLowering.h"
+#include "VC16MachineFunctionInfo.h"
 #include "VC16Subtarget.h"
 #include "llvm/CodeGen/MachineFrameInfo.h"
 #include "llvm/CodeGen/MachineFunction.h"
@@ -38,6 +39,7 @@ void VC16FrameLowering::emitPrologue(MachineFunction &MF,
   }
 
   MachineFrameInfo &MFI = MF.getFrameInfo();
+  const auto *VCFI = MF.getInfo<VC16MachineFunctionInfo>();
   MachineBasicBlock::iterator MBBI = MBB.begin();
 
   Register FPReg = getFPReg(STI);
@@ -71,7 +73,8 @@ void VC16FrameLowering::emitPrologue(MachineFunction &MF,
   std::advance(MBBI, CSI.size());
 
   // Generate new FP.
-  adjustReg(MBB, MBBI, DL, FPReg, SPReg, StackSize, MachineInstr::FrameSetup);
+  adjustReg(MBB, MBBI, DL, FPReg, SPReg, StackSize - VCFI->getVarArgsSaveSize(),
+            MachineInstr::FrameSetup);
 }
 
 void VC16FrameLowering::emitEpilogue(MachineFunction &MF,
@@ -84,6 +87,7 @@ void VC16FrameLowering::emitEpilogue(MachineFunction &MF,
   MachineBasicBlock::iterator MBBI = MBB.getLastNonDebugInstr();
   const VC16RegisterInfo *RI = STI.getRegisterInfo();
   MachineFrameInfo &MFI = MF.getFrameInfo();
+  const auto *VCFI = MF.getInfo<VC16MachineFunctionInfo>();
   DebugLoc DL = MBBI->getDebugLoc();
   Register FPReg = getFPReg(STI);
   Register SPReg = getSPReg(STI);
@@ -100,7 +104,8 @@ void VC16FrameLowering::emitEpilogue(MachineFunction &MF,
   // necessary if the stack pointer was modified, meaning the stack size is
   // unknown.
   if (RI->needsStackRealignment(MF) || MFI.hasVarSizedObjects()) {
-    adjustReg(MBB, LastFrameDestroy, DL, SPReg, FPReg, -StackSize,
+    adjustReg(MBB, LastFrameDestroy, DL, SPReg, FPReg,
+              -StackSize + VCFI->getVarArgsSaveSize(),
               MachineInstr::FrameDestroy);
   }
 
@@ -110,6 +115,7 @@ void VC16FrameLowering::emitEpilogue(MachineFunction &MF,
 
 int VC16FrameLowering::getFrameIndexReference(const MachineFunction &MF, int FI,
                                               Register &FrameReg) const {
+
   const MachineFrameInfo &MFI = MF.getFrameInfo();
   // Callee-saved registers should be referenced relative to the stack
   // pointer (positive offset). We can't use frame pointer due to the lack of

@@ -79,11 +79,12 @@ private:
   }
 
   SDValue lowerGlobalAddress(SDValue Op, SelectionDAG &DAG) const;
+  SDValue lowerBlockAddress(SDValue Op, SelectionDAG &DAG) const;
+  SDValue lowerExternalSymbol(SDValue Op, SelectionDAG &DAG) const;
   SDValue lowerSELECT(SDValue Op, SelectionDAG &DAG) const;
   SDValue lowerBRCOND(SDValue Op, SelectionDAG &DAG) const;
   SDValue lowerSETCC(SDValue Op, SelectionDAG &DAG) const;
-  SDValue lowerBlockAddress(SDValue Op, SelectionDAG &DAG) const;
-  SDValue lowerExternalSymbol(SDValue Op, SelectionDAG &DAG) const;
+  SDValue lowerVASTART(SDValue Op, SelectionDAG &DAG) const;
 };
 } // namespace llvm
 

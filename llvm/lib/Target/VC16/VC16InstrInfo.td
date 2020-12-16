@@ -447,9 +447,9 @@ defm : StPat<store, uimm6_lsb0, SW>;
 /// FrameIndex calculations
 
 def : Pat<(add (i16 AddrFI:$rs), simm5:$imm5),
-          (ADDI (i16 AddrFI:$rs), simm5:$imm5)>;
+           (FRMIDX (i16 AddrFI:$rs), simm5:$imm5)>;
 def : Pat<(IsOrAdd (i16 AddrFI:$rs), simm5:$imm5),
-          (ADDI (i16 AddrFI:$rs), simm5:$imm5)>;
+          (FRMIDX (i16 AddrFI:$rs), simm5:$imm5)>;
 
 /// Other pseudo-instructions
 

@@ -93,7 +93,6 @@ void VC16InstrInfo::movImm16(MachineBasicBlock &MBB,
     }
   } else {
     BuildMI(MBB, MBBI, DL, get(VC16::LLI), DstReg)
-        .addReg(DstReg, RegState::Kill)
         .addImm(Lo5)
         .setMIFlag(Flag);
   }
