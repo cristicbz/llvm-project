@@ -47,7 +47,7 @@ VC16TargetLowering::VC16TargetLowering(const TargetMachine &TM,
   // Compute derived properties from the register classes.
   computeRegisterProperties(STI.getRegisterInfo());
 
-  setStackPointerRegisterToSaveRestore(VC16::R7);
+  setStackPointerRegisterToSaveRestore(VC16::X0);
   for (auto N : {ISD::EXTLOAD, ISD::SEXTLOAD, ISD::ZEXTLOAD}) {
     setLoadExtAction(N, MVT::i16, MVT::i1, Promote);
   }
@@ -461,9 +461,9 @@ VC16TargetLowering::EmitInstrWithCustomInserter(MachineInstr &MI,
 
 // Calling Convention Implementation.
 static const MCPhysReg ArgGPRs[] = {
-    VC16::R0,
-    VC16::R1,
-    VC16::R2,
+    VC16::X4,
+    VC16::X5,
+    VC16::X6,
 };
 
 // Pass a 32-bit argument that has been split into two 16-bit values through
@@ -884,7 +884,7 @@ SDValue VC16TargetLowering::LowerCall(TargetLowering::CallLoweringInfo &CLI,
       assert(VA.isMemLoc() && "Argument not register or memory");
       // Work out the address of the stack slot.
       if (!StackPtr.getNode())
-        StackPtr = DAG.getCopyFromReg(Chain, DL, VC16::R7, PtrVT);
+        StackPtr = DAG.getCopyFromReg(Chain, DL, VC16::X0, PtrVT);
       SDValue Address =
           DAG.getNode(ISD::ADD, DL, PtrVT, StackPtr,
                       DAG.getIntPtrConstant(VA.getLocMemOffset(), DL));

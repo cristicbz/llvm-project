@@ -9,13 +9,13 @@ define i16 @callee(%struct.Foo* byval %f) nounwind {
 ; VC16I-LABEL: callee:
 ; VC16I:       ; %bb.0: ; %entry
 ; VC16I-NEXT:    addi sp, -4
-; VC16I-NEXT:    sw s1, 2(sp)
+; VC16I-NEXT:    sw s0, 2(sp)
 ; VC16I-NEXT:    sw ra, 0(sp)
-; VC16I-NEXT:    mv s1, sp
-; VC16I-NEXT:    addi s1, 4
+; VC16I-NEXT:    mv s0, sp
+; VC16I-NEXT:    addi s0, 4
 ; VC16I-NEXT:    lw a0, 0(a0)
 ; VC16I-NEXT:    lw ra, 0(sp)
-; VC16I-NEXT:    lw s1, 2(sp)
+; VC16I-NEXT:    lw s0, 2(sp)
 ; VC16I-NEXT:    addi sp, 4
 ; VC16I-NEXT:    jalr t0, ra, 0
 entry:
@@ -29,36 +29,36 @@ define void @caller() nounwind {
 ; VC16I-LABEL: caller:
 ; VC16I:       ; %bb.0: ; %entry
 ; VC16I-NEXT:    addi sp, -14
-; VC16I-NEXT:    sw s1, 12(sp)
+; VC16I-NEXT:    sw s0, 12(sp)
 ; VC16I-NEXT:    sw ra, 10(sp)
-; VC16I-NEXT:    mv s1, sp
-; VC16I-NEXT:    addi s1, 14
-; VC16I-NEXT:    lui a0, %his(foo+8)
-; VC16I-NEXT:    addi a0, %lo(foo+8)
-; VC16I-NEXT:    lw a0, 0(a0)
-; VC16I-NEXT:    sw a0, 8(sp)
-; VC16I-NEXT:    lui a0, %his(foo+6)
-; VC16I-NEXT:    addi a0, %lo(foo+6)
-; VC16I-NEXT:    lw a0, 0(a0)
-; VC16I-NEXT:    sw a0, 6(sp)
-; VC16I-NEXT:    lui a0, %his(foo+4)
-; VC16I-NEXT:    addi a0, %lo(foo+4)
-; VC16I-NEXT:    lw a0, 0(a0)
-; VC16I-NEXT:    sw a0, 4(sp)
-; VC16I-NEXT:    lui a0, %his(foo+2)
-; VC16I-NEXT:    addi a0, %lo(foo+2)
-; VC16I-NEXT:    lw a0, 0(a0)
-; VC16I-NEXT:    sw a0, 2(sp)
-; VC16I-NEXT:    lui a0, %his(foo)
-; VC16I-NEXT:    addi a0, %lo(foo)
-; VC16I-NEXT:    lw a0, 0(a0)
-; VC16I-NEXT:    sw a0, 0(sp)
-; VC16I-NEXT:    lui a1, %his(callee)
-; VC16I-NEXT:    addi a1, %lo(callee)
+; VC16I-NEXT:    mv s0, sp
+; VC16I-NEXT:    addi s0, 14
+; VC16I-NEXT:    lui a2, %his(foo+8)
+; VC16I-NEXT:    addi a2, %lo(foo+8)
+; VC16I-NEXT:    lw a2, 0(a2)
+; VC16I-NEXT:    sw a2, 8(sp)
+; VC16I-NEXT:    lui a2, %his(foo+6)
+; VC16I-NEXT:    addi a2, %lo(foo+6)
+; VC16I-NEXT:    lw a2, 0(a2)
+; VC16I-NEXT:    sw a2, 6(sp)
+; VC16I-NEXT:    lui a2, %his(foo+4)
+; VC16I-NEXT:    addi a2, %lo(foo+4)
+; VC16I-NEXT:    lw a2, 0(a2)
+; VC16I-NEXT:    sw a2, 4(sp)
+; VC16I-NEXT:    lui a2, %his(foo+2)
+; VC16I-NEXT:    addi a2, %lo(foo+2)
+; VC16I-NEXT:    lw a2, 0(a2)
+; VC16I-NEXT:    sw a2, 2(sp)
+; VC16I-NEXT:    lui a2, %his(foo)
+; VC16I-NEXT:    addi a2, %lo(foo)
+; VC16I-NEXT:    lw a2, 0(a2)
+; VC16I-NEXT:    sw a2, 0(sp)
+; VC16I-NEXT:    lui a2, %his(callee)
+; VC16I-NEXT:    addi a2, %lo(callee)
 ; VC16I-NEXT:    mv a0, sp
-; VC16I-NEXT:    jalr ra, a1, 0
+; VC16I-NEXT:    jalr ra, a2, 0
 ; VC16I-NEXT:    lw ra, 10(sp)
-; VC16I-NEXT:    lw s1, 12(sp)
+; VC16I-NEXT:    lw s0, 12(sp)
 ; VC16I-NEXT:    addi sp, 14
 ; VC16I-NEXT:    jalr t0, ra, 0
 entry:

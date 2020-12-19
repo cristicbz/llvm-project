@@ -53,8 +53,8 @@ extern "C" void LLVMInitializeVC16Disassembler() {
 }
 
 static const unsigned GPRDecoderTable[] = {
-  VC16::R0,  VC16::R1,  VC16::R2,  VC16::R3,
-  VC16::R4,  VC16::R5,  VC16::R6,  VC16::R7,
+  VC16::X0,  VC16::X1,  VC16::X2,  VC16::X3,
+  VC16::X4,  VC16::X5,  VC16::X6,  VC16::X7,
 };
 
 static DecodeStatus DecodeGPRRegisterClass(MCInst &Inst, uint64_t RegNo,

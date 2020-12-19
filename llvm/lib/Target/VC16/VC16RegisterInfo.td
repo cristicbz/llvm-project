@@ -22,20 +22,24 @@ def ABIRegAltName : RegAltNameIndex;
 
 
 let RegAltNameIndices = [ABIRegAltName] in {
-  def R0: VC16Reg<0, "r0", ["a0"]>, DwarfRegNum<[0]>;
-  def R1: VC16Reg<1, "r1", ["a1"]>, DwarfRegNum<[1]>;
-  def R2: VC16Reg<2, "r2", ["a2"]>, DwarfRegNum<[2]>;
-  def R3: VC16Reg<3, "r3", ["s0"]>, DwarfRegNum<[3]>;
-  def R4: VC16Reg<4, "r4", ["s1", "fp"]>, DwarfRegNum<[4]>;
-  def R5: VC16Reg<5, "r5", ["t0"]>, DwarfRegNum<[5]>;
-  def R6: VC16Reg<6, "r6", ["ra"]>, DwarfRegNum<[6]>;
-  def R7: VC16Reg<7, "r7", ["sp"]>, DwarfRegNum<[7]>;
+  def X0: VC16Reg<0, "x0", ["sp"]>, DwarfRegNum<[0]>;
+  def X1: VC16Reg<1, "x1", ["ra"]>, DwarfRegNum<[1]>;
+  def X2: VC16Reg<2, "x2", ["s0", "fp"]>, DwarfRegNum<[2]>;
+  def X3: VC16Reg<3, "x3", ["s1"]>, DwarfRegNum<[3]>;
+  def X4: VC16Reg<4, "x4", ["a0"]>, DwarfRegNum<[4]>;
+  def X5: VC16Reg<5, "x5", ["a1"]>, DwarfRegNum<[5]>;
+  def X6: VC16Reg<6, "x6", ["a2"]>, DwarfRegNum<[6]>;
+  def X7: VC16Reg<7, "x7", ["t0"]>, DwarfRegNum<[7]>;
 }
 
 // The order of registers represents the preferred allocation sequence.
 // Registers are listed in the order caller-save, callee-save, specials.
 def GPR : RegisterClass<"VC16", [i16], 16, (add
-  R0, R1, R2, R5, R3, R4, R6, R7
+  X6, X5, X4, X7, X3, X2, X1, X0
+)>;
+
+def GPR_NoSP : RegisterClass<"VC16", [i16], 16, (add
+  X6, X5, X4, X7, X3, X2, X1
 )>;
 
 // Status register.

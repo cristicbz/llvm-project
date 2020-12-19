@@ -11,9 +11,13 @@ def InstFormatM      : InstFormat<2>;
 def InstFormatRI10   : InstFormat<3>;
 def InstFormatRRI5   : InstFormat<4>;
 def InstFormatB      : InstFormat<5>;
+
 def InstFormatRR     : InstFormat<6>;
 def InstFormatRI4    : InstFormat<7>;
 def InstFormatRI5    : InstFormat<8>;
+
+def InstFormatSI6    : InstFormat<9>;
+def InstFormatCR     : InstFormat<10>;
 
 class VCInst<dag outs, dag ins, string opcodestr, string argstr,
              list<dag> pattern, InstFormat format>
@@ -43,8 +47,8 @@ class Pseudo<dag outs, dag ins, list<dag> pattern>
 }
 
 class VCInstRI11<bits<2> op2, dag outs, dag ins, string opcodestr,
-    string argstr>
-    : VCInst<outs, ins, opcodestr, argstr, [], InstFormatRI11>
+    string argstr, list<dag> pattern=[]>
+    : VCInst<outs, ins, opcodestr, argstr, pattern, InstFormatRI11>
 {
   bits<11> imm11;
   bits<3> rd;
@@ -56,8 +60,8 @@ class VCInstRI11<bits<2> op2, dag outs, dag ins, string opcodestr,
 }
 
 class VCInstM<bits<3> op3, dag outs, dag ins, string opcodestr,
-    string argstr>
-    : VCInst<outs, ins, opcodestr, argstr, [], InstFormatM>
+    string argstr, list<dag> pattern=[]>
+    : VCInst<outs, ins, opcodestr, argstr, pattern, InstFormatM>
 {
   bits<5> imm5;
   bits<3> rs2;
@@ -76,8 +80,8 @@ class VCInstM<bits<3> op3, dag outs, dag ins, string opcodestr,
 }
 
 class VCInstRI10<bits<3> op3, dag outs, dag ins, string opcodestr,
-    string argstr>
-    : VCInst<outs, ins, opcodestr, argstr, [], InstFormatRI10>
+    string argstr, list<dag> pattern=[]>
+    : VCInst<outs, ins, opcodestr, argstr, pattern, InstFormatRI10>
 {
   bits<10> imm10;
   bits<3> rd;
@@ -89,8 +93,8 @@ class VCInstRI10<bits<3> op3, dag outs, dag ins, string opcodestr,
 }
 
 class VCInstRRI5<bits<5> op5, dag outs, dag ins, string opcodestr,
-    string argstr>
-    : VCInst<outs, ins, opcodestr, argstr, [], InstFormatRRI5>
+    string argstr, list<dag> pattern=[]>
+    : VCInst<outs, ins, opcodestr, argstr, pattern, InstFormatRRI5>
 {
   bits<5> imm5;
   bits<3> rd;
@@ -104,7 +108,7 @@ class VCInstRRI5<bits<5> op5, dag outs, dag ins, string opcodestr,
 }
 
 class VCInstB<bits<8> op8, dag outs, dag ins, string opcodestr,
-    string argstr, list<dag> pattern>
+    string argstr, list<dag> pattern=[]>
     : VCInst<outs, ins, opcodestr, argstr, pattern, InstFormatB>
 {
   bits<8> imm8;
@@ -153,17 +157,5 @@ class VCInstRI5<bits<8> op8, dag outs, dag ins,
   let Inst{15-14} = imm5{4-3};
   let Inst{13-11} = rd;
   let Inst{10-8} = imm5{2-0};
-  let Inst{7-0} = op8;
-}
-
-class VCInstChk<bits<8> op8, dag outs, dag ins,
-    string opcodestr, string argstr>
-    : VCInst<outs, ins, opcodestr, argstr, [], InstFormatRI5>
-{
-  bits<3> rs;
-
-  let Inst{15-14} = 0;
-  let Inst{13-11} = rs;
-  let Inst{10-8} = 0;
   let Inst{7-0} = op8;
 }

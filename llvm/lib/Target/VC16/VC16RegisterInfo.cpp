@@ -28,7 +28,7 @@
 using namespace llvm;
 
 VC16RegisterInfo::VC16RegisterInfo(unsigned HwMode)
-    : VC16GenRegisterInfo(VC16::R0, /*DwarfFlavour*/ 0, /*EHFlavor*/ 0,
+    : VC16GenRegisterInfo(VC16::X1, /*DwarfFlavour*/ 0, /*EHFlavor*/ 0,
                           /*PC*/ 0, HwMode) {}
 
 const MCPhysReg *
@@ -40,9 +40,9 @@ BitVector VC16RegisterInfo::getReservedRegs(const MachineFunction &MF) const {
   BitVector Reserved(getNumRegs());
 
   // Use markSuperRegs to ensure any register aliases are also reserved
-  markSuperRegs(Reserved, VC16::R4); // fp
-  markSuperRegs(Reserved, VC16::R6); // ra
-  markSuperRegs(Reserved, VC16::R7); // sp
+  markSuperRegs(Reserved, VC16::X0); // sp
+  markSuperRegs(Reserved, VC16::X1); // ra
+  markSuperRegs(Reserved, VC16::X2); // fp
   assert(checkAllSuperRegsMarked(Reserved));
   return Reserved;
 }
@@ -117,7 +117,7 @@ void VC16RegisterInfo::eliminateFrameIndex(MachineBasicBlock::iterator II,
 }
 
 Register VC16RegisterInfo::getFrameRegister(const MachineFunction &MF) const {
-  return VC16::R4;
+  return VC16::X2;
 }
 
 const uint32_t *

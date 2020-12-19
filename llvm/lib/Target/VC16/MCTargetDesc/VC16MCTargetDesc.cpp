@@ -43,7 +43,7 @@ static MCInstrInfo *createVC16MCInstrInfo() {
 
 static MCRegisterInfo *createVC16MCRegisterInfo(const Triple &TT) {
   MCRegisterInfo *X = new MCRegisterInfo();
-  InitVC16MCRegisterInfo(X, VC16::R1);
+  InitVC16MCRegisterInfo(X, VC16::X1);
   return X;
 }
 

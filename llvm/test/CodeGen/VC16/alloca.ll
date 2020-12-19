@@ -11,23 +11,23 @@ define void @simple_alloca(i16 %n) nounwind {
 ; VC16I-LABEL: simple_alloca:
 ; VC16I:       ; %bb.0:
 ; VC16I-NEXT:    addi sp, -4
-; VC16I-NEXT:    sw s1, 2(sp)
+; VC16I-NEXT:    sw s0, 2(sp)
 ; VC16I-NEXT:    sw ra, 0(sp)
-; VC16I-NEXT:    mv s1, sp
-; VC16I-NEXT:    addi s1, 4
+; VC16I-NEXT:    mv s0, sp
+; VC16I-NEXT:    addi s0, 4
 ; VC16I-NEXT:    addi a0, 1
 ; VC16I-NEXT:    andi a0, -2
-; VC16I-NEXT:    mv a1, sp
-; VC16I-NEXT:    sub a1, a0
-; VC16I-NEXT:    mv sp, a1
-; VC16I-NEXT:    lui a2, %his(notdead)
-; VC16I-NEXT:    addi a2, %lo(notdead)
-; VC16I-NEXT:    mv a0, a1
-; VC16I-NEXT:    jalr ra, a2, 0
-; VC16I-NEXT:    mv sp, s1
+; VC16I-NEXT:    mv a2, sp
+; VC16I-NEXT:    sub a2, a0
+; VC16I-NEXT:    mv sp, a2
+; VC16I-NEXT:    lui a1, %his(notdead)
+; VC16I-NEXT:    addi a1, %lo(notdead)
+; VC16I-NEXT:    mv a0, a2
+; VC16I-NEXT:    jalr ra, a1, 0
+; VC16I-NEXT:    mv sp, s0
 ; VC16I-NEXT:    addi sp, -4
 ; VC16I-NEXT:    lw ra, 0(sp)
-; VC16I-NEXT:    lw s1, 2(sp)
+; VC16I-NEXT:    lw s0, 2(sp)
 ; VC16I-NEXT:    addi sp, 4
 ; VC16I-NEXT:    jalr t0, ra, 0
   %1 = alloca i8, i16 %n
@@ -43,27 +43,27 @@ define void @scoped_alloca(i16 %n) nounwind {
 ; VC16I-LABEL: scoped_alloca:
 ; VC16I:       ; %bb.0:
 ; VC16I-NEXT:    addi sp, -6
-; VC16I-NEXT:    sw s0, 4(sp)
-; VC16I-NEXT:    sw s1, 2(sp)
+; VC16I-NEXT:    sw s1, 4(sp)
+; VC16I-NEXT:    sw s0, 2(sp)
 ; VC16I-NEXT:    sw ra, 0(sp)
-; VC16I-NEXT:    mv s1, sp
-; VC16I-NEXT:    addi s1, 6
 ; VC16I-NEXT:    mv s0, sp
+; VC16I-NEXT:    addi s0, 6
+; VC16I-NEXT:    mv s1, sp
 ; VC16I-NEXT:    addi a0, 1
 ; VC16I-NEXT:    andi a0, -2
-; VC16I-NEXT:    mv a1, sp
-; VC16I-NEXT:    sub a1, a0
-; VC16I-NEXT:    mv sp, a1
-; VC16I-NEXT:    lui a2, %his(notdead)
-; VC16I-NEXT:    addi a2, %lo(notdead)
-; VC16I-NEXT:    mv a0, a1
-; VC16I-NEXT:    jalr ra, a2, 0
-; VC16I-NEXT:    mv sp, s0
+; VC16I-NEXT:    mv a2, sp
+; VC16I-NEXT:    sub a2, a0
+; VC16I-NEXT:    mv sp, a2
+; VC16I-NEXT:    lui a1, %his(notdead)
+; VC16I-NEXT:    addi a1, %lo(notdead)
+; VC16I-NEXT:    mv a0, a2
+; VC16I-NEXT:    jalr ra, a1, 0
 ; VC16I-NEXT:    mv sp, s1
+; VC16I-NEXT:    mv sp, s0
 ; VC16I-NEXT:    addi sp, -6
 ; VC16I-NEXT:    lw ra, 0(sp)
-; VC16I-NEXT:    lw s1, 2(sp)
-; VC16I-NEXT:    lw s0, 4(sp)
+; VC16I-NEXT:    lw s0, 2(sp)
+; VC16I-NEXT:    lw s1, 4(sp)
 ; VC16I-NEXT:    addi sp, 6
 ; VC16I-NEXT:    jalr t0, ra, 0
   %sp = call i8* @llvm.stacksave()

@@ -22,10 +22,10 @@
 using namespace llvm;
 
 // Returns the register used to hold the frame pointer.
-static Register getFPReg(const VC16Subtarget &STI) { return VC16::R4; }
+static Register getFPReg(const VC16Subtarget &STI) { return VC16::X2; }
 
 // Returns the register used to hold the stack pointer.
-static Register getSPReg(const VC16Subtarget &STI) { return VC16::R7; }
+static Register getSPReg(const VC16Subtarget &STI) { return VC16::X0; }
 
 bool VC16FrameLowering::hasFP(const MachineFunction &MF) const { return true; }
 
@@ -122,7 +122,7 @@ int VC16FrameLowering::getFrameIndexReference(const MachineFunction &MF, int FI,
   // negative offsets.
   int Offset = MFI.getObjectOffset(FI) - getOffsetOfLocalArea() +
                MFI.getOffsetAdjustment();
-  FrameReg = VC16::R7;
+  FrameReg = getSPReg(STI);
   Offset += MF.getFrameInfo().getStackSize();
   return Offset;
 }
@@ -133,8 +133,8 @@ void VC16FrameLowering::determineCalleeSaves(MachineFunction &MF,
   TargetFrameLowering::determineCalleeSaves(MF, SavedRegs, RS);
   // TODO: Once frame pointer elimination is implemented, don't
   // unconditionally spill the frame pointer and return address.
-  SavedRegs.set(VC16::R6);
-  SavedRegs.set(VC16::R4);
+  SavedRegs.set(VC16::X2);
+  SavedRegs.set(VC16::X1);
 }
 
 // Determines the size of the frame and maximum call frame size.

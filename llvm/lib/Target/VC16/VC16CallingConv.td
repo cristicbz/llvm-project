@@ -12,7 +12,7 @@
 //===----------------------------------------------------------------------===//
 
 
-def CSR : CalleeSavedRegs<(add R3, R4, R6)>;
+def CSR : CalleeSavedRegs<(add X3, X2, X1)>;
 
 // Needed for implementation of VC16RegisterInfo::getNoPreservedMask()
 def CSR_NoRegs : CalleeSavedRegs<(add)>;

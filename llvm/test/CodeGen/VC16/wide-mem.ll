@@ -8,15 +8,15 @@ define i32 @load_i32(i32 *%a) nounwind {
 ; VC16I-LABEL: load_i32:
 ; VC16I:       ; %bb.0:
 ; VC16I-NEXT:    addi sp, -4
-; VC16I-NEXT:    sw s1, 2(sp)
+; VC16I-NEXT:    sw s0, 2(sp)
 ; VC16I-NEXT:    sw ra, 0(sp)
-; VC16I-NEXT:    mv s1, sp
-; VC16I-NEXT:    addi s1, 4
+; VC16I-NEXT:    mv s0, sp
+; VC16I-NEXT:    addi s0, 4
 ; VC16I-NEXT:    lw a2, 0(a0)
 ; VC16I-NEXT:    lw a1, 2(a0)
 ; VC16I-NEXT:    mv a0, a2
 ; VC16I-NEXT:    lw ra, 0(sp)
-; VC16I-NEXT:    lw s1, 2(sp)
+; VC16I-NEXT:    lw s0, 2(sp)
 ; VC16I-NEXT:    addi sp, 4
 ; VC16I-NEXT:    jalr t0, ra, 0
   %1 = load i32, i32* %a
@@ -27,16 +27,16 @@ define i32 @load_i64(i64 *%a) nounwind {
 ; VC16I-LABEL: load_i64:
 ; VC16I:       ; %bb.0:
 ; VC16I-NEXT:    addi sp, -4
-; VC16I-NEXT:    sw s1, 2(sp)
+; VC16I-NEXT:    sw s0, 2(sp)
 ; VC16I-NEXT:    sw ra, 0(sp)
-; VC16I-NEXT:    mv s1, sp
-; VC16I-NEXT:    addi s1, 4
-; VC16I-NEXT:    lw a1, 6(a0)
-; VC16I-NEXT:    lw a1, 4(a0)
+; VC16I-NEXT:    mv s0, sp
+; VC16I-NEXT:    addi s0, 4
+; VC16I-NEXT:    lw a2, 6(a0)
+; VC16I-NEXT:    lw a2, 4(a0)
 ; VC16I-NEXT:    lw a1, 2(a0)
 ; VC16I-NEXT:    lw a0, 0(a0)
 ; VC16I-NEXT:    lw ra, 0(sp)
-; VC16I-NEXT:    lw s1, 2(sp)
+; VC16I-NEXT:    lw s0, 2(sp)
 ; VC16I-NEXT:    addi sp, 4
 ; VC16I-NEXT:    jalr t0, ra, 0
   %1 = load volatile i64, i64* %a
@@ -53,18 +53,18 @@ define i32 @load_i32_global() nounwind {
 ; VC16I-LABEL: load_i32_global:
 ; VC16I:       ; %bb.0:
 ; VC16I-NEXT:    addi sp, -4
-; VC16I-NEXT:    sw s1, 2(sp)
+; VC16I-NEXT:    sw s0, 2(sp)
 ; VC16I-NEXT:    sw ra, 0(sp)
-; VC16I-NEXT:    mv s1, sp
-; VC16I-NEXT:    addi s1, 4
-; VC16I-NEXT:    lui a0, %his(val32)
-; VC16I-NEXT:    addi a0, %lo(val32)
-; VC16I-NEXT:    lw a0, 0(a0)
-; VC16I-NEXT:    lui a1, %his(val32+2)
-; VC16I-NEXT:    addi a1, %lo(val32+2)
-; VC16I-NEXT:    lw a1, 0(a1)
+; VC16I-NEXT:    mv s0, sp
+; VC16I-NEXT:    addi s0, 4
+; VC16I-NEXT:    lui a2, %his(val32)
+; VC16I-NEXT:    addi a2, %lo(val32)
+; VC16I-NEXT:    lw a0, 0(a2)
+; VC16I-NEXT:    lui a2, %his(val32+2)
+; VC16I-NEXT:    addi a2, %lo(val32+2)
+; VC16I-NEXT:    lw a1, 0(a2)
 ; VC16I-NEXT:    lw ra, 0(sp)
-; VC16I-NEXT:    lw s1, 2(sp)
+; VC16I-NEXT:    lw s0, 2(sp)
 ; VC16I-NEXT:    addi sp, 4
 ; VC16I-NEXT:    jalr t0, ra, 0
   %1 = load i32, i32* @val32

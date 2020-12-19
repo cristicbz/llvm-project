@@ -8,16 +8,16 @@ define i16 @lb(i8 *%a) nounwind {
 ; VC16I-LABEL: lb:
 ; VC16I:       ; %bb.0:
 ; VC16I-NEXT:    addi sp, -4
-; VC16I-NEXT:    sw s1, 2(sp)
+; VC16I-NEXT:    sw s0, 2(sp)
 ; VC16I-NEXT:    sw ra, 0(sp)
-; VC16I-NEXT:    mv s1, sp
-; VC16I-NEXT:    addi s1, 4
-; VC16I-NEXT:    lb a1, 0(a0)
+; VC16I-NEXT:    mv s0, sp
+; VC16I-NEXT:    addi s0, 4
+; VC16I-NEXT:    lb a2, 0(a0)
 ; VC16I-NEXT:    lb a0, 1(a0)
 ; VC16I-NEXT:    slli a0, 8
 ; VC16I-NEXT:    srai a0, 8
 ; VC16I-NEXT:    lw ra, 0(sp)
-; VC16I-NEXT:    lw s1, 2(sp)
+; VC16I-NEXT:    lw s0, 2(sp)
 ; VC16I-NEXT:    addi sp, 4
 ; VC16I-NEXT:    jalr t0, ra, 0
   %1 = getelementptr i8, i8* %a, i16 1
@@ -32,14 +32,14 @@ define i16 @lw(i16 *%a) nounwind {
 ; VC16I-LABEL: lw:
 ; VC16I:       ; %bb.0:
 ; VC16I-NEXT:    addi sp, -4
-; VC16I-NEXT:    sw s1, 2(sp)
+; VC16I-NEXT:    sw s0, 2(sp)
 ; VC16I-NEXT:    sw ra, 0(sp)
-; VC16I-NEXT:    mv s1, sp
-; VC16I-NEXT:    addi s1, 4
-; VC16I-NEXT:    lw a1, 0(a0)
+; VC16I-NEXT:    mv s0, sp
+; VC16I-NEXT:    addi s0, 4
+; VC16I-NEXT:    lw a2, 0(a0)
 ; VC16I-NEXT:    lw a0, 6(a0)
 ; VC16I-NEXT:    lw ra, 0(sp)
-; VC16I-NEXT:    lw s1, 2(sp)
+; VC16I-NEXT:    lw s0, 2(sp)
 ; VC16I-NEXT:    addi sp, 4
 ; VC16I-NEXT:    jalr t0, ra, 0
   %1 = getelementptr i16, i16* %a, i16 3
@@ -52,15 +52,15 @@ define i16 @lbu(i8 *%a) nounwind {
 ; VC16I-LABEL: lbu:
 ; VC16I:       ; %bb.0:
 ; VC16I-NEXT:    addi sp, -4
-; VC16I-NEXT:    sw s1, 2(sp)
+; VC16I-NEXT:    sw s0, 2(sp)
 ; VC16I-NEXT:    sw ra, 0(sp)
-; VC16I-NEXT:    mv s1, sp
-; VC16I-NEXT:    addi s1, 4
-; VC16I-NEXT:    lb a1, 0(a0)
+; VC16I-NEXT:    mv s0, sp
+; VC16I-NEXT:    addi s0, 4
+; VC16I-NEXT:    lb a2, 0(a0)
 ; VC16I-NEXT:    lb a0, 4(a0)
-; VC16I-NEXT:    add a0, a1
+; VC16I-NEXT:    add a0, a2
 ; VC16I-NEXT:    lw ra, 0(sp)
-; VC16I-NEXT:    lw s1, 2(sp)
+; VC16I-NEXT:    lw s0, 2(sp)
 ; VC16I-NEXT:    addi sp, 4
 ; VC16I-NEXT:    jalr t0, ra, 0
   %1 = getelementptr i8, i8* %a, i16 4
@@ -79,14 +79,14 @@ define void @sb(i8 *%a, i8 %b) nounwind {
 ; VC16I-LABEL: sb:
 ; VC16I:       ; %bb.0:
 ; VC16I-NEXT:    addi sp, -4
-; VC16I-NEXT:    sw s1, 2(sp)
+; VC16I-NEXT:    sw s0, 2(sp)
 ; VC16I-NEXT:    sw ra, 0(sp)
-; VC16I-NEXT:    mv s1, sp
-; VC16I-NEXT:    addi s1, 4
+; VC16I-NEXT:    mv s0, sp
+; VC16I-NEXT:    addi s0, 4
 ; VC16I-NEXT:    sb a1, 6(a0)
 ; VC16I-NEXT:    sb a1, 0(a0)
 ; VC16I-NEXT:    lw ra, 0(sp)
-; VC16I-NEXT:    lw s1, 2(sp)
+; VC16I-NEXT:    lw s0, 2(sp)
 ; VC16I-NEXT:    addi sp, 4
 ; VC16I-NEXT:    jalr t0, ra, 0
   store i8 %b, i8* %a
@@ -99,14 +99,14 @@ define void @sw(i16 *%a, i16 %b) nounwind {
 ; VC16I-LABEL: sw:
 ; VC16I:       ; %bb.0:
 ; VC16I-NEXT:    addi sp, -4
-; VC16I-NEXT:    sw s1, 2(sp)
+; VC16I-NEXT:    sw s0, 2(sp)
 ; VC16I-NEXT:    sw ra, 0(sp)
-; VC16I-NEXT:    mv s1, sp
-; VC16I-NEXT:    addi s1, 4
+; VC16I-NEXT:    mv s0, sp
+; VC16I-NEXT:    addi s0, 4
 ; VC16I-NEXT:    sw a1, 16(a0)
 ; VC16I-NEXT:    sw a1, 0(a0)
 ; VC16I-NEXT:    lw ra, 0(sp)
-; VC16I-NEXT:    lw s1, 2(sp)
+; VC16I-NEXT:    lw s0, 2(sp)
 ; VC16I-NEXT:    addi sp, 4
 ; VC16I-NEXT:    jalr t0, ra, 0
   store i16 %b, i16* %a
@@ -121,16 +121,16 @@ define i16 @load_sext_zext_anyext_i1(i1 *%a) nounwind {
 ; VC16I-LABEL: load_sext_zext_anyext_i1:
 ; VC16I:       ; %bb.0:
 ; VC16I-NEXT:    addi sp, -4
-; VC16I-NEXT:    sw s1, 2(sp)
+; VC16I-NEXT:    sw s0, 2(sp)
 ; VC16I-NEXT:    sw ra, 0(sp)
-; VC16I-NEXT:    mv s1, sp
-; VC16I-NEXT:    addi s1, 4
-; VC16I-NEXT:    lb a1, 0(a0)
-; VC16I-NEXT:    lb a1, 1(a0)
+; VC16I-NEXT:    mv s0, sp
+; VC16I-NEXT:    addi s0, 4
+; VC16I-NEXT:    lb a2, 0(a0)
+; VC16I-NEXT:    lb a2, 1(a0)
 ; VC16I-NEXT:    lb a0, 2(a0)
-; VC16I-NEXT:    sub a0, a1
+; VC16I-NEXT:    sub a0, a2
 ; VC16I-NEXT:    lw ra, 0(sp)
-; VC16I-NEXT:    lw s1, 2(sp)
+; VC16I-NEXT:    lw s0, 2(sp)
 ; VC16I-NEXT:    addi sp, 4
 ; VC16I-NEXT:    jalr t0, ra, 0
   ; sextload i1
@@ -155,21 +155,21 @@ define i16 @lw_sw_global(i16 %a) nounwind {
 ; VC16I-LABEL: lw_sw_global:
 ; VC16I:       ; %bb.0:
 ; VC16I-NEXT:    addi sp, -4
-; VC16I-NEXT:    sw s1, 2(sp)
+; VC16I-NEXT:    sw s0, 2(sp)
 ; VC16I-NEXT:    sw ra, 0(sp)
-; VC16I-NEXT:    mv s1, sp
-; VC16I-NEXT:    addi s1, 4
-; VC16I-NEXT:    lui a2, %his(G)
-; VC16I-NEXT:    addi a2, %lo(G)
-; VC16I-NEXT:    lw a1, 0(a2)
-; VC16I-NEXT:    sw a0, 0(a2)
-; VC16I-NEXT:    lui a2, %his(G+18)
-; VC16I-NEXT:    addi a2, %lo(G+18)
-; VC16I-NEXT:    lw t0, 0(a2)
-; VC16I-NEXT:    sw a0, 0(a2)
-; VC16I-NEXT:    mv a0, a1
+; VC16I-NEXT:    mv s0, sp
+; VC16I-NEXT:    addi s0, 4
+; VC16I-NEXT:    lui a1, %his(G)
+; VC16I-NEXT:    addi a1, %lo(G)
+; VC16I-NEXT:    lw a2, 0(a1)
+; VC16I-NEXT:    sw a0, 0(a1)
+; VC16I-NEXT:    lui a1, %his(G+18)
+; VC16I-NEXT:    addi a1, %lo(G+18)
+; VC16I-NEXT:    lw t0, 0(a1)
+; VC16I-NEXT:    sw a0, 0(a1)
+; VC16I-NEXT:    mv a0, a2
 ; VC16I-NEXT:    lw ra, 0(sp)
-; VC16I-NEXT:    lw s1, 2(sp)
+; VC16I-NEXT:    lw s0, 2(sp)
 ; VC16I-NEXT:    addi sp, 4
 ; VC16I-NEXT:    jalr t0, ra, 0
   %1 = load volatile i16, i16* @G
@@ -186,17 +186,17 @@ define i16 @lw_sw_constant(i16 %a) nounwind {
 ; VC16I-LABEL: lw_sw_constant:
 ; VC16I:       ; %bb.0:
 ; VC16I-NEXT:    addi sp, -4
-; VC16I-NEXT:    sw s1, 2(sp)
+; VC16I-NEXT:    sw s0, 2(sp)
 ; VC16I-NEXT:    sw ra, 0(sp)
-; VC16I-NEXT:    mv s1, sp
-; VC16I-NEXT:    addi s1, 4
-; VC16I-NEXT:    lui a2, 1036
-; VC16I-NEXT:    addi a2, -14
-; VC16I-NEXT:    lw a1, 0(a2)
-; VC16I-NEXT:    sw a0, 0(a2)
-; VC16I-NEXT:    mv a0, a1
+; VC16I-NEXT:    mv s0, sp
+; VC16I-NEXT:    addi s0, 4
+; VC16I-NEXT:    lui a1, 1036
+; VC16I-NEXT:    addi a1, -14
+; VC16I-NEXT:    lw a2, 0(a1)
+; VC16I-NEXT:    sw a0, 0(a1)
+; VC16I-NEXT:    mv a0, a2
 ; VC16I-NEXT:    lw ra, 0(sp)
-; VC16I-NEXT:    lw s1, 2(sp)
+; VC16I-NEXT:    lw s0, 2(sp)
 ; VC16I-NEXT:    addi sp, 4
 ; VC16I-NEXT:    jalr t0, ra, 0
   %1 = inttoptr i16 33138 to i16*

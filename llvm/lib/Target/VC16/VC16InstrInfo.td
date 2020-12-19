@@ -391,28 +391,28 @@ def FRMIDX : Pseudo<(outs GPR:$rd), (ins GPR:$rs1, i16imm:$imm5), []>;
 /// Branches and jumps
 def : Pat<(br bb:$imm8), (J bb:$imm8)>;
 
-let Defs=[R5], isBarrier = 1, isBranch = 1, isTerminator = 1 in
+let Defs=[X7], isBarrier = 1, isBranch = 1, isTerminator = 1 in
 let mayStore = 0, mayLoad = 0, hasSideEffects = 0 in
 def PseudoBR : Pseudo<(outs), (ins simm11_lsb0:$imm10), [(br bb:$imm10)]>,
-               PseudoInstExpansion<(JAL R5, simm11_lsb0:$imm10)>;
+               PseudoInstExpansion<(JAL X7, simm11_lsb0:$imm10)>;
 
-let Defs=[R5] in
+let Defs=[X7] in
 let isBarrier = 1, isBranch = 1, isIndirectBranch = 1, isTerminator = 1 in
 def PseudoBRIND : Pseudo<(outs), (ins GPR:$rs1, uimm6_lsb0:$imm5), []>,
-                  PseudoInstExpansion<(JALR R5, GPR:$rs1, uimm6_lsb0:$imm5)>;
+                  PseudoInstExpansion<(JALR X7, GPR:$rs1, uimm6_lsb0:$imm5)>;
 
 def : Pat<(brind GPR:$rs1), (PseudoBRIND GPR:$rs1, 0)>;
 def : Pat<(brind (add GPR:$rs1, uimm6_lsb0:$imm5)),
           (PseudoBRIND GPR:$rs1, uimm6_lsb0:$imm5)>;
 
 
-let isCall = 1, Defs=[R6] in
+let isCall = 1, Defs=[X1] in
 def PseudoCALL : Pseudo<(outs), (ins GPR:$rs1), [(Call GPR:$rs1)]>,
-                 PseudoInstExpansion<(JALR R6, GPR:$rs1, 0)>;
+                 PseudoInstExpansion<(JALR X1, GPR:$rs1, 0)>;
 
-let isBarrier = 1, isReturn = 1, isTerminator = 1, Defs=[R5], Uses=[R6] in
+let isBarrier = 1, isReturn = 1, isTerminator = 1, Defs=[X7], Uses=[X1] in
 def PseudoRET : Pseudo<(outs), (ins), [(RetFlag)]>,
-                PseudoInstExpansion<(JALR R5, R6, 0)>;
+                PseudoInstExpansion<(JALR X7, X1, 0)>;
 
 /// Loads
 multiclass LdPat<PatFrag LoadOp, ImmLeaf LoImmT, VCInst Inst> {
@@ -454,19 +454,19 @@ def : Pat<(IsOrAdd (i16 AddrFI:$rs), simm5:$imm5),
 /// Other pseudo-instructions
 
 // Pessimistically assume the stack pointer will be clobbered
-let Defs = [R7], Uses = [R7] in {
+let Defs = [X0], Uses = [X0] in {
 def ADJCALLSTACKDOWN : Pseudo<(outs), (ins i16imm:$amt1, i16imm:$amt2),
                               [(CallSeqStart timm:$amt1, timm:$amt2)]>;
 def ADJCALLSTACKUP   : Pseudo<(outs), (ins i16imm:$amt1, i16imm:$amt2),
                               [(CallSeqEnd timm:$amt1, timm:$amt2)]>;
-} // Defs = [R7], Uses = [R7]
+} // Defs = [X0], Uses = [X0]
 
 /// Aliases
-def : InstAlias<"nop",                     (ANDI      R7,      -1)>;
-def : InstAlias<"jalr ${rs}",              (JALR      R6, GPR:$rs,       0), 3>;
-def : InstAlias<"jalr ${offset}(${rs})",   (JALR      R6, GPR:$rs, uimm6_lsb0:$offset)>;
+def : InstAlias<"nop",                     (ANDI      X7,      -1)>;
+def : InstAlias<"jalr ${rs}",              (JALR      X1, GPR:$rs,       0), 3>;
+def : InstAlias<"jalr ${offset}(${rs})",   (JALR      X1, GPR:$rs, uimm6_lsb0:$offset)>;
 def : InstAlias<"jalr ${rd}, ${rs}",       (JALR GPR:$rd, GPR:$rs,       0), 2>;
-def : InstAlias<"ret",                     (JALR      R5,      R6,       0), 4>;
+def : InstAlias<"ret",                     (JALR      X7,      X1,       0), 4>;
 
 
 let EmitPriority = 0 in {
