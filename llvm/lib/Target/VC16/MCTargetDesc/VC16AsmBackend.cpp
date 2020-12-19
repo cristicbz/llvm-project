@@ -87,9 +87,9 @@ bool VC16AsmBackend::writeNopData(raw_ostream &OS, uint64_t Count) const {
   if ((Count % 2) != 0)
     return false;
 
-  // The canonical nop on VC16 is 0xffff: andi x7, -1
+  // The canonical nop on VC16 is 0x0007: lea x0, x0, 0
   for (uint64_t i = 0; i < Count; i += 2)
-    OS.write("\xff\xff", 2);
+    OS.write("\x00\x07", 2);
 
   return true;
 }

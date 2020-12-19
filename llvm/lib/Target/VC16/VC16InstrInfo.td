@@ -326,6 +326,7 @@ def : Pat<(VC16cmp (and GPR:$r1, GPR:$r2), 0), (TEST GPR:$r1, GPR:$r2)>;
 def : Pat<(VC16cmp GPR:$r1, 0), (TEST GPR:$r1, GPR:$r1)>;
 
 // Codegen-only immleafs.
+def uimm16 : ImmLeaf<i16, [{return isUInt<16>(Imm);}]>;
 def simm16 : ImmLeaf<i16, [{return isInt<16>(Imm);}]>;
 def simm16_shift5 : ImmLeaf<i16, [{return isShiftedInt<11, 5>(Imm);}]>;
 def uimm16_shift5 : ImmLeaf<i16, [{return isShiftedUInt<11, 5>(Imm);}]>;
@@ -460,7 +461,7 @@ def ADJCALLSTACKUP   : Pseudo<(outs), (ins i16imm:$amt1, i16imm:$amt2),
 } // Defs = [X0], Uses = [X0]
 
 /// Aliases
-def : InstAlias<"nop",                     (ANDI      X7,      -1)>;
+def : InstAlias<"nop",                     (LEA       X7,       0)>;
 def : InstAlias<"jalr ${rs}",              (JALR      GPR:$rs,  0), 3>;
 def : InstAlias<"jalr ${offset}(${rs})",   (JALR      GPR:$rs,  simm5:$offset)>;
 def : InstAlias<"ret",                     (JALR      X1,       0), 4>;
