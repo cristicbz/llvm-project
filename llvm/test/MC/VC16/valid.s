@@ -4,56 +4,50 @@
 # RUN:     | llvm-objdump -d - | FileCheck -check-prefix=CHECK-INST %s
 
 ; CHECK-INST: addi sp, 2
-; CHECK: encoding: [0x5f,0x3a]
+; CHECK: encoding: [0x5f,0x02]
 addi sp, 2
 ; CHECK-INST: andi a2, -2
-; CHECK: encoding: [0xff,0xd6]
+; CHECK: encoding: [0xff,0xf6]
 andi a2, -2
-; CHECK-INST: xori a1, -7
-; CHECK: encoding: [0x7f,0xc9]
-xori a1, -7
 ; CHECK-INST: ori a1, -16
-; CHECK: encoding: [0x3f,0x88]
+; CHECK: encoding: [0x3f,0xa8]
 ori a1, -16
 ; CHECK-INST: andi sp, 15
-; CHECK: encoding: [0xff,0x7f]
+; CHECK: encoding: [0xff,0x47]
 andi sp, 15
-; CHECK-INST: andi a2, 15
-; CHECK: encoding: [0xff,0x57]
-andi a2, 15
 
 
 ; CHECK-INST: add ra, sp
-; CHECK: encoding: [0x37,0x37]
+; CHECK: encoding: [0x37,0x08]
 add ra, sp
 ; CHECK-INST: adc a1, a0
-; CHECK: encoding: [0x37,0x48]
+; CHECK: encoding: [0x37,0x6c]
 adc a1, a0
 ; CHECK-INST: sub a0, a1
-; CHECK: encoding: [0xb7,0x01]
+; CHECK: encoding: [0x77,0x25]
 sub a0, a1
 ; CHECK-INST: sll t0, s0
-; CHECK: encoding: [0x77,0x2b]
+; CHECK: encoding: [0x37,0xba]
 sll t0, s0
 ; CHECK-INST: and a0, a0
-; CHECK: encoding: [0x37,0x80]
+; CHECK: encoding: [0xf7,0xa4]
 and a0, a0
 ; CHECK-INST: xor a2, t0
-; CHECK: encoding: [0x77,0x95]
+; CHECK: encoding: [0xb7,0x37]
 xor a2, t0
-; CHECK-INST: sbb a1, ra
-; CHECK: encoding: [0xb7,0x4e]
-sbb a1, ra
+; CHECK-INST: sbc a1, ra
+; CHECK: encoding: [0x77,0x69]
+sbc a1, ra
 ; CHECK-INST: srl a0, a0
-; CHECK: encoding: [0xf7,0x00]
+; CHECK: encoding: [0xb7,0xa4]
 srl a0, a0
 ; CHECK-INST: sra a0, t0
-; CHECK: encoding: [0xf7,0xc5]
+; CHECK: encoding: [0xb7,0x67]
 sra a0, t0
-; CHECK-INST: or sp, ra
-; CHECK: encoding: [0xb7,0xbe]
-or r7, ra
+; CHECK-INST: or t0, ra
+; CHECK: encoding: [0x37,0xf9]
+or x7, ra
 ; CHECK-INST: not a0, s0
-; CHECK: encoding: [0xf7,0x83]
+; CHECK: encoding: [0xb7,0xe2]
 not a0, s0
 

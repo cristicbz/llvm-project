@@ -247,3 +247,62 @@ define i16 @not(i16 %a) nounwind {
 }
 
 ; TODO(cristicbz): Test carry.
+; TODO(cristicbz): Test all other ops.
+
+define i16 @mul(i16 %a, i16 %b) nounwind {
+; VC16I-LABEL: mul:
+; VC16I:       ; %bb.0:
+; VC16I-NEXT:    lea sp, sp, -4
+; VC16I-NEXT:    sw s0, 2(sp)
+; VC16I-NEXT:    sw ra, 0(sp)
+; VC16I-NEXT:    lea s0, sp, 4
+; VC16I-NEXT:    mul a0, a1
+; VC16I-NEXT:    lw ra, 0(sp)
+; VC16I-NEXT:    lw s0, 2(sp)
+; VC16I-NEXT:    lea sp, sp, 4
+; VC16I-NEXT:    jalr ra, 0
+  %1 = mul i16 %a, %b
+  ret i16 %1
+}
+
+define i32 @mul32u(i16 %a, i16 %b) nounwind {
+; VC16I-LABEL: mul32u:
+; VC16I:       ; %bb.0:
+; VC16I-NEXT:    lea sp, sp, -4
+; VC16I-NEXT:    sw s0, 2(sp)
+; VC16I-NEXT:    sw ra, 0(sp)
+; VC16I-NEXT:    lea s0, sp, 4
+; VC16I-NEXT:    lea a2, a0, 0
+; VC16I-NEXT:    mul a2, a1
+; VC16I-NEXT:    mlhu a1, a0
+; VC16I-NEXT:    lea a0, a2, 0
+; VC16I-NEXT:    lw ra, 0(sp)
+; VC16I-NEXT:    lw s0, 2(sp)
+; VC16I-NEXT:    lea sp, sp, 4
+; VC16I-NEXT:    jalr ra, 0
+  %1 = zext i16 %a to i32
+  %2 = zext i16 %b to i32
+  %3 = mul i32 %1, %2
+  ret i32 %3
+}
+
+define i32 @mul32s(i16 %a, i16 %b) nounwind {
+; VC16I-LABEL: mul32s:
+; VC16I:       ; %bb.0:
+; VC16I-NEXT:    lea sp, sp, -4
+; VC16I-NEXT:    sw s0, 2(sp)
+; VC16I-NEXT:    sw ra, 0(sp)
+; VC16I-NEXT:    lea s0, sp, 4
+; VC16I-NEXT:    lea a2, a0, 0
+; VC16I-NEXT:    mul a2, a1
+; VC16I-NEXT:    mlhs a1, a0
+; VC16I-NEXT:    lea a0, a2, 0
+; VC16I-NEXT:    lw ra, 0(sp)
+; VC16I-NEXT:    lw s0, 2(sp)
+; VC16I-NEXT:    lea sp, sp, 4
+; VC16I-NEXT:    jalr ra, 0
+  %1 = sext i16 %a to i32
+  %2 = sext i16 %b to i32
+  %3 = mul i32 %1, %2
+  ret i32 %3
+}

@@ -127,51 +127,64 @@ def simm9_lsb0 : Operand<OtherVT> {
 // Instruction Class Templates
 //===----------------------------------------------------------------------===//
 
-let hasSideEffects = 0, mayLoad = 0, mayStore = 0 in
-class ALU_BinaryCC_ri5<bits<8> op8, string opcodestr>
-    : VCInstRI5<op8, (outs GPR:$rd_wb), (ins GPR:$rd, simm5:$imm5),
-                opcodestr, "$rd, $imm5"> {
-  let Constraints = "$rd = $rd_wb";
-  let Defs = [FLAGS];
-}
-
-class ALU_Unary_ri5<bits<8> op8, string opcodestr>
-    : VCInstRI5<op8, (outs GPR:$rd), (ins simm5:$imm5),
-                opcodestr, "$rd, $imm5">;
-
-let hasSideEffects = 0, mayLoad = 0, mayStore = 0 in
-class ALU_ri4<bit arithshift, bits<8> op8, string opcodestr>
-    : VCInstRI4<arithshift, op8, (outs GPR:$rd_wb), (ins GPR:$rd, uimm4:$shamt),
-                opcodestr, "$rd, $shamt"> {
-  let Constraints = "$rd = $rd_wb";
-}
-
-let hasSideEffects = 0, mayLoad = 0, mayStore = 0 in
-class ALU_Unary_rr<bits<2> op2, bits<8> op8, string opcodestr>
+let hasSideEffects = 0, mayLoad = 0, mayStore = 0, Defs = [FLAGS] in
+class ALU_Unary_RF_R<bits<2> op2, bits<8> op8, string opcodestr,
+                     list<dag> pattern = []>
     : VCInstRR<op2, op8, (outs GPR:$r1), (ins GPR:$r2),
                opcodestr>;
 
-let hasSideEffects = 0, mayLoad = 0, mayStore = 0 in
-class ALU_Binary_rr<bits<2> op2, bits<8> op8, string opcodestr>
-    : VCInstRR<op2, op8, (outs GPR:$rd), (ins GPR:$r1, GPR:$r2),
-               opcodestr> {
-  let Constraints = "$rd = $r1";
-}
-
-let hasSideEffects = 0, mayLoad = 0, mayStore = 0 in
-class ALU_BinaryCC_rr<bits<2> op2, bits<8> op8, string opcodestr>
-    : VCInstRR<op2, op8, (outs GPR:$rd), (ins GPR:$r1, GPR:$r2),
-               opcodestr> {
-  let Constraints = "$rd = $r1";
-  let Defs = [FLAGS];
-}
-
-// Updated with FLAGS register
-
-let hasSideEffects = 0, mayLoad = 0, mayStore = 0, Defs=[FLAGS] in
-class ALU_Binary_F_RR<bits<2> op2, bits<8> op8, string opcodestr, list<dag> pattern>
+let hasSideEffects = 0, mayLoad = 0, mayStore = 0, Defs = [FLAGS] in
+class ALU_Binary_F_RR<bits<2> op2, bits<8> op8, string opcodestr,
+                      list<dag> pattern = []>
     : VCInstRR<op2, op8, (outs), (ins GPR:$r1, GPR:$r2),
                opcodestr, pattern>;
+
+let hasSideEffects = 0, mayLoad = 0, mayStore = 0 in
+class ALU_Binary_R_RR<bits<2> op2, bits<8> op8, string opcodestr,
+                       list<dag> pattern = []>
+    : VCInstRR<op2, op8, (outs GPR:$rd), (ins GPR:$r1, GPR:$r2),
+               opcodestr, pattern> {
+  let Constraints = "$rd = $r1";
+}
+
+let hasSideEffects = 0, mayLoad = 0, mayStore = 0, Defs = [FLAGS] in
+class ALU_Binary_RF_RR<bits<2> op2, bits<8> op8, string opcodestr,
+                       list<dag> pattern = []>
+    : VCInstRR<op2, op8, (outs GPR:$rd), (ins GPR:$r1, GPR:$r2),
+               opcodestr, pattern> {
+  let Constraints = "$rd = $r1";
+}
+
+let hasSideEffects = 0, mayLoad = 0, mayStore = 0, Defs = [FLAGS] in
+class ALU_Binary_RF_RI5<bits<8> op8, string opcodestr, list<dag> pattern = []>
+    : VCInstRI5<op8, (outs GPR:$rd), (ins GPR:$rs, simm5:$imm5),
+                opcodestr, "$rs, $imm5", pattern> {
+  let Constraints = "$rd = $rs";
+}
+
+let hasSideEffects = 0, mayLoad = 0, mayStore = 0 in
+class ALU_Unary_R_RI5<bits<8> op8, string opcodestr, list<dag> pattern = []>
+    : VCInstRI5<op8, (outs GPR:$rs), (ins simm5:$imm5),
+                opcodestr, "$rs, $imm5", pattern>;
+
+let hasSideEffects = 0, mayLoad = 0, mayStore = 0, Defs = [FLAGS] in
+class ALU_Binary_F_RI5<bits<8> op8, string opcodestr, list<dag> pattern = []>
+    : VCInstRI5<op8, (outs), (ins GPR:$rs, simm5:$imm5),
+                opcodestr, "$rs, $imm5", pattern>;
+
+let hasSideEffects = 0, mayLoad = 0, mayStore = 0, Defs = [FLAGS] in
+class ALU_Binary_F_RI4<bit op1, bits<8> op8, string opcodestr,
+                       list<dag> pattern = []>
+    : VCInstRI4<op1, op8, (outs), (ins GPR:$rs, uimm4:$imm4),
+                opcodestr, "$rs, $imm4">;
+
+let hasSideEffects = 0, mayLoad = 0, mayStore = 0 in
+class ALU_Binary_R_RI4<bit op1, bits<8> op8, string opcodestr,
+                       list<dag> pattern = []>
+    : VCInstRI4<op1, op8, (outs GPR:$rd), (ins GPR:$rs, uimm4:$imm4),
+                opcodestr, "$rs, $imm4"> {
+  let Constraints = "$rd = $rs";
+}
 
 let hasSideEffects = 0, mayLoad = 0, mayStore = 0 in
 let isBranch = 1, isTerminator = 1, Uses=[FLAGS] in
@@ -182,7 +195,7 @@ class BranchCC_i<bits<8> op8, string opcodestr, bits<8> cond>
 //===----------------------------------------------------------------------===//
 // Instructions
 //===----------------------------------------------------------------------===//
-let hasSideEffects = 0, mayLoad = 0, mayStore = 0 in {
+let hasSideEffects = 0, mayLoad = 0, mayStore = 0, isAsCheapAsAMove = 1 in {
 def LUI  : VCInstRI11<0b00, (outs GPR:$rd), (ins uimm11:$imm11),
                       "lui", "$rd, $imm11">;
 
@@ -203,20 +216,23 @@ def LB : VCInstM<0b101, (outs GPR:$rs2), (ins GPR:$rs1, uimm5:$imm5),
 } // hasSideEffects = 0, mayLoad = 1, mayStore = 0
 
 let hasSideEffects = 0, mayLoad = 0, mayStore = 1 in {
-def SW : VCInstM<0b010, (outs), (ins GPR:$rs2, GPR:$rs1, uimm6_lsb0:$imm5),
-                 "sw", "$rs2, ${imm5}(${rs1})">;
+def SW  : VCInstM<0b010, (outs), (ins GPR:$rs2, GPR:$rs1, uimm6_lsb0:$imm5),
+                  "sw", "$rs2, ${imm5}(${rs1})">;
 
-def SB : VCInstM<0b110, (outs), (ins GPR:$rs2, GPR:$rs1, uimm5:$imm5),
+def SB  : VCInstM<0b110, (outs), (ins GPR:$rs2, GPR:$rs1, uimm5:$imm5),
                  "sb", "$rs2, ${imm5}(${rs1})">;
 } // hasSideEffects = 0, mayLoad = 0, mayStore = 1
 
 let hasSideEffects = 0, mayLoad = 0, mayStore = 0 in
+let isCommutable = 1, isAsCheapAsAMove = 1 in
 def LEA : VCInstRRI5<0b00111, (outs GPR:$rd), (ins GPR:$rs, simm5:$imm5),
                      "lea", "$rd, ${rs}, ${imm5}">;
 
+/// Branch instructions.
 let hasSideEffects = 0, mayLoad = 0, mayStore = 0, isCall = 1 in
 let Constraints = "$rd = $rs" in
-def JALR : VCInstRI5 <0b00001111, (outs GPR:$rd), (ins GPR:$rs, simm5:$imm5),
+def JALR : VCInstRI5 <0b00001111,
+                      (outs GPR:$rd), (ins GPR:$rs, simm5:$imm5),
                       "jalr", "$rs, $imm5">;
 def  BZ  : BranchCC_i<0b00101111, "bz", 1>;
 def BNZ  : BranchCC_i<0b01001111, "bnz", 2>;
@@ -226,41 +242,70 @@ def BLT  : BranchCC_i<0b10101111, "blt", 5>;
 def BGE  : BranchCC_i<0b11001111, "bge", 6>;
 def BNC  : BranchCC_i<0b11101111, "bnc", 7>;
 
+/// ALU RR instructions.
+let isCommutable = 1 in
+def  MUL :  ALU_Binary_R_RR<0b11, 0b00010111, "mul">;
+let isCommutable = 1 in
+def MLHU :  ALU_Binary_R_RR<0b11, 0b01010111, "mlhu">;
+let isCommutable = 1 in
+def MLHS :  ALU_Binary_R_RR<0b11, 0b10010111, "mlhs">;
+def  NEG :   ALU_Unary_RF_R<0b11, 0b11010111, "neg">;
 
-def  ADD : ALU_BinaryCC_rr  <0b00, 0b00110111, "add">;
-def  SLL : ALU_Binary_rr    <0b00, 0b01110111, "sll">;
-def  SUB : ALU_BinaryCC_rr  <0b00, 0b10110111, "sub">;
-def  SRL : ALU_Binary_rr    <0b00, 0b11110111, "srl">;
+let isCommutable = 1 in
+def  ADD : ALU_Binary_RF_RR<0b00, 0b00110111, "add">;
+def  SUB : ALU_Binary_RF_RR<0b00, 0b01110111, "sub">;
+let isCommutable = 1 in
+def  XOR : ALU_Binary_RF_RR<0b00, 0b10110111, "xor">;
+def  RSB : ALU_Binary_RF_RR<0b00, 0b11110111, "rsb">;
 
-def  ADC : ALU_BinaryCC_rr  <0b01, 0b00110111, "adc">;
-def  NEG : ALU_Unary_rr     <0b01, 0b01110111, "neg">;
-def  SBC : ALU_BinaryCC_rr  <0b01, 0b10110111, "sbc">;
+let isCommutable = 1 in
+def  ADC : ALU_Binary_RF_RR<0b01, 0b00110111, "adc">;
+def  SBC : ALU_Binary_RF_RR<0b01, 0b01110111, "sbc">;
+def  SRA :  ALU_Binary_R_RR<0b01, 0b10110111, "sra">;
+def RSBC : ALU_Binary_RF_RR<0b01, 0b11110111, "rsbc">;
 
-def  AND : ALU_BinaryCC_rr  <0b10, 0b00110111, "and">;
-def  XOR : ALU_BinaryCC_rr  <0b10, 0b01110111, "xor">;
-def   OR : ALU_BinaryCC_rr  <0b10, 0b10110111, "or">;
-def  NOT : ALU_Unary_rr     <0b10, 0b11110111, "not">;
+def  SLL :  ALU_Binary_R_RR<0b10, 0b00110111, "sll">;
+def  SRL :  ALU_Binary_R_RR<0b10, 0b10110111, "srl">;
+let isCommutable = 1 in
+def  AND : ALU_Binary_RF_RR<0b10, 0b11110111, "and">;
+
+let isCommutable = 1 in
+def   OR : ALU_Binary_RF_RR<0b11, 0b00110111, "or">;
+def  NOT :   ALU_Unary_RF_R<0b11, 0b10110111, "not">;
+
+/// ALU Compare RR instructions.
+let isCompare = 1 in
+def  CMP :  ALU_Binary_F_RR<0b10, 0b01110111, "cmp",
+                            [(set FLAGS, (VC16cmp GPR:$r1, GPR:$r2))]>;
+let isCompare = 1 in
+def CMPC :  ALU_Binary_F_RR<0b11, 0b01110111, "cmpc", []>;
+let isCompare = 1, isCommutable = 1 in
+def TEST :  ALU_Binary_F_RR<0b11, 0b11110111, "test",
+                            [(set FLAGS, (VC16cmp (and GPR:$r1, GPR:$r2), 0))]>;
+
+/// ALU RI instructions.
+def SLLI :   ALU_Binary_R_RI4<0b1, 0b00011111, "slli">;
+def SRAI :   ALU_Binary_R_RI4<0b0, 0b10011111, "srai">;
+def SRLI :   ALU_Binary_R_RI4<0b1, 0b10011111, "srli">;
+
+let isAsCheapAsAMove = 1 in
+def ADDI :  ALU_Binary_RF_RI5<     0b01011111, "addi">;
+def ADCI :  ALU_Binary_RF_RI5<     0b11011111, "adci">;
+let isAsCheapAsAMove = 1 in
+def  ORI :  ALU_Binary_RF_RI5<     0b00111111, "ori">;
+def  LLI :    ALU_Unary_R_RI5<     0b10111111, "lli">;
+def ANDI :  ALU_Binary_RF_RI5<     0b11111111, "andi">;
+
+/// ALU Compare RI instructions.
+let isCompare = 1 in
+def TSTI :   ALU_Binary_F_RI4<0b0, 0b00011111, "tsti",
+                              [(set FLAGS,
+                                (VC16cmp (and GPR:$rs, uimm4:$imm4), 0))]>;
 
 let isCompare = 1 in
-def TEST : ALU_Binary_F_RR  <0b11, 0b00110111, "test", []>;
-let isCompare = 1 in
-def  CMP : ALU_Binary_F_RR  <0b11, 0b10110111, "cmp",
-                             [(set FLAGS, (VC16cmp GPR:$r1, GPR:$r2))]>;
-// def   MV : ALU_Unary_rr     <0b11, 0b01110111, "mv">;
-def  SRA : ALU_Binary_rr    <0b11, 0b11110111, "sra">;
+def CMPI :   ALU_Binary_F_RI5<     0b01111111, "cmpi",
+                              [(set FLAGS, (VC16cmp GPR:$rs, simm5:$imm5))]>;
 
-def SLLI : ALU_ri4          <0b0,  0b00011111, "slli">;
-def SRLI : ALU_ri4          <0b0,  0b10011111, "srli">;
-def SRAI : ALU_ri4          <0b1,  0b10011111, "srai">;
-
-def ADDI : ALU_BinaryCC_ri5 <      0b01011111, "addi">;
-def ADCI : ALU_BinaryCC_ri5 <      0b11011111, "adci">;
-def  ORI : ALU_BinaryCC_ri5 <      0b00111111, "ori">;
-
-// def CMPI : ALU_BinaryCC_ri5 <      0b01111111, "cmpi">;
-
-def  LLI : ALU_Unary_ri5    <      0b10111111, "lli">;
-def ANDI : ALU_BinaryCC_ri5 <      0b11111111, "andi">;
 
 //===----------------------------------------------------------------------===//
 // Pseudo-instructions and codegen patterns
@@ -272,29 +317,19 @@ def ANDI : ALU_BinaryCC_ri5 <      0b11111111, "andi">;
 
 /// Generic pattern classes
 
+class PatGpr<SDPatternOperator OpNode, VCInstRR Inst>
+    : Pat<(OpNode GPR:$rs), (Inst GPR:$rs)>;
 class PatGprGpr<SDPatternOperator OpNode, VCInstRR Inst>
     : Pat<(OpNode GPR:$rd, GPR:$rs), (Inst GPR:$rd, GPR:$rs)>;
+class PatSwappedGprGpr<SDPatternOperator OpNode, VCInstRR Inst>
+    : Pat<(OpNode GPR:$rs, GPR:$rd), (Inst GPR:$rd, GPR:$rs)>;
 class PatGprSimm5<SDPatternOperator OpNode, VCInst Inst>
     : Pat<(OpNode GPR:$rs, simm5:$imm5), (Inst GPR:$rs, simm5:$imm5)>;
 class PatGprUimm4<SDPatternOperator OpNode, VCInstRI4 Inst>
-    : Pat<(OpNode GPR:$rs, uimm4:$shamt), (Inst GPR:$rs, uimm4:$shamt)>;
-
-// def : PatGprGpr<addc, TEST : ALU_Binary_rr <0b11, 0b00110111, "test">;
+    : Pat<(OpNode GPR:$rs, uimm4:$imm4), (Inst GPR:$rs, uimm4:$imm4)>;
 
 // Define pattern expansions for setcc operations that aren't directly
 // handled by a RISC-V instruction.
-
-//def : Pat<(setult GPR:$rd, GPR:$rs), (SRAI (SUB GPR:$rd, GPR:$rs), 15)>;
-//def : Pat<(seteq GPR:$rd, GPR:$rs), (SRLI (OR (SUB GPR:$rd, GPR:$rs) (SUB GPR:$rs GPR:$rd)), 15)>;
-
-// def : Pat<(seteq GPR:$rs1, GPR:$rs2), (SLTIU (XOR GPR:$rs1, GPR:$rs2), 1)>;
-// def : Pat<(setne GPR:$rs1, GPR:$rs2), (SLTU X0, (XOR GPR:$rs1, GPR:$rs2))>;
-// def : Pat<(setugt GPR:$rs1, GPR:$rs2), (SLTU GPR:$rs2, GPR:$rs1)>;
-// def : Pat<(setuge GPR:$rs1, GPR:$rs2), (XORI (SLTU GPR:$rs1, GPR:$rs2), 1)>;
-// def : Pat<(setule GPR:$rs1, GPR:$rs2), (XORI (SLTU GPR:$rs2, GPR:$rs1), 1)>;
-// def : Pat<(setgt GPR:$rs1, GPR:$rs2), (SLT GPR:$rs2, GPR:$rs1)>;
-// def : Pat<(setge GPR:$rs1, GPR:$rs2), (XORI (SLT GPR:$rs1, GPR:$rs2), 1)>;
-// def : Pat<(setle GPR:$rs1, GPR:$rs2), (XORI (SLT GPR:$rs2, GPR:$rs1), 1)>;
 
 // ALU binary
 def : PatGprGpr<add, ADD>;
@@ -308,22 +343,48 @@ def : PatGprGpr<xor, XOR>;
 def : PatGprGpr<or,  OR>;
 def : PatGprGpr<sra, SRA>;
 
+
+def : PatGprGpr<mul, MUL>;
+def : PatGprGpr<mulhu, MLHU>;
+def : PatGprGpr<mulhs, MLHS>;
+def : PatGpr<ineg, NEG>;
+
+def : PatGprGpr<add, ADD>;
+def : PatGprGpr<sub, SUB>;
+def : PatGprGpr<xor, XOR>;
+def : PatSwappedGprGpr<sub, RSB>;
+
+def : PatGprGpr<adde, ADC>;
+def : PatGprGpr<sube, SBC>;
+def : PatGprGpr<sra, SRA>;
+def : PatSwappedGprGpr<sube, RSBC>;
+
+def : PatGprGpr<shl, SLL>;
+def : PatGprGpr<srl, SRL>;
+def : PatGprGpr<and, AND>;
+
+def : PatGprGpr<or,  OR>;
+def : PatGpr<not, NOT>;
+
 // ALU unary
 def : Pat<(ineg GPR:$rs), (NEG GPR:$rs)>;
 def : Pat<(not GPR:$rs), (NOT GPR:$rs)>;
 
 // ALU immediate
 def : PatGprSimm5<add, LEA>;
-def : PatGprSimm5<or, ORI>;
-// def : PatGprSimm5<add, ADDI>;
-def : PatGprSimm5<adde, ADCI>;
-def : PatGprSimm5<and, ANDI>;
-def : PatGprUimm4<shl, SLLI>;
-def : PatGprUimm4<srl, SRLI>;
-def : PatGprUimm4<sra, SRAI>;
 
-def : Pat<(VC16cmp (and GPR:$r1, GPR:$r2), 0), (TEST GPR:$r1, GPR:$r2)>;
-def : Pat<(VC16cmp GPR:$r1, 0), (TEST GPR:$r1, GPR:$r1)>;
+def : PatGprUimm4<shl, SLLI>;
+def : PatGprUimm4<sra, SRAI>;
+def : PatGprUimm4<srl, SRLI>;
+
+def : PatGprSimm5<adde, ADCI>;
+def : PatGprSimm5<or,  ORI>;
+def : PatGprSimm5<and, ANDI>;
+
+// Comparison patterns.
+def : Pat<(VC16cmp (and GPR:$r1, GPR:$r2), 0),     (TEST GPR:$r1, GPR:$r2)>;
+def : Pat<(VC16cmp (and GPR:$rs, uimm4:$imm4), 0), (TSTI GPR:$rs, uimm4:$imm4)>;
+def : Pat<(VC16cmp GPR:$r1, simm5:$imm5),          (CMPI GPR:$r1, simm5:$imm5)>;
 
 // Codegen-only immleafs.
 def uimm16 : ImmLeaf<i16, [{return isUInt<16>(Imm);}]>;
@@ -385,9 +446,8 @@ def Select_GPR_Using_CC_GPR
 
 
 /// Branches and jumps
-// def : Pat<(br bb:$imm8), (J bb:$imm8)>;
 
-let Defs=[X7], isBarrier = 1, isBranch = 1, isTerminator = 1 in
+let isBarrier = 1, isBranch = 1, isTerminator = 1, Defs=[X7] in
 let mayStore = 0, mayLoad = 0, hasSideEffects = 0 in
 def PseudoBR : Pseudo<(outs), (ins simm11_lsb0:$imm10), [(br bb:$imm10)]>,
                PseudoInstExpansion<(JAL X7, simm11_lsb0:$imm10)>;
@@ -408,7 +468,6 @@ let isCall = 1, Defs=[X1], Uses=[X1] in
 def PseudoCALL : Pseudo<(outs), (ins), [(Call X1)]>,
                  PseudoInstExpansion<(JALR X1, X1, 0)>;
 
-// TODO(cristicbz): Maybe Defs=[X1]?
 let isBarrier = 1, isReturn = 1, isTerminator = 1 in
 def PseudoRET : Pseudo<(outs), (ins), [(RetFlag)]>,
                 PseudoInstExpansion<(JALR X1, X1, 0)>;
@@ -461,7 +520,7 @@ def ADJCALLSTACKUP   : Pseudo<(outs), (ins i16imm:$amt1, i16imm:$amt2),
 } // Defs = [X0], Uses = [X0]
 
 /// Aliases
-def : InstAlias<"nop",                     (LEA       X7,       0)>;
+def : InstAlias<"nop",                     (LEA       X0,       X0,       0)>;
 def : InstAlias<"jalr ${rs}",              (JALR      GPR:$rs,  0), 3>;
 def : InstAlias<"jalr ${offset}(${rs})",   (JALR      GPR:$rs,  simm5:$offset)>;
 def : InstAlias<"ret",                     (JALR      X1,       0), 4>;
@@ -472,15 +531,6 @@ def : InstAlias<"lb $rd, (${rs1})",  (LB  GPR:$rd, GPR:$rs1, 0)>;
 def : InstAlias<"lw $rd, (${rs1})",  (LW  GPR:$rd, GPR:$rs1, 0)>;
 def : InstAlias<"sb $rs2, (${rs1})", (SB  GPR:$rs2, GPR:$rs1, 0)>;
 def : InstAlias<"sw $rs2, (${rs1})", (SW  GPR:$rs2, GPR:$rs1, 0)>;
-
-// TODO(cristicbz): getMachineOpValue() needs to be adjusted for this to work.
-// def : InstAlias<"add $rd, $imm5",  (ADDI  GPR:$rd, simm5:$imm5)>;
-// def : InstAlias<"and $rd, $imm5",  (ANDI  GPR:$rd, simm5:$imm5)>;
-// def : InstAlias<"xor $rd, $imm5",  (XORI  GPR:$rd, simm5:$imm5)>;
-// def : InstAlias<"or $rd, $imm5",   (ORI   GPR:$rd, simm5:$imm5)>;
-// def : InstAlias<"sll $rd, $shamt", (SLLI  GPR:$rd, uimm4:$shamt)>;
-// def : InstAlias<"srl $rd, $shamt", (SRLI  GPR:$rd, uimm4:$shamt)>;
-// def : InstAlias<"sra $rd, $shamt", (SRAI  GPR:$rd, uimm4:$shamt)>;
 }
 
 def : MnemonicAlias<"bltu", "bn">;

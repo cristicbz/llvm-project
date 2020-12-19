@@ -86,11 +86,8 @@ VC16TargetLowering::VC16TargetLowering(const TargetMachine &TM,
   setOperationAction(ISD::UDIVREM, MVT::i16, Expand);
   setOperationAction(ISD::UDIV, MVT::i16, Expand);
 
-  setOperationAction(ISD::MUL, MVT::i16, Expand);
   setOperationAction(ISD::SMUL_LOHI, MVT::i16, Expand);
   setOperationAction(ISD::UMUL_LOHI, MVT::i16, Expand);
-  setOperationAction(ISD::MULHS, MVT::i16, Expand);
-  setOperationAction(ISD::MULHU, MVT::i16, Expand);
 
   setOperationAction(ISD::SHL_PARTS, MVT::i16, Expand);
   setOperationAction(ISD::SRL_PARTS, MVT::i16, Expand);

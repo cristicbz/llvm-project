@@ -59,9 +59,8 @@ define void @foo(i16 %a, i16 *%b, i1 %c) {
 ; VC16I-NEXT:    bnn .LBB0_12
 ; VC16I-NEXT:    jal t0, .LBB0_10
 ; VC16I-NEXT:  .LBB0_10: ; %test11
-; VC16I-NEXT:    lli a0, 1
-; VC16I-NEXT:    test a2, a0
-; VC16I-NEXT:    lw a2, 0(a1)
+; VC16I-NEXT:    lw a0, 0(a1)
+; VC16I-NEXT:    tsti a2, 1
 ; VC16I-NEXT:    bnz .LBB0_12
 ; VC16I-NEXT:    jal t0, .LBB0_11
 ; VC16I-NEXT:  .LBB0_11: ; %test12
