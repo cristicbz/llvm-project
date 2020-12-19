@@ -178,29 +178,26 @@ void VC16FrameLowering::adjustReg(MachineBasicBlock &MBB,
                                   MachineInstr::MIFlag Flag) const {
   MachineRegisterInfo &MRI = MBB.getParent()->getRegInfo();
   const VC16InstrInfo *TII = STI.getInstrInfo();
-  if (DestReg != SrcReg) {
-    BuildMI(MBB, MBBI, DL, TII->get(VC16::MV), DestReg)
-        .addReg(SrcReg)
-        .setMIFlag(Flag);
-  }
 
   if (isInt<6>(Val)) {
     if (Val < -16) {
-      BuildMI(MBB, MBBI, DL, TII->get(VC16::ADDI), DestReg)
-          .addReg(DestReg)
+      BuildMI(MBB, MBBI, DL, TII->get(VC16::LEA), DestReg)
+          .addReg(SrcReg)
           .addImm(-16)
           .setMIFlag(Flag);
       Val += 16;
+      SrcReg = DestReg;
     } else if (Val > 15) {
-      BuildMI(MBB, MBBI, DL, TII->get(VC16::ADDI), DestReg)
-          .addReg(DestReg)
+      BuildMI(MBB, MBBI, DL, TII->get(VC16::LEA), DestReg)
+          .addReg(SrcReg)
           .addImm(15)
           .setMIFlag(Flag);
       Val -= 15;
+      SrcReg = DestReg;
     }
     if (Val != 0) {
-      BuildMI(MBB, MBBI, DL, TII->get(VC16::ADDI), DestReg)
-          .addReg(DestReg)
+      BuildMI(MBB, MBBI, DL, TII->get(VC16::LEA), DestReg)
+          .addReg(SrcReg)
           .addImm(Val)
           .setMIFlag(Flag);
     }

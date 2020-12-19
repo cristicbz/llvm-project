@@ -38,8 +38,9 @@ void VC16InstrInfo::copyPhysReg(MachineBasicBlock &MBB,
   assert(VC16::GPRRegClass.contains(DstReg, SrcReg) &&
          "Impossible reg-to-reg copy");
 
-  BuildMI(MBB, MBBI, DL, get(VC16::MV), DstReg)
-      .addReg(SrcReg, getKillRegState(KillSrc));
+  BuildMI(MBB, MBBI, DL, get(VC16::LEA), DstReg)
+      .addReg(SrcReg, getKillRegState(KillSrc))
+      .addImm(0);
 }
 
 void VC16InstrInfo::storeRegToStackSlot(MachineBasicBlock &MBB,
@@ -86,7 +87,7 @@ void VC16InstrInfo::movImm16(MachineBasicBlock &MBB,
   if (Hi11 != 0) {
     BuildMI(MBB, MBBI, DL, get(VC16::LUI), DstReg).addImm(Hi11).setMIFlag(Flag);
     if (Lo5 != 0) {
-      BuildMI(MBB, MBBI, DL, get(VC16::ADDI), DstReg)
+      BuildMI(MBB, MBBI, DL, get(VC16::LEA), DstReg)
           .addReg(DstReg, RegState::Kill)
           .addImm(Lo5)
           .setMIFlag(Flag);

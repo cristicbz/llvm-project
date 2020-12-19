@@ -236,7 +236,7 @@ SDValue VC16TargetLowering::lowerGlobalAddress(SDValue Op,
   SDValue GAHi = DAG.getTargetGlobalAddress(GV, DL, Ty, Offset, VC16II::MO_HIS);
   SDValue GALo = DAG.getTargetGlobalAddress(GV, DL, Ty, Offset, VC16II::MO_LOS);
   SDValue MNHi = SDValue(DAG.getMachineNode(VC16::LUI, DL, Ty, GAHi), 0);
-  SDValue MNLo = SDValue(DAG.getMachineNode(VC16::ADDI, DL, Ty, MNHi, GALo), 0);
+  SDValue MNLo = SDValue(DAG.getMachineNode(VC16::LEA, DL, Ty, MNHi, GALo), 0);
 
   return MNLo;
 }
@@ -256,7 +256,7 @@ SDValue VC16TargetLowering::lowerBlockAddress(SDValue Op,
   SDValue BAHi = DAG.getTargetBlockAddress(BA, Ty, Offset, VC16II::MO_HIS);
   SDValue BALo = DAG.getTargetBlockAddress(BA, Ty, Offset, VC16II::MO_LOS);
   SDValue MNHi = SDValue(DAG.getMachineNode(VC16::LUI, DL, Ty, BAHi), 0);
-  SDValue MNLo = SDValue(DAG.getMachineNode(VC16::ADDI, DL, Ty, MNHi, BALo), 0);
+  SDValue MNLo = SDValue(DAG.getMachineNode(VC16::LEA, DL, Ty, MNHi, BALo), 0);
   return MNLo;
 }
 
@@ -276,7 +276,7 @@ SDValue VC16TargetLowering::lowerExternalSymbol(SDValue Op,
   SDValue GAHi = DAG.getTargetExternalSymbol(Sym, Ty, VC16II::MO_HIS);
   SDValue GALo = DAG.getTargetExternalSymbol(Sym, Ty, VC16II::MO_LOS);
   SDValue MNHi = SDValue(DAG.getMachineNode(VC16::LUI, DL, Ty, GAHi), 0);
-  SDValue MNLo = SDValue(DAG.getMachineNode(VC16::ADDI, DL, Ty, MNHi, GALo), 0);
+  SDValue MNLo = SDValue(DAG.getMachineNode(VC16::LEA, DL, Ty, MNHi, GALo), 0);
   return MNLo;
 }
 

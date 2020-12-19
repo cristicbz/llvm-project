@@ -210,6 +210,10 @@ def SB : VCInstM<0b110, (outs), (ins GPR:$rs2, GPR:$rs1, uimm5:$imm5),
                  "sb", "$rs2, ${imm5}(${rs1})">;
 } // hasSideEffects = 0, mayLoad = 0, mayStore = 1
 
+let hasSideEffects = 0, mayLoad = 0, mayStore = 0 in
+def LEA : VCInstRRI5<0b00111, (outs GPR:$rd), (ins GPR:$rs, simm5:$imm5),
+                     "lea", "$rd, ${rs}, ${imm5}">;
+
 let hasSideEffects = 0, mayLoad = 0, mayStore = 0, isCall = 1 in
 let Constraints = "$rd = $rs" in
 def JALR : VCInstRI5 <0b00001111, (outs GPR:$rd), (ins GPR:$rs, simm5:$imm5),
@@ -242,7 +246,7 @@ def TEST : ALU_Binary_F_RR  <0b11, 0b00110111, "test", []>;
 let isCompare = 1 in
 def  CMP : ALU_Binary_F_RR  <0b11, 0b10110111, "cmp",
                              [(set FLAGS, (VC16cmp GPR:$r1, GPR:$r2))]>;
-def   MV : ALU_Unary_rr     <0b11, 0b01110111, "mv">;
+// def   MV : ALU_Unary_rr     <0b11, 0b01110111, "mv">;
 def  SRA : ALU_Binary_rr    <0b11, 0b11110111, "sra">;
 
 def SLLI : ALU_ri4          <0b0,  0b00011111, "slli">;
@@ -270,7 +274,7 @@ def ANDI : ALU_BinaryCC_ri5 <      0b11111111, "andi">;
 
 class PatGprGpr<SDPatternOperator OpNode, VCInstRR Inst>
     : Pat<(OpNode GPR:$rd, GPR:$rs), (Inst GPR:$rd, GPR:$rs)>;
-class PatGprSimm5<SDPatternOperator OpNode, VCInstRI5 Inst>
+class PatGprSimm5<SDPatternOperator OpNode, VCInst Inst>
     : Pat<(OpNode GPR:$rs, simm5:$imm5), (Inst GPR:$rs, simm5:$imm5)>;
 class PatGprUimm4<SDPatternOperator OpNode, VCInstRI4 Inst>
     : Pat<(OpNode GPR:$rs, uimm4:$shamt), (Inst GPR:$rs, uimm4:$shamt)>;
@@ -292,7 +296,6 @@ class PatGprUimm4<SDPatternOperator OpNode, VCInstRI4 Inst>
 // def : Pat<(setge GPR:$rs1, GPR:$rs2), (XORI (SLT GPR:$rs1, GPR:$rs2), 1)>;
 // def : Pat<(setle GPR:$rs1, GPR:$rs2), (XORI (SLT GPR:$rs2, GPR:$rs1), 1)>;
 
-
 // ALU binary
 def : PatGprGpr<add, ADD>;
 def : PatGprGpr<shl, SLL>;
@@ -310,8 +313,9 @@ def : Pat<(ineg GPR:$rs), (NEG GPR:$rs)>;
 def : Pat<(not GPR:$rs), (NOT GPR:$rs)>;
 
 // ALU immediate
+def : PatGprSimm5<add, LEA>;
 def : PatGprSimm5<or, ORI>;
-def : PatGprSimm5<add, ADDI>;
+// def : PatGprSimm5<add, ADDI>;
 def : PatGprSimm5<adde, ADCI>;
 def : PatGprSimm5<and, ANDI>;
 def : PatGprUimm4<shl, SLLI>;
@@ -368,7 +372,7 @@ def IsOrAdd: PatFrag<(ops node:$A, node:$B), (or node:$A, node:$B), [{
 /// Immediates.
 def : Pat<(simm5:$imm), (LLI simm5:$imm)>;
 def : Pat<(simm16_shift5:$imm), (LUI (HI20U $imm))>;
-def : Pat<(simm16:$imm), (ADDI (LUI (HI20S imm:$imm)), (LO5Sext imm:$imm))>;
+def : Pat<(simm16:$imm), (LEA (LUI (HI20S imm:$imm)), (LO5Sext imm:$imm))>;
 
 
 let usesCustomInserter = 1 in
@@ -378,10 +382,6 @@ def Select_GPR_Using_CC_GPR
              [(set i16:$dst, (SelectCC GPR:$lhs, GPR:$rhs,
               (i16 imm:$imm), GPR:$src, GPR:$src2))]>;
 
-
-// This pseudo gets expanded into a mv+addi thus it clobbers FLAGS.
-let Defs = [FLAGS], hasSideEffects = 0, mayStore = 0, mayLoad = 0 in
-def FRMIDX : Pseudo<(outs GPR:$rd), (ins GPR:$rs1, i16imm:$imm5), []>;
 
 /// Branches and jumps
 // def : Pat<(br bb:$imm8), (J bb:$imm8)>;
@@ -445,9 +445,9 @@ defm : StPat<store, uimm6_lsb0, SW>;
 /// FrameIndex calculations
 
 def : Pat<(add (i16 AddrFI:$rs), simm5:$imm5),
-           (FRMIDX (i16 AddrFI:$rs), simm5:$imm5)>;
+           (LEA (i16 AddrFI:$rs), simm5:$imm5)>;
 def : Pat<(IsOrAdd (i16 AddrFI:$rs), simm5:$imm5),
-          (FRMIDX (i16 AddrFI:$rs), simm5:$imm5)>;
+          (LEA (i16 AddrFI:$rs), simm5:$imm5)>;
 
 /// Other pseudo-instructions
 
