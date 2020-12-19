@@ -41,7 +41,6 @@ BitVector VC16RegisterInfo::getReservedRegs(const MachineFunction &MF) const {
 
   // Use markSuperRegs to ensure any register aliases are also reserved
   markSuperRegs(Reserved, VC16::X0); // sp
-  markSuperRegs(Reserved, VC16::X1); // ra
   markSuperRegs(Reserved, VC16::X2); // fp
   assert(checkAllSuperRegsMarked(Reserved));
   return Reserved;

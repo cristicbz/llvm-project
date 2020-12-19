@@ -73,7 +73,7 @@ define i16 @foo(i16 %a, i16 *%b) {
 ; VC16I-NEXT:    lw ra, 0(sp)
 ; VC16I-NEXT:    lw s0, 2(sp)
 ; VC16I-NEXT:    addi sp, 4
-; VC16I-NEXT:    jalr t0, ra, 0
+; VC16I-NEXT:    jalr ra, 0
   %val1 = load volatile i16, i16* %b
   %tst1 = icmp eq i16 %a, %val1
   %val2 = select i1 %tst1, i16 %a, i16 %val1

@@ -38,9 +38,7 @@ def GPR : RegisterClass<"VC16", [i16], 16, (add
   X6, X5, X4, X7, X3, X2, X1, X0
 )>;
 
-def GPR_NoSP : RegisterClass<"VC16", [i16], 16, (add
-  X6, X5, X4, X7, X3, X2, X1
-)>;
+def GPR_RA : RegisterClass<"VC16", [i16], 16, (add X1)>;
 
 // Status register.
 def FLAGS : VC16Reg<4, "FLAGS", ["FLAGS"]>, DwarfRegNum<[8]>;

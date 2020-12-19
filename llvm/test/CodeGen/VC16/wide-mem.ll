@@ -18,7 +18,7 @@ define i32 @load_i32(i32 *%a) nounwind {
 ; VC16I-NEXT:    lw ra, 0(sp)
 ; VC16I-NEXT:    lw s0, 2(sp)
 ; VC16I-NEXT:    addi sp, 4
-; VC16I-NEXT:    jalr t0, ra, 0
+; VC16I-NEXT:    jalr ra, 0
   %1 = load i32, i32* %a
   ret i32 %1
 }
@@ -38,7 +38,7 @@ define i32 @load_i64(i64 *%a) nounwind {
 ; VC16I-NEXT:    lw ra, 0(sp)
 ; VC16I-NEXT:    lw s0, 2(sp)
 ; VC16I-NEXT:    addi sp, 4
-; VC16I-NEXT:    jalr t0, ra, 0
+; VC16I-NEXT:    jalr ra, 0
   %1 = load volatile i64, i64* %a
   %2 = trunc i64 %1 to i32
   ret i32 %2
@@ -66,7 +66,7 @@ define i32 @load_i32_global() nounwind {
 ; VC16I-NEXT:    lw ra, 0(sp)
 ; VC16I-NEXT:    lw s0, 2(sp)
 ; VC16I-NEXT:    addi sp, 4
-; VC16I-NEXT:    jalr t0, ra, 0
+; VC16I-NEXT:    jalr ra, 0
   %1 = load i32, i32* @val32
   ret i32 %1
 }

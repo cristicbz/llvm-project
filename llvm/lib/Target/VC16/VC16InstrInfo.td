@@ -190,9 +190,6 @@ let isCall = 1 in
 def JAL  : VCInstRI10<0b011, (outs GPR:$rd), (ins simm11_lsb0:$imm10),
                       "jal", "$rd, $imm10">;
 
-let isCall = 1 in
-def JALR : VCInstRRI5<0b00111, (outs GPR:$rd), (ins GPR:$rs, uimm6_lsb0:$imm5),
-                      "jalr", "$rd, $rs, $imm5">;
 } // hasSideEffects = 0, mayLoad = 0, mayStore = 0
 
 
@@ -213,13 +210,10 @@ def SB : VCInstM<0b110, (outs), (ins GPR:$rs2, GPR:$rs1, uimm5:$imm5),
                  "sb", "$rs2, ${imm5}(${rs1})">;
 } // hasSideEffects = 0, mayLoad = 0, mayStore = 1
 
-let hasSideEffects = 0, mayLoad = 0, mayStore = 0 in
-def J  : VCInstB<0b00001111, (outs), (ins simm9_lsb0:$imm8), "j", "$imm8", []> {
-    let isBranch = 1;
-    let isTerminator = 1;
-    let isBarrier = 1;
-}
-
+let hasSideEffects = 0, mayLoad = 0, mayStore = 0, isCall = 1 in
+let Constraints = "$rd = $rs" in
+def JALR : VCInstRI5 <0b00001111, (outs GPR:$rd), (ins GPR:$rs, simm5:$imm5),
+                      "jalr", "$rs, $imm5">;
 def  BZ  : BranchCC_i<0b00101111, "bz", 1>;
 def BNZ  : BranchCC_i<0b01001111, "bnz", 2>;
 def  BN  : BranchCC_i<0b01101111, "bn", 3>;
@@ -236,7 +230,7 @@ def  SRL : ALU_Binary_rr    <0b00, 0b11110111, "srl">;
 
 def  ADC : ALU_BinaryCC_rr  <0b01, 0b00110111, "adc">;
 def  NEG : ALU_Unary_rr     <0b01, 0b01110111, "neg">;
-def  SBB : ALU_BinaryCC_rr  <0b01, 0b10110111, "sbb">;
+def  SBC : ALU_BinaryCC_rr  <0b01, 0b10110111, "sbc">;
 
 def  AND : ALU_BinaryCC_rr  <0b10, 0b00110111, "and">;
 def  XOR : ALU_BinaryCC_rr  <0b10, 0b01110111, "xor">;
@@ -258,9 +252,11 @@ def SRAI : ALU_ri4          <0b1,  0b10011111, "srai">;
 def ADDI : ALU_BinaryCC_ri5 <      0b01011111, "addi">;
 def ADCI : ALU_BinaryCC_ri5 <      0b11011111, "adci">;
 def  ORI : ALU_BinaryCC_ri5 <      0b00111111, "ori">;
-def XORI : ALU_BinaryCC_ri5 <      0b01111111, "xori">;
-def ANDI : ALU_BinaryCC_ri5 <      0b11111111, "andi">;
+
+// def CMPI : ALU_BinaryCC_ri5 <      0b01111111, "cmpi">;
+
 def  LLI : ALU_Unary_ri5    <      0b10111111, "lli">;
+def ANDI : ALU_BinaryCC_ri5 <      0b11111111, "andi">;
 
 //===----------------------------------------------------------------------===//
 // Pseudo-instructions and codegen patterns
@@ -303,7 +299,7 @@ def : PatGprGpr<shl, SLL>;
 def : PatGprGpr<sub, SUB>;
 def : PatGprGpr<srl, SRL>;
 def : PatGprGpr<adde, ADC>;
-def : PatGprGpr<sube, SBB>;
+def : PatGprGpr<sube, SBC>;
 def : PatGprGpr<and, AND>;
 def : PatGprGpr<xor, XOR>;
 def : PatGprGpr<or,  OR>;
@@ -318,7 +314,6 @@ def : PatGprSimm5<or, ORI>;
 def : PatGprSimm5<add, ADDI>;
 def : PatGprSimm5<adde, ADCI>;
 def : PatGprSimm5<and, ANDI>;
-def : PatGprSimm5<xor, XORI>;
 def : PatGprUimm4<shl, SLLI>;
 def : PatGprUimm4<srl, SRLI>;
 def : PatGprUimm4<sra, SRAI>;
@@ -389,30 +384,33 @@ let Defs = [FLAGS], hasSideEffects = 0, mayStore = 0, mayLoad = 0 in
 def FRMIDX : Pseudo<(outs GPR:$rd), (ins GPR:$rs1, i16imm:$imm5), []>;
 
 /// Branches and jumps
-def : Pat<(br bb:$imm8), (J bb:$imm8)>;
+// def : Pat<(br bb:$imm8), (J bb:$imm8)>;
 
 let Defs=[X7], isBarrier = 1, isBranch = 1, isTerminator = 1 in
 let mayStore = 0, mayLoad = 0, hasSideEffects = 0 in
 def PseudoBR : Pseudo<(outs), (ins simm11_lsb0:$imm10), [(br bb:$imm10)]>,
                PseudoInstExpansion<(JAL X7, simm11_lsb0:$imm10)>;
 
-let Defs=[X7] in
+
 let isBarrier = 1, isBranch = 1, isIndirectBranch = 1, isTerminator = 1 in
-def PseudoBRIND : Pseudo<(outs), (ins GPR:$rs1, uimm6_lsb0:$imm5), []>,
-                  PseudoInstExpansion<(JALR X7, GPR:$rs1, uimm6_lsb0:$imm5)>;
+def PseudoBRIND : Pseudo<(outs GPR:$rd), (ins GPR:$rs, simm5:$imm5), []>,
+                  PseudoInstExpansion<(JALR GPR:$rd, GPR:$rs, simm5:$imm5)> {
+    let Constraints = "$rd = $rs";
+}
 
-def : Pat<(brind GPR:$rs1), (PseudoBRIND GPR:$rs1, 0)>;
-def : Pat<(brind (add GPR:$rs1, uimm6_lsb0:$imm5)),
-          (PseudoBRIND GPR:$rs1, uimm6_lsb0:$imm5)>;
+def : Pat<(brind GPR:$rs), (PseudoBRIND GPR:$rs, 0)>;
+def : Pat<(brind (add GPR:$rs, simm5:$imm5)),
+          (PseudoBRIND GPR:$rs, simm5:$imm5)>;
 
 
-let isCall = 1, Defs=[X1] in
-def PseudoCALL : Pseudo<(outs), (ins GPR:$rs1), [(Call GPR:$rs1)]>,
-                 PseudoInstExpansion<(JALR X1, GPR:$rs1, 0)>;
+let isCall = 1, Defs=[X1], Uses=[X1] in
+def PseudoCALL : Pseudo<(outs), (ins), [(Call X1)]>,
+                 PseudoInstExpansion<(JALR X1, X1, 0)>;
 
-let isBarrier = 1, isReturn = 1, isTerminator = 1, Defs=[X7], Uses=[X1] in
+// TODO(cristicbz): Maybe Defs=[X1]?
+let isBarrier = 1, isReturn = 1, isTerminator = 1 in
 def PseudoRET : Pseudo<(outs), (ins), [(RetFlag)]>,
-                PseudoInstExpansion<(JALR X7, X1, 0)>;
+                PseudoInstExpansion<(JALR X1, X1, 0)>;
 
 /// Loads
 multiclass LdPat<PatFrag LoadOp, ImmLeaf LoImmT, VCInst Inst> {
@@ -463,10 +461,9 @@ def ADJCALLSTACKUP   : Pseudo<(outs), (ins i16imm:$amt1, i16imm:$amt2),
 
 /// Aliases
 def : InstAlias<"nop",                     (ANDI      X7,      -1)>;
-def : InstAlias<"jalr ${rs}",              (JALR      X1, GPR:$rs,       0), 3>;
-def : InstAlias<"jalr ${offset}(${rs})",   (JALR      X1, GPR:$rs, uimm6_lsb0:$offset)>;
-def : InstAlias<"jalr ${rd}, ${rs}",       (JALR GPR:$rd, GPR:$rs,       0), 2>;
-def : InstAlias<"ret",                     (JALR      X7,      X1,       0), 4>;
+def : InstAlias<"jalr ${rs}",              (JALR      GPR:$rs,  0), 3>;
+def : InstAlias<"jalr ${offset}(${rs})",   (JALR      GPR:$rs,  simm5:$offset)>;
+def : InstAlias<"ret",                     (JALR      X1,       0), 4>;
 
 
 let EmitPriority = 0 in {

@@ -19,7 +19,7 @@ define i16 @lb(i8 *%a) nounwind {
 ; VC16I-NEXT:    lw ra, 0(sp)
 ; VC16I-NEXT:    lw s0, 2(sp)
 ; VC16I-NEXT:    addi sp, 4
-; VC16I-NEXT:    jalr t0, ra, 0
+; VC16I-NEXT:    jalr ra, 0
   %1 = getelementptr i8, i8* %a, i16 1
   %2 = load i8, i8* %1
   %3 = sext i8 %2 to i16
@@ -41,7 +41,7 @@ define i16 @lw(i16 *%a) nounwind {
 ; VC16I-NEXT:    lw ra, 0(sp)
 ; VC16I-NEXT:    lw s0, 2(sp)
 ; VC16I-NEXT:    addi sp, 4
-; VC16I-NEXT:    jalr t0, ra, 0
+; VC16I-NEXT:    jalr ra, 0
   %1 = getelementptr i16, i16* %a, i16 3
   %2 = load i16, i16* %1
   %3 = load volatile i16, i16* %a
@@ -62,7 +62,7 @@ define i16 @lbu(i8 *%a) nounwind {
 ; VC16I-NEXT:    lw ra, 0(sp)
 ; VC16I-NEXT:    lw s0, 2(sp)
 ; VC16I-NEXT:    addi sp, 4
-; VC16I-NEXT:    jalr t0, ra, 0
+; VC16I-NEXT:    jalr ra, 0
   %1 = getelementptr i8, i8* %a, i16 4
   %2 = load i8, i8* %1
   %3 = zext i8 %2 to i16
@@ -88,7 +88,7 @@ define void @sb(i8 *%a, i8 %b) nounwind {
 ; VC16I-NEXT:    lw ra, 0(sp)
 ; VC16I-NEXT:    lw s0, 2(sp)
 ; VC16I-NEXT:    addi sp, 4
-; VC16I-NEXT:    jalr t0, ra, 0
+; VC16I-NEXT:    jalr ra, 0
   store i8 %b, i8* %a
   %1 = getelementptr i8, i8* %a, i16 6
   store i8 %b, i8* %1
@@ -108,7 +108,7 @@ define void @sw(i16 *%a, i16 %b) nounwind {
 ; VC16I-NEXT:    lw ra, 0(sp)
 ; VC16I-NEXT:    lw s0, 2(sp)
 ; VC16I-NEXT:    addi sp, 4
-; VC16I-NEXT:    jalr t0, ra, 0
+; VC16I-NEXT:    jalr ra, 0
   store i16 %b, i16* %a
   %1 = getelementptr i16, i16* %a, i16 8
   store i16 %b, i16* %1
@@ -132,7 +132,7 @@ define i16 @load_sext_zext_anyext_i1(i1 *%a) nounwind {
 ; VC16I-NEXT:    lw ra, 0(sp)
 ; VC16I-NEXT:    lw s0, 2(sp)
 ; VC16I-NEXT:    addi sp, 4
-; VC16I-NEXT:    jalr t0, ra, 0
+; VC16I-NEXT:    jalr ra, 0
   ; sextload i1
   %1 = getelementptr i1, i1* %a, i16 1
   %2 = load i1, i1* %1
@@ -171,7 +171,7 @@ define i16 @lw_sw_global(i16 %a) nounwind {
 ; VC16I-NEXT:    lw ra, 0(sp)
 ; VC16I-NEXT:    lw s0, 2(sp)
 ; VC16I-NEXT:    addi sp, 4
-; VC16I-NEXT:    jalr t0, ra, 0
+; VC16I-NEXT:    jalr ra, 0
   %1 = load volatile i16, i16* @G
   store i16 %a, i16* @G
   %2 = getelementptr i16, i16* @G, i16 9
@@ -198,7 +198,7 @@ define i16 @lw_sw_constant(i16 %a) nounwind {
 ; VC16I-NEXT:    lw ra, 0(sp)
 ; VC16I-NEXT:    lw s0, 2(sp)
 ; VC16I-NEXT:    addi sp, 4
-; VC16I-NEXT:    jalr t0, ra, 0
+; VC16I-NEXT:    jalr ra, 0
   %1 = inttoptr i16 33138 to i16*
   %2 = load volatile i16, i16* %1
   store i16 %a, i16* %1

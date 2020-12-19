@@ -13,65 +13,65 @@ define void @foo(i16 %a, i16 *%b, i1 %c) {
 ; VC16I-NEXT:    lw t0, 0(a1)
 ; VC16I-NEXT:    cmp t0, a0
 ; VC16I-NEXT:    bz .LBB0_12
-; VC16I-NEXT:    j .LBB0_1
+; VC16I-NEXT:    jal t0, .LBB0_1
 ; VC16I-NEXT:  .LBB0_1: ; %test2
 ; VC16I-NEXT:    lw t0, 0(a1)
 ; VC16I-NEXT:    cmp t0, a0
 ; VC16I-NEXT:    bnz .LBB0_12
-; VC16I-NEXT:    j .LBB0_2
+; VC16I-NEXT:    jal t0, .LBB0_2
 ; VC16I-NEXT:  .LBB0_2: ; %test3
 ; VC16I-NEXT:    lw t0, 0(a1)
 ; VC16I-NEXT:    cmp t0, a0
 ; VC16I-NEXT:    blt .LBB0_12
-; VC16I-NEXT:    j .LBB0_3
+; VC16I-NEXT:    jal t0, .LBB0_3
 ; VC16I-NEXT:  .LBB0_3: ; %test4
 ; VC16I-NEXT:    lw t0, 0(a1)
 ; VC16I-NEXT:    cmp t0, a0
 ; VC16I-NEXT:    bge .LBB0_12
-; VC16I-NEXT:    j .LBB0_4
+; VC16I-NEXT:    jal t0, .LBB0_4
 ; VC16I-NEXT:  .LBB0_4: ; %test5
 ; VC16I-NEXT:    lw t0, 0(a1)
 ; VC16I-NEXT:    cmp t0, a0
 ; VC16I-NEXT:    bn .LBB0_12
-; VC16I-NEXT:    j .LBB0_5
+; VC16I-NEXT:    jal t0, .LBB0_5
 ; VC16I-NEXT:  .LBB0_5: ; %test6
 ; VC16I-NEXT:    lw t0, 0(a1)
 ; VC16I-NEXT:    cmp t0, a0
 ; VC16I-NEXT:    bnn .LBB0_12
-; VC16I-NEXT:    j .LBB0_6
+; VC16I-NEXT:    jal t0, .LBB0_6
 ; VC16I-NEXT:  .LBB0_6: ; %test7
 ; VC16I-NEXT:    lw t0, 0(a1)
 ; VC16I-NEXT:    cmp a0, t0
 ; VC16I-NEXT:    blt .LBB0_12
-; VC16I-NEXT:    j .LBB0_7
+; VC16I-NEXT:    jal t0, .LBB0_7
 ; VC16I-NEXT:  .LBB0_7: ; %test8
 ; VC16I-NEXT:    lw t0, 0(a1)
 ; VC16I-NEXT:    cmp a0, t0
 ; VC16I-NEXT:    bge .LBB0_12
-; VC16I-NEXT:    j .LBB0_8
+; VC16I-NEXT:    jal t0, .LBB0_8
 ; VC16I-NEXT:  .LBB0_8: ; %test9
 ; VC16I-NEXT:    lw t0, 0(a1)
 ; VC16I-NEXT:    cmp a0, t0
 ; VC16I-NEXT:    bn .LBB0_12
-; VC16I-NEXT:    j .LBB0_9
+; VC16I-NEXT:    jal t0, .LBB0_9
 ; VC16I-NEXT:  .LBB0_9: ; %test10
 ; VC16I-NEXT:    lw t0, 0(a1)
 ; VC16I-NEXT:    cmp a0, t0
 ; VC16I-NEXT:    bnn .LBB0_12
-; VC16I-NEXT:    j .LBB0_10
+; VC16I-NEXT:    jal t0, .LBB0_10
 ; VC16I-NEXT:  .LBB0_10: ; %test11
 ; VC16I-NEXT:    lli a0, 1
 ; VC16I-NEXT:    test a2, a0
 ; VC16I-NEXT:    lw a2, 0(a1)
 ; VC16I-NEXT:    bnz .LBB0_12
-; VC16I-NEXT:    j .LBB0_11
+; VC16I-NEXT:    jal t0, .LBB0_11
 ; VC16I-NEXT:  .LBB0_11: ; %test12
 ; VC16I-NEXT:    lw a2, 0(a1)
 ; VC16I-NEXT:  .LBB0_12: ; %end
 ; VC16I-NEXT:    lw ra, 0(sp)
 ; VC16I-NEXT:    lw s0, 2(sp)
 ; VC16I-NEXT:    addi sp, 4
-; VC16I-NEXT:    jalr t0, ra, 0
+; VC16I-NEXT:    jalr ra, 0
 
   %val1 = load volatile i16, i16* %b
   %tst1 = icmp eq i16 %val1, %a

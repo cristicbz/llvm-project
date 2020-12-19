@@ -21,7 +21,7 @@ define i16 @bare_select(i1 %a, i16 %b, i16 %c) {
 ; VC16I-NEXT:    lw ra, 0(sp)
 ; VC16I-NEXT:    lw s0, 2(sp)
 ; VC16I-NEXT:    addi sp, 4
-; VC16I-NEXT:    jalr t0, ra, 0
+; VC16I-NEXT:    jalr ra, 0
   %1 = select i1 %a, i16 %b, i16 %c
   ret i16 %1
 }

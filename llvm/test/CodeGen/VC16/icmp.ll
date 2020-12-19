@@ -23,7 +23,7 @@ define i16 @icmp_eq(i16 %a, i16 %b) nounwind {
 ; VC16I-NEXT:    lw ra, 0(sp)
 ; VC16I-NEXT:    lw s0, 2(sp)
 ; VC16I-NEXT:    addi sp, 4
-; VC16I-NEXT:    jalr t0, ra, 0
+; VC16I-NEXT:    jalr ra, 0
   %1 = icmp eq i16 %a, %b
   %2 = zext i1 %1 to i16
   ret i16 %2
@@ -47,7 +47,7 @@ define i16 @icmp_ugt(i16 %a, i16 %b) nounwind {
 ; VC16I-NEXT:    lw ra, 0(sp)
 ; VC16I-NEXT:    lw s0, 2(sp)
 ; VC16I-NEXT:    addi sp, 4
-; VC16I-NEXT:    jalr t0, ra, 0
+; VC16I-NEXT:    jalr ra, 0
   %1 = icmp ugt i16 %a, %b
   %2 = zext i1 %1 to i16
   ret i16 %2
@@ -71,7 +71,7 @@ define i16 @icmp_uge(i16 %a, i16 %b) nounwind {
 ; VC16I-NEXT:    lw ra, 0(sp)
 ; VC16I-NEXT:    lw s0, 2(sp)
 ; VC16I-NEXT:    addi sp, 4
-; VC16I-NEXT:    jalr t0, ra, 0
+; VC16I-NEXT:    jalr ra, 0
   %1 = icmp uge i16 %a, %b
   %2 = zext i1 %1 to i16
   ret i16 %2
@@ -95,7 +95,7 @@ define i16 @icmp_ult(i16 %a, i16 %b) nounwind {
 ; VC16I-NEXT:    lw ra, 0(sp)
 ; VC16I-NEXT:    lw s0, 2(sp)
 ; VC16I-NEXT:    addi sp, 4
-; VC16I-NEXT:    jalr t0, ra, 0
+; VC16I-NEXT:    jalr ra, 0
   %1 = icmp ult i16 %a, %b
   %2 = zext i1 %1 to i16
   ret i16 %2
@@ -119,7 +119,7 @@ define i16 @icmp_ule(i16 %a, i16 %b) nounwind {
 ; VC16I-NEXT:    lw ra, 0(sp)
 ; VC16I-NEXT:    lw s0, 2(sp)
 ; VC16I-NEXT:    addi sp, 4
-; VC16I-NEXT:    jalr t0, ra, 0
+; VC16I-NEXT:    jalr ra, 0
   %1 = icmp ule i16 %a, %b
   %2 = zext i1 %1 to i16
   ret i16 %2
@@ -144,7 +144,7 @@ define i16 @icmp_sgt(i16 %a, i16 %b) nounwind {
 ; VC16I-NEXT:    lw ra, 0(sp)
 ; VC16I-NEXT:    lw s0, 2(sp)
 ; VC16I-NEXT:    addi sp, 4
-; VC16I-NEXT:    jalr t0, ra, 0
+; VC16I-NEXT:    jalr ra, 0
   %1 = icmp sgt i16 %a, %b
   %2 = zext i1 %1 to i16
   ret i16 %2
@@ -168,7 +168,7 @@ define i16 @icmp_sge(i16 %a, i16 %b) nounwind {
 ; VC16I-NEXT:    lw ra, 0(sp)
 ; VC16I-NEXT:    lw s0, 2(sp)
 ; VC16I-NEXT:    addi sp, 4
-; VC16I-NEXT:    jalr t0, ra, 0
+; VC16I-NEXT:    jalr ra, 0
   %1 = icmp sge i16 %a, %b
   %2 = zext i1 %1 to i16
   ret i16 %2
@@ -192,7 +192,7 @@ define i16 @icmp_slt(i16 %a, i16 %b) nounwind {
 ; VC16I-NEXT:    lw ra, 0(sp)
 ; VC16I-NEXT:    lw s0, 2(sp)
 ; VC16I-NEXT:    addi sp, 4
-; VC16I-NEXT:    jalr t0, ra, 0
+; VC16I-NEXT:    jalr ra, 0
   %1 = icmp slt i16 %a, %b
   %2 = zext i1 %1 to i16
   ret i16 %2
@@ -217,7 +217,7 @@ define i16 @icmp_sle(i16 %a, i16 %b) nounwind {
 ; VC16I-NEXT:    lw ra, 0(sp)
 ; VC16I-NEXT:    lw s0, 2(sp)
 ; VC16I-NEXT:    addi sp, 4
-; VC16I-NEXT:    jalr t0, ra, 0
+; VC16I-NEXT:    jalr ra, 0
   %1 = icmp sle i16 %a, %b
   %2 = zext i1 %1 to i16
   ret i16 %2

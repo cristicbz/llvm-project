@@ -13,30 +13,30 @@ define void @jt(i16 %in, i16* %out) {
 ; VC16I-NEXT:    lli a2, 2
 ; VC16I-NEXT:    cmp a2, a0
 ; VC16I-NEXT:    blt .LBB0_3
-; VC16I-NEXT:    j .LBB0_1
+; VC16I-NEXT:    jal t0, .LBB0_1
 ; VC16I-NEXT:  .LBB0_1: ; %entry
 ; VC16I-NEXT:    lli t0, 1
 ; VC16I-NEXT:    cmp a0, t0
 ; VC16I-NEXT:    bz .LBB0_5
-; VC16I-NEXT:    j .LBB0_2
+; VC16I-NEXT:    jal t0, .LBB0_2
 ; VC16I-NEXT:  .LBB0_2: ; %entry
 ; VC16I-NEXT:    cmp a0, a2
 ; VC16I-NEXT:    bz .LBB0_6
-; VC16I-NEXT:    j .LBB0_9
+; VC16I-NEXT:    jal t0, .LBB0_9
 ; VC16I-NEXT:  .LBB0_6: ; %bb2
 ; VC16I-NEXT:    lli a2, 3
 ; VC16I-NEXT:    sw a2, 0(a1)
-; VC16I-NEXT:    j .LBB0_9
+; VC16I-NEXT:    jal t0, .LBB0_9
 ; VC16I-NEXT:  .LBB0_3: ; %entry
 ; VC16I-NEXT:    lli t0, 3
 ; VC16I-NEXT:    cmp a0, t0
 ; VC16I-NEXT:    bz .LBB0_7
-; VC16I-NEXT:    j .LBB0_4
+; VC16I-NEXT:    jal t0, .LBB0_4
 ; VC16I-NEXT:  .LBB0_4: ; %entry
 ; VC16I-NEXT:    lli a2, 4
 ; VC16I-NEXT:    cmp a0, a2
 ; VC16I-NEXT:    bz .LBB0_8
-; VC16I-NEXT:    j .LBB0_9
+; VC16I-NEXT:    jal t0, .LBB0_9
 ; VC16I-NEXT:  .LBB0_8: ; %bb4
 ; VC16I-NEXT:    lli a2, 1
 ; VC16I-NEXT:    sw a2, 0(a1)
@@ -44,14 +44,14 @@ define void @jt(i16 %in, i16* %out) {
 ; VC16I-NEXT:    lw ra, 0(sp)
 ; VC16I-NEXT:    lw s0, 2(sp)
 ; VC16I-NEXT:    addi sp, 4
-; VC16I-NEXT:    jalr t0, ra, 0
+; VC16I-NEXT:    jalr ra, 0
 ; VC16I-NEXT:  .LBB0_5: ; %bb1
 ; VC16I-NEXT:    lli a2, 4
 ; VC16I-NEXT:    sw a2, 0(a1)
-; VC16I-NEXT:    j .LBB0_9
+; VC16I-NEXT:    jal t0, .LBB0_9
 ; VC16I-NEXT:  .LBB0_7: ; %bb3
 ; VC16I-NEXT:    sw a2, 0(a1)
-; VC16I-NEXT:    j .LBB0_9
+; VC16I-NEXT:    jal t0, .LBB0_9
 entry:
   switch i16 %in, label %exit [
     i16 1, label %bb1
