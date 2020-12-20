@@ -12,13 +12,14 @@ define i16 @icmp_eq(i16 %a, i16 %b) nounwind {
 ; VC16I-NEXT:    sw s0, 2(sp)
 ; VC16I-NEXT:    sw ra, 0(sp)
 ; VC16I-NEXT:    lea s0, sp, 4
-; VC16I-NEXT:    lea a2, a0, 0
-; VC16I-NEXT:    lli a0, 1
-; VC16I-NEXT:    cmp a2, a1
-; VC16I-NEXT:    bz .LBB0_2
-; VC16I-NEXT:  ; %bb.1:
+; VC16I-NEXT:    cmp a0, a1
+; VC16I-NEXT:    bz .LBB0_1
+; VC16I-NEXT:  ; %bb.2:
 ; VC16I-NEXT:    lli a0, 0
-; VC16I-NEXT:  .LBB0_2:
+; VC16I-NEXT:    jal t0, .LBB0_3
+; VC16I-NEXT:  .LBB0_1:
+; VC16I-NEXT:    lli a0, 1
+; VC16I-NEXT:  .LBB0_3:
 ; VC16I-NEXT:    lw ra, 0(sp)
 ; VC16I-NEXT:    lw s0, 2(sp)
 ; VC16I-NEXT:    lea sp, sp, 4
@@ -35,13 +36,14 @@ define i16 @icmp_ugt(i16 %a, i16 %b) nounwind {
 ; VC16I-NEXT:    sw s0, 2(sp)
 ; VC16I-NEXT:    sw ra, 0(sp)
 ; VC16I-NEXT:    lea s0, sp, 4
-; VC16I-NEXT:    lea a2, a0, 0
-; VC16I-NEXT:    lli a0, 1
-; VC16I-NEXT:    cmp a1, a2
-; VC16I-NEXT:    bn .LBB1_2
-; VC16I-NEXT:  ; %bb.1:
+; VC16I-NEXT:    cmp a1, a0
+; VC16I-NEXT:    bn .LBB1_1
+; VC16I-NEXT:  ; %bb.2:
 ; VC16I-NEXT:    lli a0, 0
-; VC16I-NEXT:  .LBB1_2:
+; VC16I-NEXT:    jal t0, .LBB1_3
+; VC16I-NEXT:  .LBB1_1:
+; VC16I-NEXT:    lli a0, 1
+; VC16I-NEXT:  .LBB1_3:
 ; VC16I-NEXT:    lw ra, 0(sp)
 ; VC16I-NEXT:    lw s0, 2(sp)
 ; VC16I-NEXT:    lea sp, sp, 4
@@ -58,13 +60,14 @@ define i16 @icmp_uge(i16 %a, i16 %b) nounwind {
 ; VC16I-NEXT:    sw s0, 2(sp)
 ; VC16I-NEXT:    sw ra, 0(sp)
 ; VC16I-NEXT:    lea s0, sp, 4
-; VC16I-NEXT:    lea a2, a0, 0
-; VC16I-NEXT:    lli a0, 1
-; VC16I-NEXT:    cmp a2, a1
-; VC16I-NEXT:    bnn .LBB2_2
-; VC16I-NEXT:  ; %bb.1:
+; VC16I-NEXT:    cmp a0, a1
+; VC16I-NEXT:    bnn .LBB2_1
+; VC16I-NEXT:  ; %bb.2:
 ; VC16I-NEXT:    lli a0, 0
-; VC16I-NEXT:  .LBB2_2:
+; VC16I-NEXT:    jal t0, .LBB2_3
+; VC16I-NEXT:  .LBB2_1:
+; VC16I-NEXT:    lli a0, 1
+; VC16I-NEXT:  .LBB2_3:
 ; VC16I-NEXT:    lw ra, 0(sp)
 ; VC16I-NEXT:    lw s0, 2(sp)
 ; VC16I-NEXT:    lea sp, sp, 4
@@ -81,13 +84,14 @@ define i16 @icmp_ult(i16 %a, i16 %b) nounwind {
 ; VC16I-NEXT:    sw s0, 2(sp)
 ; VC16I-NEXT:    sw ra, 0(sp)
 ; VC16I-NEXT:    lea s0, sp, 4
-; VC16I-NEXT:    lea a2, a0, 0
-; VC16I-NEXT:    lli a0, 1
-; VC16I-NEXT:    cmp a2, a1
-; VC16I-NEXT:    bn .LBB3_2
-; VC16I-NEXT:  ; %bb.1:
+; VC16I-NEXT:    cmp a0, a1
+; VC16I-NEXT:    bn .LBB3_1
+; VC16I-NEXT:  ; %bb.2:
 ; VC16I-NEXT:    lli a0, 0
-; VC16I-NEXT:  .LBB3_2:
+; VC16I-NEXT:    jal t0, .LBB3_3
+; VC16I-NEXT:  .LBB3_1:
+; VC16I-NEXT:    lli a0, 1
+; VC16I-NEXT:  .LBB3_3:
 ; VC16I-NEXT:    lw ra, 0(sp)
 ; VC16I-NEXT:    lw s0, 2(sp)
 ; VC16I-NEXT:    lea sp, sp, 4
@@ -104,13 +108,14 @@ define i16 @icmp_ule(i16 %a, i16 %b) nounwind {
 ; VC16I-NEXT:    sw s0, 2(sp)
 ; VC16I-NEXT:    sw ra, 0(sp)
 ; VC16I-NEXT:    lea s0, sp, 4
-; VC16I-NEXT:    lea a2, a0, 0
-; VC16I-NEXT:    lli a0, 1
-; VC16I-NEXT:    cmp a1, a2
-; VC16I-NEXT:    bnn .LBB4_2
-; VC16I-NEXT:  ; %bb.1:
+; VC16I-NEXT:    cmp a1, a0
+; VC16I-NEXT:    bnn .LBB4_1
+; VC16I-NEXT:  ; %bb.2:
 ; VC16I-NEXT:    lli a0, 0
-; VC16I-NEXT:  .LBB4_2:
+; VC16I-NEXT:    jal t0, .LBB4_3
+; VC16I-NEXT:  .LBB4_1:
+; VC16I-NEXT:    lli a0, 1
+; VC16I-NEXT:  .LBB4_3:
 ; VC16I-NEXT:    lw ra, 0(sp)
 ; VC16I-NEXT:    lw s0, 2(sp)
 ; VC16I-NEXT:    lea sp, sp, 4
@@ -128,13 +133,14 @@ define i16 @icmp_sgt(i16 %a, i16 %b) nounwind {
 ; VC16I-NEXT:    sw s0, 2(sp)
 ; VC16I-NEXT:    sw ra, 0(sp)
 ; VC16I-NEXT:    lea s0, sp, 4
-; VC16I-NEXT:    lea a2, a0, 0
-; VC16I-NEXT:    lli a0, 1
-; VC16I-NEXT:    cmp a1, a2
-; VC16I-NEXT:    blt .LBB5_2
-; VC16I-NEXT:  ; %bb.1:
+; VC16I-NEXT:    cmp a1, a0
+; VC16I-NEXT:    blt .LBB5_1
+; VC16I-NEXT:  ; %bb.2:
 ; VC16I-NEXT:    lli a0, 0
-; VC16I-NEXT:  .LBB5_2:
+; VC16I-NEXT:    jal t0, .LBB5_3
+; VC16I-NEXT:  .LBB5_1:
+; VC16I-NEXT:    lli a0, 1
+; VC16I-NEXT:  .LBB5_3:
 ; VC16I-NEXT:    lw ra, 0(sp)
 ; VC16I-NEXT:    lw s0, 2(sp)
 ; VC16I-NEXT:    lea sp, sp, 4
@@ -151,13 +157,14 @@ define i16 @icmp_sge(i16 %a, i16 %b) nounwind {
 ; VC16I-NEXT:    sw s0, 2(sp)
 ; VC16I-NEXT:    sw ra, 0(sp)
 ; VC16I-NEXT:    lea s0, sp, 4
-; VC16I-NEXT:    lea a2, a0, 0
-; VC16I-NEXT:    lli a0, 1
-; VC16I-NEXT:    cmp a2, a1
-; VC16I-NEXT:    bge .LBB6_2
-; VC16I-NEXT:  ; %bb.1:
+; VC16I-NEXT:    cmp a0, a1
+; VC16I-NEXT:    bge .LBB6_1
+; VC16I-NEXT:  ; %bb.2:
 ; VC16I-NEXT:    lli a0, 0
-; VC16I-NEXT:  .LBB6_2:
+; VC16I-NEXT:    jal t0, .LBB6_3
+; VC16I-NEXT:  .LBB6_1:
+; VC16I-NEXT:    lli a0, 1
+; VC16I-NEXT:  .LBB6_3:
 ; VC16I-NEXT:    lw ra, 0(sp)
 ; VC16I-NEXT:    lw s0, 2(sp)
 ; VC16I-NEXT:    lea sp, sp, 4
@@ -174,13 +181,14 @@ define i16 @icmp_slt(i16 %a, i16 %b) nounwind {
 ; VC16I-NEXT:    sw s0, 2(sp)
 ; VC16I-NEXT:    sw ra, 0(sp)
 ; VC16I-NEXT:    lea s0, sp, 4
-; VC16I-NEXT:    lea a2, a0, 0
-; VC16I-NEXT:    lli a0, 1
-; VC16I-NEXT:    cmp a2, a1
-; VC16I-NEXT:    blt .LBB7_2
-; VC16I-NEXT:  ; %bb.1:
+; VC16I-NEXT:    cmp a0, a1
+; VC16I-NEXT:    blt .LBB7_1
+; VC16I-NEXT:  ; %bb.2:
 ; VC16I-NEXT:    lli a0, 0
-; VC16I-NEXT:  .LBB7_2:
+; VC16I-NEXT:    jal t0, .LBB7_3
+; VC16I-NEXT:  .LBB7_1:
+; VC16I-NEXT:    lli a0, 1
+; VC16I-NEXT:  .LBB7_3:
 ; VC16I-NEXT:    lw ra, 0(sp)
 ; VC16I-NEXT:    lw s0, 2(sp)
 ; VC16I-NEXT:    lea sp, sp, 4
@@ -198,13 +206,14 @@ define i16 @icmp_sle(i16 %a, i16 %b) nounwind {
 ; VC16I-NEXT:    sw s0, 2(sp)
 ; VC16I-NEXT:    sw ra, 0(sp)
 ; VC16I-NEXT:    lea s0, sp, 4
-; VC16I-NEXT:    lea a2, a0, 0
-; VC16I-NEXT:    lli a0, 1
-; VC16I-NEXT:    cmp a1, a2
-; VC16I-NEXT:    bge .LBB8_2
-; VC16I-NEXT:  ; %bb.1:
+; VC16I-NEXT:    cmp a1, a0
+; VC16I-NEXT:    bge .LBB8_1
+; VC16I-NEXT:  ; %bb.2:
 ; VC16I-NEXT:    lli a0, 0
-; VC16I-NEXT:  .LBB8_2:
+; VC16I-NEXT:    jal t0, .LBB8_3
+; VC16I-NEXT:  .LBB8_1:
+; VC16I-NEXT:    lli a0, 1
+; VC16I-NEXT:  .LBB8_3:
 ; VC16I-NEXT:    lw ra, 0(sp)
 ; VC16I-NEXT:    lw s0, 2(sp)
 ; VC16I-NEXT:    lea sp, sp, 4

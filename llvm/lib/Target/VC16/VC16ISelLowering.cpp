@@ -277,25 +277,6 @@ SDValue VC16TargetLowering::lowerExternalSymbol(SDValue Op,
   return MNLo;
 }
 
-static VC16Cond::Code oppositeCC(VC16Cond::Code CC) {
-  switch (CC) {
-  default:
-    llvm_unreachable("CC has no inverse.");
-  case VC16Cond::GE:
-    return VC16Cond::LT;
-  case VC16Cond::LT:
-    return VC16Cond::GE;
-  case VC16Cond::N:
-    return VC16Cond::NN;
-  case VC16Cond::NN:
-    return VC16Cond::N;
-  case VC16Cond::Z:
-    return VC16Cond::NZ;
-  case VC16Cond::NZ:
-    return VC16Cond::Z;
-  }
-}
-
 SDValue VC16TargetLowering::lowerBRCOND(SDValue Op, SelectionDAG &DAG) const {
   SDValue Chain = Op.getOperand(0);
   SDValue CondV = Op.getOperand(1);
