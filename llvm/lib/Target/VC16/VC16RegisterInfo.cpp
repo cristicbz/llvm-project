@@ -86,13 +86,12 @@ void VC16RegisterInfo::eliminateFrameIndex(MachineBasicBlock::iterator II,
     Register ScratchReg = MRI.createVirtualRegister(&VC16::GPRRegClass);
     unsigned Hiu11 = Offset >> 5;
     BuildMI(MBB, II, DL, TII->get(VC16::LUI), ScratchReg).addImm(Hiu11);
-    BuildMI(MBB, II, DL, TII->get(VC16::ADD), ScratchReg)
+    BuildMI(MBB, II, DL, TII->get(VC16::ADDN), ScratchReg)
         .addReg(ScratchReg, RegState::Kill)
         .addReg(FrameReg);
     Offset -= Hiu11 << 5;
     FrameReg = ScratchReg;
     FrameRegIsKill = true;
-
   }
   MI.getOperand(FIOperandNum)
       .ChangeToRegister(FrameReg, false, false, FrameRegIsKill);

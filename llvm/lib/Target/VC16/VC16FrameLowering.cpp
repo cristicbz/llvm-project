@@ -18,6 +18,7 @@
 #include "llvm/CodeGen/MachineFunction.h"
 #include "llvm/CodeGen/MachineInstrBuilder.h"
 #include "llvm/CodeGen/MachineRegisterInfo.h"
+#include "llvm/CodeGen/RegisterScavenging.h"
 
 using namespace llvm;
 
@@ -137,6 +138,24 @@ void VC16FrameLowering::determineCalleeSaves(MachineFunction &MF,
   SavedRegs.set(VC16::X1);
 }
 
+void VC16FrameLowering::processFunctionBeforeFrameFinalized(
+    MachineFunction &MF, RegScavenger *RS) const {
+  const TargetRegisterInfo *RegInfo = MF.getSubtarget().getRegisterInfo();
+  MachineFrameInfo &MFI = MF.getFrameInfo();
+  const TargetRegisterClass *RC = &VC16::GPRRegClass;
+  // estimateStackSize has been observed to under-estimate the final stack
+  // size, so give ourselves wiggle-room by checking for stack size
+  // representable an 4-bit signed field rather than 5-bits.
+  // FIXME: It may be possible to craft a function with a small stack that
+  // still needs an emergency spill slot for branch relaxation. This case
+  // would currently be missed.
+  if (!isUInt<5>(MFI.estimateStackSize(MF))) {
+    int RegScavFI = MFI.CreateStackObject(RegInfo->getSpillSize(*RC),
+                                          RegInfo->getSpillAlign(*RC), false);
+    RS->addScavengingFrameIndex(RegScavFI);
+  }
+}
+
 // Determines the size of the frame and maximum call frame size.
 void VC16FrameLowering::determineFrameLayout(MachineFunction &MF) const {
   MachineFrameInfo &MFI = MF.getFrameInfo();
@@ -202,13 +221,7 @@ void VC16FrameLowering::adjustReg(MachineBasicBlock &MBB,
           .setMIFlag(Flag);
     }
   } else if (isInt<16>(Val)) {
-    unsigned Opc = VC16::ADD;
-    bool isSub = Val < 0;
-    if (isSub) {
-      Val = -Val;
-      Opc = VC16::SUB;
-    }
-
+    unsigned Opc = VC16::ADDN;
     unsigned ScratchReg = MRI.createVirtualRegister(&VC16::GPRRegClass);
     TII->movImm16(MBB, MBBI, DL, ScratchReg, Val, Flag);
     BuildMI(MBB, MBBI, DL, TII->get(Opc), DestReg)

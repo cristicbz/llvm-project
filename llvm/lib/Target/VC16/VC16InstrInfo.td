@@ -195,13 +195,18 @@ class BranchCC_i<bits<8> op8, string opcodestr, bits<8> cond>
 //===----------------------------------------------------------------------===//
 // Instructions
 //===----------------------------------------------------------------------===//
-let hasSideEffects = 0, mayLoad = 0, mayStore = 0, isAsCheapAsAMove = 1 in {
+let hasSideEffects = 0, mayLoad = 0, mayStore = 0 in {
+let isAsCheapAsAMove = 1 in
 def LUI  : VCInstRI11<0b00, (outs GPR:$rd), (ins uimm11:$imm11),
                       "lui", "$rd, $imm11">;
 
 let isCall = 1 in
-def JAL  : VCInstRI10<0b011, (outs GPR:$rd), (ins simm11_lsb0:$imm10),
+def JAL  : VCInstRI10<0b011, (outs GPR_JAL:$rd), (ins simm11_lsb0:$imm10),
                       "jal", "$rd, $imm10">;
+
+let isBarrier = 1, isBranch = 1, isTerminator = 1, rd = 0 in
+def   J  : VCInstRI10<0b011, (outs), (ins simm11_lsb0:$imm10),
+                      "j", "$imm10", [(br bb:$imm10)]>;
 
 } // hasSideEffects = 0, mayLoad = 0, mayStore = 0
 
@@ -234,6 +239,8 @@ let Constraints = "$rd = $rs" in
 def JALR : VCInstRI5 <0b00001111,
                       (outs GPR:$rd), (ins GPR:$rs, simm5:$imm5),
                       "jalr", "$rs, $imm5">;
+
+
 def  BZ  : BranchCC_i<0b00101111, "bz", 1>;
 def BNZ  : BranchCC_i<0b01001111, "bnz", 2>;
 def  BN  : BranchCC_i<0b01101111, "bn", 3>;
@@ -262,7 +269,8 @@ let isCommutable = 1 in
 def  ADC : ALU_Binary_RF_RR<0b01, 0b00110111, "adc">;
 def  SBC : ALU_Binary_RF_RR<0b01, 0b01110111, "sbc">;
 def  SRA :  ALU_Binary_R_RR<0b01, 0b10110111, "sra">;
-def RSBC : ALU_Binary_RF_RR<0b01, 0b11110111, "rsbc">;
+let isCommutable = 1 in
+def   OR : ALU_Binary_RF_RR<0b01, 0b11110111, "or">;
 
 def  SLL :  ALU_Binary_R_RR<0b10, 0b00110111, "sll">;
 def  SRL :  ALU_Binary_R_RR<0b10, 0b10110111, "srl">;
@@ -270,7 +278,7 @@ let isCommutable = 1 in
 def  AND : ALU_Binary_RF_RR<0b10, 0b11110111, "and">;
 
 let isCommutable = 1 in
-def   OR : ALU_Binary_RF_RR<0b11, 0b00110111, "or">;
+def ADDN : ALU_Binary_RF_RR<0b11, 0b00110111, "addn">;
 def  NOT :   ALU_Unary_RF_R<0b11, 0b10110111, "not">;
 
 /// ALU Compare RR instructions.
@@ -332,17 +340,6 @@ class PatGprUimm4<SDPatternOperator OpNode, VCInstRI4 Inst>
 // handled by a RISC-V instruction.
 
 // ALU binary
-def : PatGprGpr<add, ADD>;
-def : PatGprGpr<shl, SLL>;
-def : PatGprGpr<sub, SUB>;
-def : PatGprGpr<srl, SRL>;
-def : PatGprGpr<adde, ADC>;
-def : PatGprGpr<sube, SBC>;
-def : PatGprGpr<and, AND>;
-def : PatGprGpr<xor, XOR>;
-def : PatGprGpr<or,  OR>;
-def : PatGprGpr<sra, SRA>;
-
 
 def : PatGprGpr<mul, MUL>;
 def : PatGprGpr<mulhu, MLHU>;
@@ -357,13 +354,13 @@ def : PatSwappedGprGpr<sub, RSB>;
 def : PatGprGpr<adde, ADC>;
 def : PatGprGpr<sube, SBC>;
 def : PatGprGpr<sra, SRA>;
-def : PatSwappedGprGpr<sube, RSBC>;
+def : PatGprGpr<or,  OR>;
 
 def : PatGprGpr<shl, SLL>;
 def : PatGprGpr<srl, SRL>;
 def : PatGprGpr<and, AND>;
 
-def : PatGprGpr<or,  OR>;
+def : PatGprGpr<add, ADDN>;
 def : PatGpr<not, NOT>;
 
 // ALU unary
@@ -446,13 +443,6 @@ def Select_GPR_Using_CC_GPR
 
 
 /// Branches and jumps
-
-let isBarrier = 1, isBranch = 1, isTerminator = 1, Defs=[X7] in
-let mayStore = 0, mayLoad = 0, hasSideEffects = 0 in
-def PseudoBR : Pseudo<(outs), (ins simm11_lsb0:$imm10), [(br bb:$imm10)]>,
-               PseudoInstExpansion<(JAL X7, simm11_lsb0:$imm10)>;
-
-
 let isBarrier = 1, isBranch = 1, isIndirectBranch = 1, isTerminator = 1 in
 def PseudoBRIND : Pseudo<(outs GPR:$rd), (ins GPR:$rs, simm5:$imm5), []>,
                   PseudoInstExpansion<(JALR GPR:$rd, GPR:$rs, simm5:$imm5)> {

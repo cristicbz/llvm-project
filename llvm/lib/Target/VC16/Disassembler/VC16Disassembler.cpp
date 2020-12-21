@@ -53,22 +53,36 @@ extern "C" void LLVMInitializeVC16Disassembler() {
 }
 
 static const unsigned GPRDecoderTable[] = {
-  VC16::X0,  VC16::X1,  VC16::X2,  VC16::X3,
-  VC16::X4,  VC16::X5,  VC16::X6,  VC16::X7,
+    VC16::X0, VC16::X1, VC16::X2, VC16::X3,
+    VC16::X4, VC16::X5, VC16::X6, VC16::X7,
 };
 
 static DecodeStatus DecodeGPRRegisterClass(MCInst &Inst, uint64_t RegNo,
                                            uint64_t Address,
                                            const void *Decoder) {
-   if (RegNo > sizeof(GPRDecoderTable))
-     return MCDisassembler::Fail;
+  if (RegNo > sizeof(GPRDecoderTable))
+    return MCDisassembler::Fail;
 
-   // We must define our own mapping from RegNo to register identifier.
-   // Accessing index RegNo in the register class will work in the case that
-   // registers were added in ascending order, but not in general.
-   unsigned Reg = GPRDecoderTable[RegNo];
-   Inst.addOperand(MCOperand::createReg(Reg));
-   return MCDisassembler::Success;
+  // We must define our own mapping from RegNo to register identifier.
+  // Accessing index RegNo in the register class will work in the case that
+  // registers were added in ascending order, but not in general.
+  unsigned Reg = GPRDecoderTable[RegNo];
+  Inst.addOperand(MCOperand::createReg(Reg));
+  return MCDisassembler::Success;
+}
+
+static DecodeStatus DecodeGPR_JALRegisterClass(MCInst &Inst, uint64_t RegNo,
+                                               uint64_t Address,
+                                               const void *Decoder) {
+  if (RegNo > sizeof(GPRDecoderTable) || ((RegNo & 1) == 0))
+    return MCDisassembler::Fail;
+
+  // We must define our own mapping from RegNo to register identifier.
+  // Accessing index RegNo in the register class will work in the case that
+  // registers were added in ascending order, but not in general.
+  unsigned Reg = GPRDecoderTable[RegNo];
+  Inst.addOperand(MCOperand::createReg(Reg));
+  return MCDisassembler::Success;
 }
 
 template <unsigned N>
@@ -109,13 +123,12 @@ static DecodeStatus decodeUImmOperandAndLsl1(MCInst &Inst, uint64_t Imm,
   return MCDisassembler::Success;
 }
 
-
 #include "VC16GenDisassemblerTables.inc"
 
 DecodeStatus VC16Disassembler::getInstruction(MCInst &MI, uint64_t &Size,
-                                               ArrayRef<uint8_t> Bytes,
-                                               uint64_t Address,
-                                               raw_ostream &CS) const {
+                                              ArrayRef<uint8_t> Bytes,
+                                              uint64_t Address,
+                                              raw_ostream &CS) const {
   Size = 2;
   if (Bytes.size() < 2) {
     Size = 0;

@@ -75,10 +75,6 @@ public:
   reverseBranchCondition(SmallVectorImpl<MachineOperand> &Cond) const override;
 
   MachineBasicBlock *getBranchDestBlock(const MachineInstr &MI) const override;
-
-private:
-  MachineInstr &insertJump(MachineBasicBlock &MBB, const DebugLoc &DL,
-                           MachineBasicBlock *TBB) const;
 };
 
 } // namespace llvm

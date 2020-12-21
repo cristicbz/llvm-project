@@ -275,16 +275,6 @@ unsigned VC16InstrInfo::removeBranch(MachineBasicBlock &MBB,
   return 2;
 }
 
-MachineInstr &VC16InstrInfo::insertJump(MachineBasicBlock &MBB,
-                                        const DebugLoc &DL,
-                                        MachineBasicBlock *TBB) const {
-  Register ScratchReg =
-      MBB.getParent()->getRegInfo().createVirtualRegister(&VC16::GPRRegClass);
-  return *BuildMI(&MBB, DL, get(VC16::JAL))
-              .addReg(ScratchReg, RegState::Dead | RegState::Define)
-              .addMBB(TBB);
-}
-
 // Inserts a branch into the end of the specific MachineBasicBlock, returning
 // the number of instructions inserted.
 unsigned VC16InstrInfo::insertBranch(
@@ -300,7 +290,7 @@ unsigned VC16InstrInfo::insertBranch(
   // Unconditional branch.
   if (Cond.empty()) {
     assert(!FBB && "Unconditional branch with multiple successors!");
-    MachineInstr &MI = insertJump(MBB, DL, TBB);
+    MachineInstr &MI = *BuildMI(&MBB, DL, get(VC16::J)).addMBB(TBB);
     if (BytesAdded) {
       *BytesAdded = getInstSizeInBytes(MI);
     }
@@ -319,8 +309,7 @@ unsigned VC16InstrInfo::insertBranch(
     return 1;
 
   // Two-way Conditional branch. Insert the second branch.
-  // auto &MI = insertJump(MBB, DL, FBB);
-  MachineInstr &MI = insertJump(MBB, DL, FBB);
+  MachineInstr &MI = *BuildMI(&MBB, DL, get(VC16::J)).addMBB(TBB);
   if (BytesAdded)
     *BytesAdded += getInstSizeInBytes(MI);
 
