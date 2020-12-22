@@ -65,6 +65,7 @@ public:
   }
 
   bool addInstSelector() override;
+  void addPreEmitPass() override;
 };
 } // namespace
 
@@ -77,3 +78,5 @@ bool VC16PassConfig::addInstSelector() {
 
   return false;
 }
+
+void VC16PassConfig::addPreEmitPass() { addPass(&BranchRelaxationPassID); }

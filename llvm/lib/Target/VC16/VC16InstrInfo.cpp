@@ -20,6 +20,7 @@
 #include "llvm/CodeGen/MachineFunctionPass.h"
 #include "llvm/CodeGen/MachineInstrBuilder.h"
 #include "llvm/CodeGen/MachineRegisterInfo.h"
+#include "llvm/CodeGen/RegisterScavenging.h"
 #include "llvm/Support/ErrorHandling.h"
 #include "llvm/Support/TargetRegistry.h"
 
@@ -147,7 +148,8 @@ static void parseCondBranch(MachineInstr &LastInst, MachineBasicBlock *&Target,
   // Block ends with fall-through condbranch.
   assert(LastInst.getDesc().isConditionalBranch() &&
          "Unknown conditional branch");
-  Target = LastInst.getOperand(0).getMBB();
+  int NumOp = LastInst.getNumExplicitOperands();
+  Target = LastInst.getOperand(NumOp - 1).getMBB();
   Cond.push_back(MachineOperand::CreateImm(getCCFromOp(LastInst.getOpcode())));
 }
 
@@ -250,7 +252,8 @@ bool VC16InstrInfo::analyzeBranch(MachineBasicBlock &MBB,
 
 unsigned VC16InstrInfo::removeBranch(MachineBasicBlock &MBB,
                                      int *BytesRemoved) const {
-  assert(!BytesRemoved && "Code size not handled");
+  if (BytesRemoved)
+    *BytesRemoved = 0;
   MachineBasicBlock::iterator I = MBB.getLastNonDebugInstr();
   if (I == MBB.end())
     return 0;
@@ -260,6 +263,8 @@ unsigned VC16InstrInfo::removeBranch(MachineBasicBlock &MBB,
     return 0;
 
   // Remove the branch.
+  if (BytesRemoved)
+    *BytesRemoved += getInstSizeInBytes(*I);
   I->eraseFromParent();
 
   I = MBB.end();
@@ -271,6 +276,8 @@ unsigned VC16InstrInfo::removeBranch(MachineBasicBlock &MBB,
     return 1;
 
   // Remove the branch.
+  if (BytesRemoved)
+    *BytesRemoved += getInstSizeInBytes(*I);
   I->eraseFromParent();
   return 2;
 }
@@ -280,8 +287,6 @@ unsigned VC16InstrInfo::removeBranch(MachineBasicBlock &MBB,
 unsigned VC16InstrInfo::insertBranch(
     MachineBasicBlock &MBB, MachineBasicBlock *TBB, MachineBasicBlock *FBB,
     ArrayRef<MachineOperand> Cond, const DebugLoc &DL, int *BytesAdded) const {
-  assert(!BytesAdded && "Code size not handled.");
-
   // Shouldn't be a fall through.
   assert(TBB && "InsertBranch must not be told to insert a fallthrough");
   assert((Cond.size() == 1 || Cond.size() == 0) &&
@@ -300,20 +305,105 @@ unsigned VC16InstrInfo::insertBranch(
   // Conditional branch.
   VC16Cond::Code CC = (VC16Cond::Code)Cond[0].getImm();
   MachineInstr &CondMI = *BuildMI(&MBB, DL, get(getOpFromCC(CC))).addMBB(TBB);
-
   if (BytesAdded)
     *BytesAdded += getInstSizeInBytes(CondMI);
-  //
+
   // One-way conditional branch.
   if (!FBB)
     return 1;
 
   // Two-way Conditional branch. Insert the second branch.
-  MachineInstr &MI = *BuildMI(&MBB, DL, get(VC16::J)).addMBB(TBB);
+  MachineInstr &MI = *BuildMI(&MBB, DL, get(VC16::J)).addMBB(FBB);
   if (BytesAdded)
     *BytesAdded += getInstSizeInBytes(MI);
 
   return 2;
+}
+
+unsigned VC16InstrInfo::insertIndirectBranch(MachineBasicBlock &MBB,
+                                             MachineBasicBlock &DestBB,
+                                             const DebugLoc &DL,
+                                             int64_t BrOffset,
+                                             RegScavenger *RS) const {
+  assert(RS && "RegScavenger required for long branching");
+  assert(MBB.empty() &&
+         "new block should be inserted for expanding unconditional branch");
+  assert(MBB.pred_size() == 1);
+
+  MachineFunction *MF = MBB.getParent();
+  MachineRegisterInfo &MRI = MF->getRegInfo();
+  const auto &TM = static_cast<const VC16TargetMachine &>(MF->getTarget());
+
+  if (TM.isPositionIndependent())
+    report_fatal_error("Unable to insert indirect branch");
+
+  if (!isInt<16>(BrOffset))
+    report_fatal_error(
+        "Branch offsets outside of the signed 16-bit range not supported");
+
+  // FIXME: A virtual register must be used initially, as the register
+  // scavenger won't work with empty blocks (SIInstrInfo::insertIndirectBranch
+  // uses the same workaround).
+  Register ScratchReg = MRI.createVirtualRegister(&VC16::GPRRegClass);
+  auto II = MBB.end();
+
+  MachineInstr &LuiMI = *BuildMI(MBB, II, DL, get(VC16::LUI), ScratchReg)
+                             .addMBB(&DestBB, VC16II::MO_HIS);
+  BuildMI(MBB, II, DL, get(VC16::PseudoBRIND))
+      .addReg(ScratchReg, RegState::Define | RegState::Dead)
+      .addReg(ScratchReg, RegState::Kill)
+      .addMBB(&DestBB, VC16II::MO_LO);
+
+  RS->enterBasicBlockEnd(MBB);
+  Register Scav = RS->scavengeRegisterBackwards(
+      VC16::GPRRegClass, MachineBasicBlock::iterator(LuiMI), false, 0);
+  MRI.replaceRegWith(ScratchReg, Scav);
+  MRI.clearVirtRegs();
+  RS->setRegUsed(Scav);
+  return 4;
+}
+
+bool VC16InstrInfo::isBranchOffsetInRange(unsigned BranchOp,
+                                          int64_t BrOffset) const {
+  // Ideally we could determine the supported branch offset from the
+  // VC16II::FormMask, but this can't be used for Pseudo instructions like
+  // PseudoBR.
+  switch (BranchOp) {
+  default:
+    llvm_unreachable("Unexpected opcode!");
+  case VC16::BZ:
+  case VC16::BNZ:
+  case VC16::BN:
+  case VC16::BNN:
+  case VC16::BLT:
+  case VC16::BGE:
+  case VC16::BNC:
+    return isIntN(9, BrOffset);
+  case VC16::JAL:
+  case VC16::J:
+    return isIntN(11, BrOffset);
+  }
+}
+
+unsigned VC16InstrInfo::getInstSizeInBytes(const MachineInstr &MI) const {
+  unsigned Opcode = MI.getOpcode();
+
+  switch (Opcode) {
+  default: {
+    return get(Opcode).getSize();
+  }
+  case TargetOpcode::EH_LABEL:
+  case TargetOpcode::IMPLICIT_DEF:
+  case TargetOpcode::KILL:
+  case TargetOpcode::DBG_VALUE:
+    return 0;
+  case TargetOpcode::INLINEASM: {
+    const MachineFunction &MF = *MI.getParent()->getParent();
+    const auto &TM = static_cast<const VC16TargetMachine &>(MF.getTarget());
+    return getInlineAsmLength(MI.getOperand(0).getSymbolName(),
+                              *TM.getMCAsmInfo());
+  }
+  }
 }
 
 bool VC16InstrInfo::reverseBranchCondition(

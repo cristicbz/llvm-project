@@ -216,6 +216,10 @@ SDValue VC16TargetLowering::LowerOperation(SDValue Op,
     return lowerSETCC(Op, DAG);
   case ISD::VASTART:
     return lowerVASTART(Op, DAG);
+  case ISD::FRAMEADDR:
+    return LowerFRAMEADDR(Op, DAG);
+  case ISD::RETURNADDR:
+    return LowerRETURNADDR(Op, DAG);
   }
 }
 
@@ -231,7 +235,7 @@ SDValue VC16TargetLowering::lowerGlobalAddress(SDValue Op,
     report_fatal_error("Unable to lowerGlobalAddress");
   }
   SDValue GAHi = DAG.getTargetGlobalAddress(GV, DL, Ty, Offset, VC16II::MO_HIS);
-  SDValue GALo = DAG.getTargetGlobalAddress(GV, DL, Ty, Offset, VC16II::MO_LOS);
+  SDValue GALo = DAG.getTargetGlobalAddress(GV, DL, Ty, Offset, VC16II::MO_LO);
   SDValue MNHi = SDValue(DAG.getMachineNode(VC16::LUI, DL, Ty, GAHi), 0);
   SDValue MNLo = SDValue(DAG.getMachineNode(VC16::LEA, DL, Ty, MNHi, GALo), 0);
 
@@ -251,7 +255,7 @@ SDValue VC16TargetLowering::lowerBlockAddress(SDValue Op,
   }
 
   SDValue BAHi = DAG.getTargetBlockAddress(BA, Ty, Offset, VC16II::MO_HIS);
-  SDValue BALo = DAG.getTargetBlockAddress(BA, Ty, Offset, VC16II::MO_LOS);
+  SDValue BALo = DAG.getTargetBlockAddress(BA, Ty, Offset, VC16II::MO_LO);
   SDValue MNHi = SDValue(DAG.getMachineNode(VC16::LUI, DL, Ty, BAHi), 0);
   SDValue MNLo = SDValue(DAG.getMachineNode(VC16::LEA, DL, Ty, MNHi, BALo), 0);
   return MNLo;
@@ -271,7 +275,7 @@ SDValue VC16TargetLowering::lowerExternalSymbol(SDValue Op,
   }
 
   SDValue GAHi = DAG.getTargetExternalSymbol(Sym, Ty, VC16II::MO_HIS);
-  SDValue GALo = DAG.getTargetExternalSymbol(Sym, Ty, VC16II::MO_LOS);
+  SDValue GALo = DAG.getTargetExternalSymbol(Sym, Ty, VC16II::MO_LO);
   SDValue MNHi = SDValue(DAG.getMachineNode(VC16::LUI, DL, Ty, GAHi), 0);
   SDValue MNLo = SDValue(DAG.getMachineNode(VC16::LEA, DL, Ty, MNHi, GALo), 0);
   return MNLo;
@@ -371,6 +375,58 @@ SDValue VC16TargetLowering::lowerVASTART(SDValue Op, SelectionDAG &DAG) const {
   const Value *SV = cast<SrcValueSDNode>(Op.getOperand(2))->getValue();
   return DAG.getStore(Op.getOperand(0), DL, FI, Op.getOperand(1),
                       MachinePointerInfo(SV));
+}
+
+SDValue VC16TargetLowering::LowerFRAMEADDR(SDValue Op,
+                                           SelectionDAG &DAG) const {
+  const VC16RegisterInfo &RI = *Subtarget.getRegisterInfo();
+  MachineFunction &MF = DAG.getMachineFunction();
+  MachineFrameInfo &MFI = MF.getFrameInfo();
+  MFI.setFrameAddressIsTaken(true);
+  Register FrameReg = RI.getFrameRegister(MF);
+  int XLenInBytes = 2;
+
+  EVT VT = Op.getValueType();
+  SDLoc DL(Op);
+  SDValue FrameAddr = DAG.getCopyFromReg(DAG.getEntryNode(), DL, FrameReg, VT);
+  unsigned Depth = cast<ConstantSDNode>(Op.getOperand(0))->getZExtValue();
+  while (Depth--) {
+    int Offset = -XLenInBytes;
+    SDValue Ptr = DAG.getNode(ISD::ADD, DL, VT, FrameAddr,
+                              DAG.getIntPtrConstant(Offset, DL));
+    FrameAddr =
+        DAG.getLoad(VT, DL, DAG.getEntryNode(), Ptr, MachinePointerInfo());
+  }
+  return FrameAddr;
+}
+
+SDValue VC16TargetLowering::LowerRETURNADDR(SDValue Op,
+                                            SelectionDAG &DAG) const {
+  const VC16RegisterInfo &RI = *Subtarget.getRegisterInfo();
+  MachineFunction &MF = DAG.getMachineFunction();
+  MachineFrameInfo &MFI = MF.getFrameInfo();
+  MFI.setReturnAddressIsTaken(true);
+  int XLenInBytes = 2;
+
+  if (verifyReturnAddressArgumentIsConstant(Op, DAG))
+    return SDValue();
+
+  EVT VT = Op.getValueType();
+  SDLoc DL(Op);
+  unsigned Depth = cast<ConstantSDNode>(Op.getOperand(0))->getZExtValue();
+  // if (Depth) {
+  int Off = -XLenInBytes * 2;
+  SDValue FrameAddr = LowerFRAMEADDR(Op, DAG);
+  SDValue Offset = DAG.getConstant(Off, DL, VT);
+  return DAG.getLoad(VT, DL, DAG.getEntryNode(),
+                     DAG.getNode(ISD::ADD, DL, VT, FrameAddr, Offset),
+                     MachinePointerInfo());
+  //}
+
+  // Return the value of the return address register, marking it an implicit
+  // live-in.
+  Register Reg = MF.addLiveIn(RI.getRARegister(), getRegClassFor(MVT::i16));
+  // return DAG.getCopyFromReg(DAG.getEntryNode(), DL, Reg, MVT::i16);
 }
 
 MachineBasicBlock *
@@ -1015,4 +1071,22 @@ const char *VC16TargetLowering::getTargetNodeName(unsigned Opcode) const {
     return "VC16ISD::BRCOND";
   }
   return nullptr;
+}
+
+std::pair<unsigned, const TargetRegisterClass *>
+VC16TargetLowering::getRegForInlineAsmConstraint(const TargetRegisterInfo *TRI,
+                                                 StringRef Constraint,
+                                                 MVT VT) const {
+  // First, see if this is a constraint that directly corresponds to a
+  // VC16 register class.
+  if (Constraint.size() == 1) {
+    switch (Constraint[0]) {
+    case 'r':
+      return std::make_pair(0U, &VC16::GPRRegClass);
+    default:
+      break;
+    }
+  }
+
+  return TargetLowering::getRegForInlineAsmConstraint(TRI, Constraint, VT);
 }

@@ -45,6 +45,10 @@ public:
   // This method returns the name of a target specific DAG node.
   const char *getTargetNodeName(unsigned Opcode) const override;
 
+  std::pair<unsigned, const TargetRegisterClass *>
+  getRegForInlineAsmConstraint(const TargetRegisterInfo *TRI,
+                               StringRef Constraint, MVT VT) const override;
+
   MachineBasicBlock *
   EmitInstrWithCustomInserter(MachineInstr &MI,
                               MachineBasicBlock *BB) const override;
@@ -85,6 +89,8 @@ private:
   SDValue lowerBRCOND(SDValue Op, SelectionDAG &DAG) const;
   SDValue lowerSETCC(SDValue Op, SelectionDAG &DAG) const;
   SDValue lowerVASTART(SDValue Op, SelectionDAG &DAG) const;
+  SDValue LowerFRAMEADDR(SDValue Op, SelectionDAG &DAG) const;
+  SDValue LowerRETURNADDR(SDValue Op, SelectionDAG &DAG) const;
 };
 } // namespace llvm
 

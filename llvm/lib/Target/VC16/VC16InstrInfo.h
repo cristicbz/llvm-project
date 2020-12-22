@@ -58,6 +58,7 @@ public:
                 const DebugLoc &DL, Register DstReg, uint64_t Val,
                 MachineInstr::MIFlag Flag = MachineInstr::NoFlags) const;
 
+  unsigned getInstSizeInBytes(const MachineInstr &MI) const override;
   bool analyzeBranch(MachineBasicBlock &MBB, MachineBasicBlock *&TBB,
                      MachineBasicBlock *&FBB,
                      SmallVectorImpl<MachineOperand> &Cond,
@@ -67,6 +68,10 @@ public:
                         MachineBasicBlock *FBB, ArrayRef<MachineOperand> Cond,
                         const DebugLoc &dl,
                         int *BytesAdded = nullptr) const override;
+  unsigned insertIndirectBranch(MachineBasicBlock &MBB,
+                                MachineBasicBlock &DestBB, const DebugLoc &DL,
+                                int64_t BrOffset,
+                                RegScavenger *RS) const override;
 
   unsigned removeBranch(MachineBasicBlock &MBB,
                         int *BytesRemoved = nullptr) const override;
@@ -75,6 +80,9 @@ public:
   reverseBranchCondition(SmallVectorImpl<MachineOperand> &Cond) const override;
 
   MachineBasicBlock *getBranchDestBlock(const MachineInstr &MI) const override;
+
+  bool isBranchOffsetInRange(unsigned BranchOpc,
+                             int64_t BrOffset) const override;
 };
 
 } // namespace llvm

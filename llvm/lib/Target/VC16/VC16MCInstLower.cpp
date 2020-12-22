@@ -37,8 +37,7 @@ static MCOperand lowerSymbolOperand(const MachineOperand &MO, MCSymbol *Sym,
   case VC16II::MO_None:
     Kind = VC16MCExpr::VK_VC16_None;
     break;
-  case VC16II::MO_LOU:
-  case VC16II::MO_LOS:
+  case VC16II::MO_LO:
     Kind = VC16MCExpr::VK_VC16_LO;
     break;
   case VC16II::MO_HIU:
@@ -52,11 +51,12 @@ static MCOperand lowerSymbolOperand(const MachineOperand &MO, MCSymbol *Sym,
   const MCExpr *ME =
       MCSymbolRefExpr::create(Sym, MCSymbolRefExpr::VK_None, Ctx);
 
-  if (!MO.isJTI() && MO.getOffset())
+  if (!MO.isJTI() && !MO.isMBB() && MO.getOffset())
     ME = MCBinaryExpr::createAdd(
         ME, MCConstantExpr::create(MO.getOffset(), Ctx), Ctx);
 
-  ME = VC16MCExpr::create(ME, Kind, Ctx);
+  if (Kind != VC16MCExpr::VK_VC16_None)
+    ME = VC16MCExpr::create(ME, Kind, Ctx);
   return MCOperand::createExpr(ME);
 }
 

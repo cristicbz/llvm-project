@@ -12,8 +12,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "VC16.h"
 #include "InstPrinter/VC16InstPrinter.h"
+#include "VC16.h"
 #include "VC16TargetMachine.h"
 #include "llvm/CodeGen/AsmPrinter.h"
 #include "llvm/CodeGen/MachineConstantPool.h"
@@ -34,12 +34,17 @@ namespace {
 class VC16AsmPrinter : public AsmPrinter {
 public:
   explicit VC16AsmPrinter(TargetMachine &TM,
-                           std::unique_ptr<MCStreamer> Streamer)
+                          std::unique_ptr<MCStreamer> Streamer)
       : AsmPrinter(TM, std::move(Streamer)) {}
 
   StringRef getPassName() const override { return "VC16 Assembly Printer"; }
 
   void emitInstruction(const MachineInstr *MI) override;
+
+  bool PrintAsmOperand(const MachineInstr *MI, unsigned OpNo,
+                       const char *ExtraCode, raw_ostream &OS) override;
+  bool PrintAsmMemoryOperand(const MachineInstr *MI, unsigned OpNo,
+                             const char *ExtraCode, raw_ostream &OS) override;
 
   bool emitPseudoExpansionLowering(MCStreamer &OutStreamer,
                                    const MachineInstr *MI);
@@ -49,7 +54,7 @@ public:
     return LowerVC16MachineOperandToMCOperand(MO, MCOp, *this);
   }
 };
-}
+} // namespace
 
 // Simple pseudo-instructions have their lowering (with expansion to real
 // instructions) auto-generated.
@@ -63,6 +68,54 @@ void VC16AsmPrinter::emitInstruction(const MachineInstr *MI) {
   MCInst TmpInst;
   LowerVC16MachineInstrToMCInst(MI, TmpInst, *this);
   EmitToStreamer(*OutStreamer, TmpInst);
+}
+
+bool VC16AsmPrinter::PrintAsmOperand(const MachineInstr *MI, unsigned OpNo,
+                                     const char *ExtraCode, raw_ostream &OS) {
+  // First try the generic code, which knows about modifiers like 'c' and 'n'.
+  if (!AsmPrinter::PrintAsmOperand(MI, OpNo, ExtraCode, OS))
+    return false;
+
+  if (!ExtraCode) {
+    const MachineOperand &MO = MI->getOperand(OpNo);
+    switch (MO.getType()) {
+    case MachineOperand::MO_Immediate:
+      OS << MO.getImm();
+      return false;
+    case MachineOperand::MO_Register:
+      OS << VC16InstPrinter::getRegisterName(MO.getReg());
+      return false;
+    case MachineOperand::MO_GlobalAddress:
+      PrintSymbolOperand(MO, OS);
+      return false;
+    case MachineOperand::MO_BlockAddress: {
+      MCSymbol *Sym = GetBlockAddressSymbol(MO.getBlockAddress());
+      Sym->print(OS, MAI);
+      return false;
+    }
+    default:
+      break;
+    }
+  }
+
+  return true;
+}
+
+bool VC16AsmPrinter::PrintAsmMemoryOperand(const MachineInstr *MI,
+                                           unsigned OpNo, const char *ExtraCode,
+                                           raw_ostream &OS) {
+  if (!ExtraCode) {
+    const MachineOperand &MO = MI->getOperand(OpNo);
+    // For now, we only support register memory operands in registers and
+    // assume there is no addend
+    if (!MO.isReg())
+      return true;
+
+    OS << "0(" << VC16InstPrinter::getRegisterName(MO.getReg()) << ")";
+    return false;
+  }
+
+  return AsmPrinter::PrintAsmMemoryOperand(MI, OpNo, ExtraCode, OS);
 }
 
 // Force static initialization.

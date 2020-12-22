@@ -36,12 +36,11 @@ enum {
 };
 enum {
   MO_None,
-  MO_LOU,
+  MO_LO,
   MO_HIU,
-  MO_LOS,
   MO_HIS,
 };
-} // namespace VC16
+} // namespace VC16II
 
 } // namespace llvm
 
