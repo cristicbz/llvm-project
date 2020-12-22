@@ -7,16 +7,9 @@
 define i32 @load_i32(i32 *%a) nounwind {
 ; VC16I-LABEL: load_i32:
 ; VC16I:       ; %bb.0:
-; VC16I-NEXT:    lea sp, sp, -4
-; VC16I-NEXT:    sw s0, 2(sp)
-; VC16I-NEXT:    sw ra, 0(sp)
-; VC16I-NEXT:    lea s0, sp, 4
 ; VC16I-NEXT:    lw a2, 0(a0)
 ; VC16I-NEXT:    lw a1, 2(a0)
 ; VC16I-NEXT:    lea a0, a2, 0
-; VC16I-NEXT:    lw ra, 0(sp)
-; VC16I-NEXT:    lw s0, 2(sp)
-; VC16I-NEXT:    lea sp, sp, 4
 ; VC16I-NEXT:    jalr ra, 0
   %1 = load i32, i32* %a
   ret i32 %1
@@ -25,17 +18,10 @@ define i32 @load_i32(i32 *%a) nounwind {
 define i32 @load_i64(i64 *%a) nounwind {
 ; VC16I-LABEL: load_i64:
 ; VC16I:       ; %bb.0:
-; VC16I-NEXT:    lea sp, sp, -4
-; VC16I-NEXT:    sw s0, 2(sp)
-; VC16I-NEXT:    sw ra, 0(sp)
-; VC16I-NEXT:    lea s0, sp, 4
 ; VC16I-NEXT:    lw a2, 6(a0)
 ; VC16I-NEXT:    lw a2, 4(a0)
 ; VC16I-NEXT:    lw a1, 2(a0)
 ; VC16I-NEXT:    lw a0, 0(a0)
-; VC16I-NEXT:    lw ra, 0(sp)
-; VC16I-NEXT:    lw s0, 2(sp)
-; VC16I-NEXT:    lea sp, sp, 4
 ; VC16I-NEXT:    jalr ra, 0
   %1 = load volatile i64, i64* %a
   %2 = trunc i64 %1 to i32
@@ -50,19 +36,12 @@ define i32 @load_i64(i64 *%a) nounwind {
 define i32 @load_i32_global() nounwind {
 ; VC16I-LABEL: load_i32_global:
 ; VC16I:       ; %bb.0:
-; VC16I-NEXT:    lea sp, sp, -4
-; VC16I-NEXT:    sw s0, 2(sp)
-; VC16I-NEXT:    sw ra, 0(sp)
-; VC16I-NEXT:    lea s0, sp, 4
 ; VC16I-NEXT:    lui a2, %his(val32)
 ; VC16I-NEXT:    lea a2, a2, %lo(val32)
 ; VC16I-NEXT:    lw a0, 0(a2)
 ; VC16I-NEXT:    lui a2, %his(val32+2)
 ; VC16I-NEXT:    lea a2, a2, %lo(val32+2)
 ; VC16I-NEXT:    lw a1, 0(a2)
-; VC16I-NEXT:    lw ra, 0(sp)
-; VC16I-NEXT:    lw s0, 2(sp)
-; VC16I-NEXT:    lea sp, sp, 4
 ; VC16I-NEXT:    jalr ra, 0
   %1 = load i32, i32* @val32
   ret i32 %1

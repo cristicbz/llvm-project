@@ -5,10 +5,6 @@
 define i16 @bare_select(i1 %a, i16 %b, i16 %c) {
 ; VC16I-LABEL: bare_select:
 ; VC16I:       ; %bb.0:
-; VC16I-NEXT:    lea sp, sp, -4
-; VC16I-NEXT:    sw s0, 2(sp)
-; VC16I-NEXT:    sw ra, 0(sp)
-; VC16I-NEXT:    lea s0, sp, 4
 ; VC16I-NEXT:    andi a0, 1
 ; VC16I-NEXT:    lli t0, 0
 ; VC16I-NEXT:    cmp a0, t0
@@ -17,9 +13,6 @@ define i16 @bare_select(i1 %a, i16 %b, i16 %c) {
 ; VC16I-NEXT:    lea a1, a2, 0
 ; VC16I-NEXT:  .LBB0_2:
 ; VC16I-NEXT:    lea a0, a1, 0
-; VC16I-NEXT:    lw ra, 0(sp)
-; VC16I-NEXT:    lw s0, 2(sp)
-; VC16I-NEXT:    lea sp, sp, 4
 ; VC16I-NEXT:    jalr ra, 0
   %1 = select i1 %a, i16 %b, i16 %c
   ret i16 %1

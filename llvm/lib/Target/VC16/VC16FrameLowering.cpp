@@ -28,16 +28,18 @@ static Register getFPReg(const VC16Subtarget &STI) { return VC16::X2; }
 // Returns the register used to hold the stack pointer.
 static Register getSPReg(const VC16Subtarget &STI) { return VC16::X0; }
 
-bool VC16FrameLowering::hasFP(const MachineFunction &MF) const { return true; }
+bool VC16FrameLowering::hasFP(const MachineFunction &MF) const {
+  const TargetRegisterInfo *RegInfo = MF.getSubtarget().getRegisterInfo();
+
+  const MachineFrameInfo &MFI = MF.getFrameInfo();
+  return MF.getTarget().Options.DisableFramePointerElim(MF) ||
+         RegInfo->needsStackRealignment(MF) || MFI.hasVarSizedObjects() ||
+         MFI.isFrameAddressTaken();
+}
 
 void VC16FrameLowering::emitPrologue(MachineFunction &MF,
                                      MachineBasicBlock &MBB) const {
   assert(&MF.front() == &MBB && "Shrink-wrapping not yet supported");
-
-  if (!hasFP(MF)) {
-    report_fatal_error(
-        "emitPrologue doesn't support framepointer-less functions");
-  }
 
   MachineFrameInfo &MFI = MF.getFrameInfo();
   const auto *VCFI = MF.getInfo<VC16MachineFunctionInfo>();
@@ -74,17 +76,14 @@ void VC16FrameLowering::emitPrologue(MachineFunction &MF,
   std::advance(MBBI, CSI.size());
 
   // Generate new FP.
-  adjustReg(MBB, MBBI, DL, FPReg, SPReg, StackSize - VCFI->getVarArgsSaveSize(),
-            MachineInstr::FrameSetup);
+  if (hasFP(MF)) {
+    adjustReg(MBB, MBBI, DL, FPReg, SPReg,
+              StackSize - VCFI->getVarArgsSaveSize(), MachineInstr::FrameSetup);
+  }
 }
 
 void VC16FrameLowering::emitEpilogue(MachineFunction &MF,
                                      MachineBasicBlock &MBB) const {
-  if (!hasFP(MF)) {
-    report_fatal_error(
-        "emitEpilogue doesn't support framepointer-less functions");
-  }
-
   MachineBasicBlock::iterator MBBI = MBB.getLastNonDebugInstr();
   const VC16RegisterInfo *RI = STI.getRegisterInfo();
   MachineFrameInfo &MFI = MF.getFrameInfo();
@@ -105,6 +104,7 @@ void VC16FrameLowering::emitEpilogue(MachineFunction &MF,
   // necessary if the stack pointer was modified, meaning the stack size is
   // unknown.
   if (RI->needsStackRealignment(MF) || MFI.hasVarSizedObjects()) {
+    assert(hasFP(MF) && "frame pointer should not have been eliminated");
     adjustReg(MBB, LastFrameDestroy, DL, SPReg, FPReg,
               -StackSize + VCFI->getVarArgsSaveSize(),
               MachineInstr::FrameDestroy);
@@ -132,10 +132,12 @@ void VC16FrameLowering::determineCalleeSaves(MachineFunction &MF,
                                              BitVector &SavedRegs,
                                              RegScavenger *RS) const {
   TargetFrameLowering::determineCalleeSaves(MF, SavedRegs, RS);
-  // TODO: Once frame pointer elimination is implemented, don't
-  // unconditionally spill the frame pointer and return address.
-  SavedRegs.set(VC16::X2);
-  SavedRegs.set(VC16::X1);
+  // Unconditionally spill RA and FP only if the function uses a frame
+  // pointer.
+  if (hasFP(MF)) {
+    SavedRegs.set(VC16::X2);
+    SavedRegs.set(VC16::X1);
+  }
 }
 
 void VC16FrameLowering::processFunctionBeforeFrameFinalized(

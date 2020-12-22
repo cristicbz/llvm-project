@@ -7,16 +7,9 @@
 define i16 @constraint_r(i16 %a) {
 ; VC16I-LABEL: constraint_r:
 ; VC16I:       ; %bb.0:
-; VC16I-NEXT:    lea sp, sp, -4
-; VC16I-NEXT:    sw s0, 2(sp)
-; VC16I-NEXT:    sw ra, 0(sp)
-; VC16I-NEXT:    lea s0, sp, 4
 ; VC16I-NEXT:    ;APP
 ; VC16I-NEXT:    add a0, a0
 ; VC16I-NEXT:    ;NO_APP
-; VC16I-NEXT:    lw ra, 0(sp)
-; VC16I-NEXT:    lw s0, 2(sp)
-; VC16I-NEXT:    lea sp, sp, 4
 ; VC16I-NEXT:    jalr ra, 0
   %1 = load i16, i16* @gi
   %2 = tail call i16 asm "add $0, $1", "=r,r"(i16 %a)
@@ -26,16 +19,9 @@ define i16 @constraint_r(i16 %a) {
 define i16 @constraint_i(i16 %a) {
 ; VC16I-LABEL: constraint_i:
 ; VC16I:       ; %bb.0:
-; VC16I-NEXT:    lea sp, sp, -4
-; VC16I-NEXT:    sw s0, 2(sp)
-; VC16I-NEXT:    sw ra, 0(sp)
-; VC16I-NEXT:    lea s0, sp, 4
 ; VC16I-NEXT:    ;APP
 ; VC16I-NEXT:    addi a0, 11
 ; VC16I-NEXT:    ;NO_APP
-; VC16I-NEXT:    lw ra, 0(sp)
-; VC16I-NEXT:    lw s0, 2(sp)
-; VC16I-NEXT:    lea sp, sp, 4
 ; VC16I-NEXT:    jalr ra, 0
   %1 = load i16, i16* @gi
   %2 = tail call i16 asm "addi $0, $1", "=r,i"(i16 11)
@@ -45,15 +31,8 @@ define i16 @constraint_i(i16 %a) {
 define void @constraint_m(i16* %a) {
 ; VC16I-LABEL: constraint_m:
 ; VC16I:       ; %bb.0:
-; VC16I-NEXT:    lea sp, sp, -4
-; VC16I-NEXT:    sw s0, 2(sp)
-; VC16I-NEXT:    sw ra, 0(sp)
-; VC16I-NEXT:    lea s0, sp, 4
 ; VC16I-NEXT:    ;APP
 ; VC16I-NEXT:    ;NO_APP
-; VC16I-NEXT:    lw ra, 0(sp)
-; VC16I-NEXT:    lw s0, 2(sp)
-; VC16I-NEXT:    lea sp, sp, 4
 ; VC16I-NEXT:    jalr ra, 0
   call void asm sideeffect "", "=*m"(i16* %a)
   ret void
@@ -62,16 +41,9 @@ define void @constraint_m(i16* %a) {
 define i16 @constraint_m2(i16* %a) {
 ; VC16I-LABEL: constraint_m2:
 ; VC16I:       ; %bb.0:
-; VC16I-NEXT:    lea sp, sp, -4
-; VC16I-NEXT:    sw s0, 2(sp)
-; VC16I-NEXT:    sw ra, 0(sp)
-; VC16I-NEXT:    lea s0, sp, 4
 ; VC16I-NEXT:    ;APP
 ; VC16I-NEXT:    lw a0, 0(a0)
 ; VC16I-NEXT:    ;NO_APP
-; VC16I-NEXT:    lw ra, 0(sp)
-; VC16I-NEXT:    lw s0, 2(sp)
-; VC16I-NEXT:    lea sp, sp, 4
 ; VC16I-NEXT:    jalr ra, 0
   %1 = tail call i16 asm "lw $0, $1", "=r,*m"(i16* %a) nounwind
   ret i16 %1

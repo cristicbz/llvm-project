@@ -6,10 +6,6 @@
 define void @relax_bcc(i1 %a) {
 ; CHECK-LABEL: relax_bcc:
 ; CHECK:       ; %bb.0:
-; CHECK-NEXT:    lea sp, sp, -4
-; CHECK-NEXT:    sw s0, 2(sp)
-; CHECK-NEXT:    sw ra, 0(sp)
-; CHECK-NEXT:    lea s0, sp, 4
 ; CHECK-NEXT:    tsti a0, 1
 ; CHECK-NEXT:    bnz .LBB0_1
 ; CHECK-NEXT:    j .LBB0_2
@@ -18,9 +14,6 @@ define void @relax_bcc(i1 %a) {
 ; CHECK-NEXT:    .zero 254
 ; CHECK-NEXT:    ;NO_APP
 ; CHECK-NEXT:  .LBB0_2: ; %tail
-; CHECK-NEXT:    lw ra, 0(sp)
-; CHECK-NEXT:    lw s0, 2(sp)
-; CHECK-NEXT:    lea sp, sp, 4
 ; CHECK-NEXT:    jalr ra, 0
   br i1 %a, label %iftrue, label %tail
 
@@ -36,13 +29,9 @@ tail:
 define i16 @relax_jal(i1 %a) {
 ; CHECK-LABEL: relax_jal:
 ; CHECK:       ; %bb.0:
-; CHECK-NEXT:    lea sp, sp, -4
-; CHECK-NEXT:    sw s0, 2(sp)
-; CHECK-NEXT:    sw ra, 0(sp)
-; CHECK-NEXT:    lea s0, sp, 4
 ; CHECK-NEXT:    tsti a0, 1
 ; CHECK-NEXT:    bnz .LBB1_1
-; CHECK-NEXT:  ; %bb.4:
+; CHECK-NEXT:  ; %bb.3:
 ; CHECK-NEXT:    lui a2, .LBB1_2
 ; CHECK-NEXT:    jalr a2, .LBB1_2
 ; CHECK-NEXT:  .LBB1_1: ; %iftrue
@@ -51,15 +40,12 @@ define i16 @relax_jal(i1 %a) {
 ; CHECK-NEXT:    ;APP
 ; CHECK-NEXT:    .zero 1022
 ; CHECK-NEXT:    ;NO_APP
-; CHECK-NEXT:    j .LBB1_3
+; CHECK-NEXT:    lli a0, 1
+; CHECK-NEXT:    jalr ra, 0
 ; CHECK-NEXT:  .LBB1_2: ; %jmp
 ; CHECK-NEXT:    ;APP
 ; CHECK-NEXT:    ;NO_APP
-; CHECK-NEXT:  .LBB1_3: ; %tail
 ; CHECK-NEXT:    lli a0, 1
-; CHECK-NEXT:    lw ra, 0(sp)
-; CHECK-NEXT:    lw s0, 2(sp)
-; CHECK-NEXT:    lea sp, sp, 4
 ; CHECK-NEXT:    jalr ra, 0
   br i1 %a, label %iftrue, label %jmp
 

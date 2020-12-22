@@ -5,10 +5,6 @@
 define void @foo(i16 %a, i16 *%b, i1 %c) {
 ; VC16I-LABEL: foo:
 ; VC16I:       ; %bb.0:
-; VC16I-NEXT:    lea sp, sp, -4
-; VC16I-NEXT:    sw s0, 2(sp)
-; VC16I-NEXT:    sw ra, 0(sp)
-; VC16I-NEXT:    lea s0, sp, 4
 ; VC16I-NEXT:    lw t0, 0(a1)
 ; VC16I-NEXT:    cmp t0, a0
 ; VC16I-NEXT:    bz .LBB0_12
@@ -55,9 +51,6 @@ define void @foo(i16 %a, i16 *%b, i1 %c) {
 ; VC16I-NEXT:  ; %bb.11: ; %test12
 ; VC16I-NEXT:    lw a2, 0(a1)
 ; VC16I-NEXT:  .LBB0_12: ; %end
-; VC16I-NEXT:    lw ra, 0(sp)
-; VC16I-NEXT:    lw s0, 2(sp)
-; VC16I-NEXT:    lea sp, sp, 4
 ; VC16I-NEXT:    jalr ra, 0
 
   %val1 = load volatile i16, i16* %b

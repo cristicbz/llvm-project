@@ -5,10 +5,6 @@
 define void @jt(i16 %in, i16* %out) {
 ; VC16I-LABEL: jt:
 ; VC16I:       ; %bb.0: ; %entry
-; VC16I-NEXT:    lea sp, sp, -4
-; VC16I-NEXT:    sw s0, 2(sp)
-; VC16I-NEXT:    sw ra, 0(sp)
-; VC16I-NEXT:    lea s0, sp, 4
 ; VC16I-NEXT:    lli a2, 2
 ; VC16I-NEXT:    cmp a2, a0
 ; VC16I-NEXT:    blt .LBB0_4
@@ -35,9 +31,6 @@ define void @jt(i16 %in, i16* %out) {
 ; VC16I-NEXT:  .LBB0_8: ; %exit
 ; VC16I-NEXT:    sw a2, 0(a1)
 ; VC16I-NEXT:  .LBB0_9: ; %exit
-; VC16I-NEXT:    lw ra, 0(sp)
-; VC16I-NEXT:    lw s0, 2(sp)
-; VC16I-NEXT:    lea sp, sp, 4
 ; VC16I-NEXT:    jalr ra, 0
 entry:
   switch i16 %in, label %exit [

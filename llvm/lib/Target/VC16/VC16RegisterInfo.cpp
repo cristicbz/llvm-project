@@ -37,11 +37,13 @@ VC16RegisterInfo::getCalleeSavedRegs(const MachineFunction *MF) const {
 }
 
 BitVector VC16RegisterInfo::getReservedRegs(const MachineFunction &MF) const {
+  const VC16FrameLowering *TFI = getFrameLowering(MF);
   BitVector Reserved(getNumRegs());
 
   // Use markSuperRegs to ensure any register aliases are also reserved
   markSuperRegs(Reserved, VC16::X0); // sp
-  markSuperRegs(Reserved, VC16::X2); // fp
+  if (TFI->hasFP(MF))
+    markSuperRegs(Reserved, VC16::X2); // fp
   assert(checkAllSuperRegsMarked(Reserved));
   return Reserved;
 }
@@ -66,9 +68,6 @@ void VC16RegisterInfo::eliminateFrameIndex(MachineBasicBlock::iterator II,
   int Offset =
       getFrameLowering(MF)->getFrameIndexReference(MF, FrameIndex, FrameReg) +
       MI.getOperand(FIOperandNum + 1).getImm();
-
-  assert(MF.getSubtarget().getFrameLowering()->hasFP(MF) &&
-         "eliminateFrameIndex currently requires hasFP");
 
   if (!isUInt<16>(Offset)) {
     report_fatal_error("Frame offsets outside of the unsigned 16-bit range.");
@@ -99,7 +98,8 @@ void VC16RegisterInfo::eliminateFrameIndex(MachineBasicBlock::iterator II,
 }
 
 Register VC16RegisterInfo::getFrameRegister(const MachineFunction &MF) const {
-  return VC16::X2;
+  const TargetFrameLowering *TFI = getFrameLowering(MF);
+  return TFI->hasFP(MF) ? VC16::X2 : VC16::X0;
 }
 
 const uint32_t *

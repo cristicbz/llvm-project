@@ -109,10 +109,8 @@ define i16 @va1_va_arg_alloca(i8* %fmt, ...) nounwind {
 define void @va1_caller() nounwind {
 ; VC16I-LABEL: va1_caller:
 ; VC16I:       ; %bb.0:
-; VC16I-NEXT:    lea sp, sp, -12
-; VC16I-NEXT:    sw s0, 10(sp)
+; VC16I-NEXT:    lea sp, sp, -10
 ; VC16I-NEXT:    sw ra, 8(sp)
-; VC16I-NEXT:    lea s0, sp, 12
 ; VC16I-NEXT:    lli a2, 0
 ; VC16I-NEXT:    sw a2, 4(sp)
 ; VC16I-NEXT:    sw a2, 2(sp)
@@ -126,8 +124,7 @@ define void @va1_caller() nounwind {
 ; VC16I-NEXT:    lli a2, 2
 ; VC16I-NEXT:    jalr ra, 0
 ; VC16I-NEXT:    lw ra, 8(sp)
-; VC16I-NEXT:    lw s0, 10(sp)
-; VC16I-NEXT:    lea sp, sp, 12
+; VC16I-NEXT:    lea sp, sp, 10
 ; VC16I-NEXT:    jalr ra, 0
 ; Pass a double, as a float would be promoted by a C/C++ frontend
   %1 = call i16 (i8*, ...) @va1(i8* undef, double 1.0, i16 2)
@@ -216,10 +213,8 @@ define float @va3_va_arg(i16 %a, float %b, ...) nounwind {
 define void @va3_caller() nounwind {
 ; VC16I-LABEL: va3_caller:
 ; VC16I:       ; %bb.0:
-; VC16I-NEXT:    lea sp, sp, -8
-; VC16I-NEXT:    sw s0, 6(sp)
+; VC16I-NEXT:    lea sp, sp, -6
 ; VC16I-NEXT:    sw ra, 4(sp)
-; VC16I-NEXT:    lea s0, sp, 8
 ; VC16I-NEXT:    lui a2, 512
 ; VC16I-NEXT:    sw a2, 2(sp)
 ; VC16I-NEXT:    lli a1, 0
@@ -230,8 +225,7 @@ define void @va3_caller() nounwind {
 ; VC16I-NEXT:    lui a2, 508
 ; VC16I-NEXT:    jalr ra, 0
 ; VC16I-NEXT:    lw ra, 4(sp)
-; VC16I-NEXT:    lw s0, 6(sp)
-; VC16I-NEXT:    lea sp, sp, 8
+; VC16I-NEXT:    lea sp, sp, 6
 ; VC16I-NEXT:    jalr ra, 0
  %1 = call float (i16, float, ...) @va3(i16 2, float 1.000000e+00, float 2.000000e+00)
  ret void
@@ -307,16 +301,11 @@ define i16 @va4_va_copy(i16 %argno, ...) nounwind {
 define i16 @va5_aligned_stack_callee(i16 %a, ...) nounwind {
 ; VC16I-LABEL: va5_aligned_stack_callee:
 ; VC16I:       ; %bb.0:
-; VC16I-NEXT:    lea sp, sp, -8
-; VC16I-NEXT:    sw s0, 2(sp)
-; VC16I-NEXT:    sw ra, 0(sp)
-; VC16I-NEXT:    lea s0, sp, 4
-; VC16I-NEXT:    sw a2, 6(sp)
-; VC16I-NEXT:    sw a1, 4(sp)
+; VC16I-NEXT:    lea sp, sp, -4
+; VC16I-NEXT:    sw a2, 2(sp)
+; VC16I-NEXT:    sw a1, 0(sp)
 ; VC16I-NEXT:    lli a0, 1
-; VC16I-NEXT:    lw ra, 0(sp)
-; VC16I-NEXT:    lw s0, 2(sp)
-; VC16I-NEXT:    lea sp, sp, 8
+; VC16I-NEXT:    lea sp, sp, 4
 ; VC16I-NEXT:    jalr ra, 0
   ret i16 1
 }

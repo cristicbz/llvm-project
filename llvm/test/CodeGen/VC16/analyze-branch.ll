@@ -15,10 +15,8 @@ declare void @test_false()
 define void @test_bcc_fallthrough_taken(i16 %in) nounwind {
 ; VC16I-LABEL: test_bcc_fallthrough_taken:
 ; VC16I:       ; %bb.0:
-; VC16I-NEXT:    lea sp, sp, -4
-; VC16I-NEXT:    sw s0, 2(sp)
+; VC16I-NEXT:    lea sp, sp, -2
 ; VC16I-NEXT:    sw ra, 0(sp)
-; VC16I-NEXT:    lea s0, sp, 4
 ; VC16I-NEXT:    lui a2, 1
 ; VC16I-NEXT:    lea a2, a2, 10
 ; VC16I-NEXT:    cmp a0, a2
@@ -29,8 +27,7 @@ define void @test_bcc_fallthrough_taken(i16 %in) nounwind {
 ; VC16I-NEXT:  .LBB0_2: ; %true
 ; VC16I-NEXT:    jalr ra, 0
 ; VC16I-NEXT:    lw ra, 0(sp)
-; VC16I-NEXT:    lw s0, 2(sp)
-; VC16I-NEXT:    lea sp, sp, 4
+; VC16I-NEXT:    lea sp, sp, 2
 ; VC16I-NEXT:    jalr ra, 0
 ; VC16I-NEXT:  .LBB0_3: ; %false
 ; VC16I-NEXT:    lui a2, %his(test_false)
@@ -55,10 +52,8 @@ false:
 define void @test_bcc_fallthrough_nottaken(i16 %in) nounwind {
 ; VC16I-LABEL: test_bcc_fallthrough_nottaken:
 ; VC16I:       ; %bb.0:
-; VC16I-NEXT:    lea sp, sp, -4
-; VC16I-NEXT:    sw s0, 2(sp)
+; VC16I-NEXT:    lea sp, sp, -2
 ; VC16I-NEXT:    sw ra, 0(sp)
-; VC16I-NEXT:    lea s0, sp, 4
 ; VC16I-NEXT:    lui a2, 1
 ; VC16I-NEXT:    lea a2, a2, 10
 ; VC16I-NEXT:    cmp a0, a2
@@ -69,8 +64,7 @@ define void @test_bcc_fallthrough_nottaken(i16 %in) nounwind {
 ; VC16I-NEXT:  .LBB1_2: ; %true
 ; VC16I-NEXT:    jalr ra, 0
 ; VC16I-NEXT:    lw ra, 0(sp)
-; VC16I-NEXT:    lw s0, 2(sp)
-; VC16I-NEXT:    lea sp, sp, 4
+; VC16I-NEXT:    lea sp, sp, 2
 ; VC16I-NEXT:    jalr ra, 0
 ; VC16I-NEXT:  .LBB1_3: ; %true
 ; VC16I-NEXT:    lui a2, %his(test_true)
