@@ -326,18 +326,18 @@ define void @va5_aligned_stack_caller() nounwind {
 ; should only be 2-byte aligned
 ; VC16I-LABEL: va5_aligned_stack_caller:
 ; VC16I:       ; %bb.0:
-; VC16I-NEXT:    lui a2, 3
+; VC16I-NEXT:    lui a2, 2046
 ; VC16I-NEXT:    lea a2, a2, -16
-; VC16I-NEXT:    sub sp, a2
+; VC16I-NEXT:    addn sp, a2
 ; VC16I-NEXT:    lui a2, 2
-; VC16I-NEXT:    add a2, sp
+; VC16I-NEXT:    addn a2, sp
 ; VC16I-NEXT:    sw s0, 14(a2)
 ; VC16I-NEXT:    lui a2, 2
-; VC16I-NEXT:    add a2, sp
+; VC16I-NEXT:    addn a2, sp
 ; VC16I-NEXT:    sw ra, 12(a2)
 ; VC16I-NEXT:    lui a2, 3
 ; VC16I-NEXT:    lea a2, a2, -16
-; VC16I-NEXT:    add s0, a2
+; VC16I-NEXT:    addn s0, a2
 ; VC16I-NEXT:    lui a2, 1
 ; VC16I-NEXT:    lea a1, a2, -15
 ; VC16I-NEXT:    sw a1, 16(sp)
@@ -348,7 +348,7 @@ define void @va5_aligned_stack_caller() nounwind {
 ; VC16I-NEXT:    lli a2, 14
 ; VC16I-NEXT:    sw a2, 6(sp)
 ; VC16I-NEXT:    lui a2, 1
-; VC16I-NEXT:    add a2, sp
+; VC16I-NEXT:    addn a2, sp
 ; VC16I-NEXT:    lea a2, a2, 8
 ; VC16I-NEXT:    sw a2, 4(sp)
 ; VC16I-NEXT:    lli a2, 13
@@ -393,21 +393,21 @@ define void @va5_aligned_stack_caller() nounwind {
 ; VC16I-NEXT:    lli a0, 1
 ; VC16I-NEXT:    lli a1, 11
 ; VC16I-NEXT:    lui a2, 1
-; VC16I-NEXT:    add a2, sp
+; VC16I-NEXT:    addn a2, sp
 ; VC16I-NEXT:    lea a2, a2, 16
 ; VC16I-NEXT:    jalr ra, 0
-; VC16I-NEXT:    lui a2, 3
+; VC16I-NEXT:    lui a2, 2046
 ; VC16I-NEXT:    lea a2, a2, -16
-; VC16I-NEXT:    sub sp, a2
+; VC16I-NEXT:    addn sp, a2
 ; VC16I-NEXT:    lui a2, 2
-; VC16I-NEXT:    add a2, sp
+; VC16I-NEXT:    addn a2, sp
 ; VC16I-NEXT:    lw ra, 12(a2)
 ; VC16I-NEXT:    lui a2, 2
-; VC16I-NEXT:    add a2, sp
+; VC16I-NEXT:    addn a2, sp
 ; VC16I-NEXT:    lw s0, 14(a2)
 ; VC16I-NEXT:    lui a2, 3
 ; VC16I-NEXT:    lea a2, a2, -16
-; VC16I-NEXT:    add sp, a2
+; VC16I-NEXT:    addn sp, a2
 ; VC16I-NEXT:    jalr ra, 0
   %1 = call i16 (i16, ...) @va5_aligned_stack_callee(i16 1, i16 11,
     fp128 0xLEB851EB851EB851F400091EB851EB851, i16 12, i16 13, i64 20000000000,

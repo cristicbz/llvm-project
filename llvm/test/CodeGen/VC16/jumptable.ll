@@ -20,7 +20,7 @@ define void @jt(i16 %in, i16* %out) {
 ; VC16I-NEXT:    bnz .LBB0_9
 ; VC16I-NEXT:  ; %bb.3: ; %bb2
 ; VC16I-NEXT:    lli a2, 3
-; VC16I-NEXT:    jal t0, .LBB0_8
+; VC16I-NEXT:    j .LBB0_8
 ; VC16I-NEXT:  .LBB0_4: ; %entry
 ; VC16I-NEXT:    cmpi a0, 3
 ; VC16I-NEXT:    bz .LBB0_8
@@ -29,7 +29,7 @@ define void @jt(i16 %in, i16* %out) {
 ; VC16I-NEXT:    bnz .LBB0_9
 ; VC16I-NEXT:  ; %bb.6: ; %bb4
 ; VC16I-NEXT:    lli a2, 1
-; VC16I-NEXT:    jal t0, .LBB0_8
+; VC16I-NEXT:    j .LBB0_8
 ; VC16I-NEXT:  .LBB0_7: ; %bb1
 ; VC16I-NEXT:    lli a2, 4
 ; VC16I-NEXT:  .LBB0_8: ; %exit
