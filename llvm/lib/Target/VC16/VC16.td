@@ -38,4 +38,5 @@ def : ProcessorModel<"generic-vc16", NoSchedModel, []>;
 def VC16 : Target {
   let InstructionSet = VC16InstrInfo;
   let AssemblyParsers = [VC16AsmParser];
+  let AllowRegisterRenaming = 1;
 }

@@ -413,7 +413,7 @@ SDValue VC16TargetLowering::LowerRETURNADDR(SDValue Op,
 
   EVT VT = Op.getValueType();
   SDLoc DL(Op);
-  unsigned Depth = cast<ConstantSDNode>(Op.getOperand(0))->getZExtValue();
+  // unsigned Depth = cast<ConstantSDNode>(Op.getOperand(0))->getZExtValue();
   // if (Depth) {
   int Off = -XLenInBytes * 2;
   SDValue FrameAddr = LowerFRAMEADDR(Op, DAG);
@@ -425,7 +425,7 @@ SDValue VC16TargetLowering::LowerRETURNADDR(SDValue Op,
 
   // Return the value of the return address register, marking it an implicit
   // live-in.
-  Register Reg = MF.addLiveIn(RI.getRARegister(), getRegClassFor(MVT::i16));
+  // Register Reg = MF.addLiveIn(RI.getRARegister(), getRegClassFor(MVT::i16));
   // return DAG.getCopyFromReg(DAG.getEntryNode(), DL, Reg, MVT::i16);
 }
 

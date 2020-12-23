@@ -22,7 +22,7 @@ define i16 @va1(i8* %fmt, ...) nounwind {
 ; VC16I-NEXT:    sw a2, 10(sp)
 ; VC16I-NEXT:    lea a2, sp, 12
 ; VC16I-NEXT:    sw a2, 0(sp)
-; VC16I-NEXT:    sw a0, 8(sp)
+; VC16I-NEXT:    sw a1, 8(sp)
 ; VC16I-NEXT:    lea sp, s0, -8
 ; VC16I-NEXT:    lw ra, 4(sp)
 ; VC16I-NEXT:    lw s0, 6(sp)
@@ -52,7 +52,7 @@ define i16 @va1_va_arg(i8* %fmt, ...) nounwind {
 ; VC16I-NEXT:    sw a2, 10(sp)
 ; VC16I-NEXT:    lea a2, sp, 10
 ; VC16I-NEXT:    sw a2, 0(sp)
-; VC16I-NEXT:    sw a0, 8(sp)
+; VC16I-NEXT:    sw a1, 8(sp)
 ; VC16I-NEXT:    lea sp, s0, -8
 ; VC16I-NEXT:    lw ra, 4(sp)
 ; VC16I-NEXT:    lw s0, 6(sp)
@@ -80,8 +80,8 @@ define i16 @va1_va_arg_alloca(i8* %fmt, ...) nounwind {
 ; VC16I-NEXT:    sw a2, 10(sp)
 ; VC16I-NEXT:    lea a2, sp, 10
 ; VC16I-NEXT:    sw a2, 0(sp)
-; VC16I-NEXT:    sw s1, 8(sp)
-; VC16I-NEXT:    lea a2, s1, 1
+; VC16I-NEXT:    sw a1, 8(sp)
+; VC16I-NEXT:    lea a2, a1, 1
 ; VC16I-NEXT:    andi a2, -2
 ; VC16I-NEXT:    mv a0, sp
 ; VC16I-NEXT:    sub a0, a2
@@ -243,7 +243,7 @@ define i16 @va4_va_copy(i16 %argno, ...) nounwind {
 ; VC16I-NEXT:    lea s0, sp, 12
 ; VC16I-NEXT:    mv s1, a1
 ; VC16I-NEXT:    sw a2, 14(sp)
-; VC16I-NEXT:    sw s1, 12(sp)
+; VC16I-NEXT:    sw a1, 12(sp)
 ; VC16I-NEXT:    lea a0, sp, 14
 ; VC16I-NEXT:    sw a0, 4(sp)
 ; VC16I-NEXT:    sw a0, 0(sp)
