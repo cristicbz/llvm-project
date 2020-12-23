@@ -24,13 +24,14 @@ namespace VC16II {
 enum {
   InstFormatPseudo = 0,
   InstFormatRI11 = 1,
-  InstFormatM = 2,
-  InstFormatRI10 = 3,
-  InstFormatRRI5 = 4,
-  InstFormatB = 5,
-  InstFormatRR = 6,
-  InstFormatRI4 = 7,
-  InstFormatRI5 = 8,
+  InstFormatMW = 2,
+  InstFormatMB = 3,
+  InstFormatRI10 = 4,
+  InstFormatRRI5 = 5,
+  InstFormatB = 6,
+  InstFormatRR = 7,
+  InstFormatRI4 = 8,
+  InstFormatRI5 = 9,
 
   InstFormatMask = 15
 };

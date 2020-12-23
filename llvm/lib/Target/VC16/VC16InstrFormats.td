@@ -7,17 +7,15 @@ class InstFormat<bits<4> val> {
 
 def InstFormatPseudo : InstFormat<0>;
 def InstFormatRI11   : InstFormat<1>;
-def InstFormatM      : InstFormat<2>;
-def InstFormatRI10   : InstFormat<3>;
-def InstFormatRRI5   : InstFormat<4>;
-def InstFormatB      : InstFormat<5>;
+def InstFormatMW     : InstFormat<2>;
+def InstFormatMB     : InstFormat<3>;
+def InstFormatRI10   : InstFormat<4>;
+def InstFormatRRI5   : InstFormat<5>;
+def InstFormatB      : InstFormat<6>;
 
-def InstFormatRR     : InstFormat<6>;
-def InstFormatRI4    : InstFormat<7>;
-def InstFormatRI5    : InstFormat<8>;
-
-def InstFormatSI6    : InstFormat<9>;
-def InstFormatCR     : InstFormat<10>;
+def InstFormatRR     : InstFormat<7>;
+def InstFormatRI4    : InstFormat<8>;
+def InstFormatRI5    : InstFormat<9>;
 
 class VCInst<dag outs, dag ins, string opcodestr, string argstr,
              list<dag> pattern, InstFormat format>
@@ -59,9 +57,29 @@ class VCInstRI11<bits<2> op2, dag outs, dag ins, string opcodestr,
   let Inst{1-0} = op2;
 }
 
-class VCInstM<bits<3> op3, dag outs, dag ins, string opcodestr,
+class VCInstMW<bits<3> op3, dag outs, dag ins, string opcodestr,
     string argstr, list<dag> pattern=[]>
-    : VCInst<outs, ins, opcodestr, argstr, pattern, InstFormatM>
+    : VCInst<outs, ins, opcodestr, argstr, pattern, InstFormatMW>
+{
+  bits<5> imm5;
+  bits<3> rs2;
+  bits<3> rs1;
+
+  // TODO(cristicbz): Add support for segment selectors, currently just point to
+  // stack.
+  // bits<2> ss;
+
+  let Inst{15-14} = imm5{4-3};
+  let Inst{13-11} = rs2;
+  let Inst{10-8} = rs1;
+  let Inst{7-6} = 0b11;
+  let Inst{5-3} = imm5{2-0};
+  let Inst{2-0} = op3;
+}
+
+class VCInstMB<bits<3> op3, dag outs, dag ins, string opcodestr,
+    string argstr, list<dag> pattern=[]>
+    : VCInst<outs, ins, opcodestr, argstr, pattern, InstFormatMB>
 {
   bits<5> imm5;
   bits<3> rs2;

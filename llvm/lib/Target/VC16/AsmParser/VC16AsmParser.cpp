@@ -35,7 +35,6 @@ class VC16AsmParser : public MCTargetAsmParser {
   bool generateImmOutOfRangeError(OperandVector &Operands, uint64_t ErrorInfo,
                                   int Lower, int Upper, Twine Msg);
 
-
   bool MatchAndEmitInstruction(SMLoc IDLoc, unsigned &Opcode,
                                OperandVector &Operands, MCStreamer &Out,
                                uint64_t &ErrorInfo,
@@ -70,12 +69,10 @@ public:
   };
 
   static bool classifySymbolRef(const MCExpr *Expr,
-                                VC16MCExpr::VariantKind &Kind,
-                                int64_t &Addend);
-
+                                VC16MCExpr::VariantKind &Kind, int64_t &Addend);
 
   VC16AsmParser(const MCSubtargetInfo &STI, MCAsmParser &Parser,
-                 const MCInstrInfo &MII, const MCTargetOptions &Options)
+                const MCInstrInfo &MII, const MCTargetOptions &Options)
       : MCTargetAsmParser(Options, STI, MII) {
     setAvailableFeatures(ComputeAvailableFeatures(STI.getFeatureBits()));
   }
@@ -159,7 +156,7 @@ public:
     else
       IsValid = isShiftedInt<N - 1, 1>(Imm);
     return IsValid && VK == VC16MCExpr::VK_VC16_None;
-   }
+  }
 
   bool isUImm4() const {
     int64_t Imm;
@@ -196,9 +193,9 @@ public:
       IsValid = VC16AsmParser::classifySymbolRef(getImm(), VK, Imm);
     else
       IsValid = isUInt<11>(Imm);
-    return IsValid && (VK == VC16MCExpr::VK_VC16_None ||
-                       VK == VC16MCExpr::VK_VC16_HIS ||
-                       VK == VC16MCExpr::VK_VC16_HIU);
+    return IsValid &&
+           (VK == VC16MCExpr::VK_VC16_None || VK == VC16MCExpr::VK_VC16_HIS ||
+            VK == VC16MCExpr::VK_VC16_HIU);
   }
 
   bool isSImm5() const {
@@ -231,14 +228,9 @@ public:
            (VK == VC16MCExpr::VK_VC16_None || VK == VC16MCExpr::VK_VC16_LO);
   }
 
-  bool isSImm9Lsb0() const {
-    return isBareSimmNLsb0<9>();
-  }
+  bool isSImm9Lsb0() const { return isBareSimmNLsb0<9>(); }
 
-  bool isSImm11Lsb0() const {
-    return isBareSimmNLsb0<11>();
-  }
-
+  bool isSImm11Lsb0() const { return isBareSimmNLsb0<11>(); }
 
   /// getStartLoc - Gets location of the first token of this operand
   SMLoc getStartLoc() const override { return StartLoc; }
@@ -284,7 +276,7 @@ public:
   }
 
   static std::unique_ptr<VC16Operand> createReg(unsigned RegNo, SMLoc S,
-                                                 SMLoc E) {
+                                                SMLoc E) {
     auto Op = std::make_unique<VC16Operand>(Register);
     Op->Reg.RegNum = RegNo;
     Op->StartLoc = S;
@@ -293,7 +285,7 @@ public:
   }
 
   static std::unique_ptr<VC16Operand> createImm(const MCExpr *Val, SMLoc S,
-                                                 SMLoc E) {
+                                                SMLoc E) {
     auto Op = std::make_unique<VC16Operand>(Immediate);
     Op->Imm.Val = Val;
     Op->StartLoc = S;
@@ -335,7 +327,6 @@ public:
 #define GET_MATCHER_IMPLEMENTATION
 #include "VC16GenAsmMatcher.inc"
 
-
 bool VC16AsmParser::generateImmOutOfRangeError(
     OperandVector &Operands, uint64_t ErrorInfo, int Lower, int Upper,
     Twine Msg = "immediate must be an integer in the range") {
@@ -343,12 +334,11 @@ bool VC16AsmParser::generateImmOutOfRangeError(
   return Error(ErrorLoc, Msg + " [" + Twine(Lower) + ", " + Twine(Upper) + "]");
 }
 
-
 bool VC16AsmParser::MatchAndEmitInstruction(SMLoc IDLoc, unsigned &Opcode,
-                                             OperandVector &Operands,
-                                             MCStreamer &Out,
-                                             uint64_t &ErrorInfo,
-                                             bool MatchingInlineAsm) {
+                                            OperandVector &Operands,
+                                            MCStreamer &Out,
+                                            uint64_t &ErrorInfo,
+                                            bool MatchingInlineAsm) {
   MCInst Inst;
   SMLoc ErrorLoc;
 
@@ -375,35 +365,33 @@ bool VC16AsmParser::MatchAndEmitInstruction(SMLoc IDLoc, unsigned &Opcode,
     }
     return Error(ErrorLoc, "invalid operand for instruction");
   case Match_InvalidSImm11Lsb0:
-      return generateImmOutOfRangeError(
-          Operands, ErrorInfo, -(1 << 10), (1 << 10) - 2,
-          "immediate must be a multiple of 2 bytes in the range");
+    return generateImmOutOfRangeError(
+        Operands, ErrorInfo, -(1 << 10), (1 << 10) - 2,
+        "immediate must be a multiple of 2 bytes in the range");
   case Match_InvalidUImm11:
-      return generateImmOutOfRangeError(Operands, ErrorInfo, 0, (1 << 11) - 1);
+    return generateImmOutOfRangeError(Operands, ErrorInfo, 0, (1 << 11) - 1);
   case Match_InvalidUImm4:
-      return generateImmOutOfRangeError(Operands, ErrorInfo, 0, (1 << 4) - 1);
+    return generateImmOutOfRangeError(Operands, ErrorInfo, 0, (1 << 4) - 1);
   case Match_InvalidSImm5:
-      return generateImmOutOfRangeError(Operands, ErrorInfo, -(1 << 4),
-                                        (1 << 4) - 1);
+    return generateImmOutOfRangeError(Operands, ErrorInfo, -(1 << 4),
+                                      (1 << 4) - 1);
   case Match_InvalidUImm5:
-      return generateImmOutOfRangeError(Operands, ErrorInfo, 0, (1 << 5) - 1);
+    return generateImmOutOfRangeError(Operands, ErrorInfo, 0, (1 << 5) - 1);
   case Match_InvalidUImm6Lsb0:
-      return generateImmOutOfRangeError(
-          Operands, ErrorInfo, 0, (1 << 6) - 2,
-          "immediate must be a multiple of 2 bytes in the range");
+    return generateImmOutOfRangeError(
+        Operands, ErrorInfo, 0, (1 << 6) - 2,
+        "immediate must be a multiple of 2 bytes in the range");
   case Match_InvalidSImm9Lsb0:
-      return generateImmOutOfRangeError(
-          Operands, ErrorInfo, -(1 << 8), (1 << 8) - 2,
-          "immediate must be a multiple of 2 bytes in the range");
+    return generateImmOutOfRangeError(
+        Operands, ErrorInfo, -(1 << 8), (1 << 8) - 2,
+        "immediate must be a multiple of 2 bytes in the range");
   }
 
   llvm_unreachable("Unknown match type detected!");
 }
 
-
-
 bool VC16AsmParser::ParseRegister(unsigned &RegNo, SMLoc &StartLoc,
-                                   SMLoc &EndLoc) {
+                                  SMLoc &EndLoc) {
   if (tryParseRegister(RegNo, StartLoc, EndLoc) != MatchOperand_Success)
     return Error(StartLoc, "invalid register name");
   return false;
@@ -519,8 +507,7 @@ VC16AsmParser::parseOperandWithModifier(OperandVector &Operands) {
   return MatchOperand_Success;
 }
 
-OperandMatchResultTy
-VC16AsmParser::parseMemOpBaseReg(OperandVector &Operands) {
+OperandMatchResultTy VC16AsmParser::parseMemOpBaseReg(OperandVector &Operands) {
   if (getLexer().isNot(AsmToken::LParen)) {
     Error(getLoc(), "expected '('");
     return MatchOperand_ParseFail;
@@ -566,9 +553,8 @@ bool VC16AsmParser::parseOperand(OperandVector &Operands) {
   return true;
 }
 
-bool VC16AsmParser::ParseInstruction(ParseInstructionInfo &Info,
-                                      StringRef Name, SMLoc NameLoc,
-                                      OperandVector &Operands) {
+bool VC16AsmParser::ParseInstruction(ParseInstructionInfo &Info, StringRef Name,
+                                     SMLoc NameLoc, OperandVector &Operands) {
   // First operand is token for instruction
   Operands.push_back(VC16Operand::createToken(Name, NameLoc));
 
@@ -601,8 +587,8 @@ bool VC16AsmParser::ParseInstruction(ParseInstructionInfo &Info,
 }
 
 bool VC16AsmParser::classifySymbolRef(const MCExpr *Expr,
-                                       VC16MCExpr::VariantKind &Kind,
-                                       int64_t &Addend) {
+                                      VC16MCExpr::VariantKind &Kind,
+                                      int64_t &Addend) {
   Kind = VC16MCExpr::VK_VC16_None;
   Addend = 0;
 
@@ -644,7 +630,6 @@ bool VC16AsmParser::classifySymbolRef(const MCExpr *Expr,
   // It's some symbol reference + a constant addend
   return Kind != VC16MCExpr::VK_VC16_Invalid;
 }
-
 
 bool VC16AsmParser::ParseDirective(AsmToken DirectiveID) { return true; }
 

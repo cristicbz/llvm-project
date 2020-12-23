@@ -26,7 +26,7 @@ ArrayRef<const char *> VC16TargetInfo::getGCCRegNames() const {
 
 void VC16TargetInfo::getTargetDefines(const LangOptions &Opts,
                                       MacroBuilder &Builder) const {
-  Builder.defineMacro("VC16");
-  Builder.defineMacro("__VC16__");
+  Builder.defineMacro("__ELF__");
+  Builder.defineMacro("__vc16");
   // FIXME: defines for different 'flavours' of MCU
 }

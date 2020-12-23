@@ -29,7 +29,7 @@ protected:
   unsigned getRelocType(MCContext &Ctx, const MCValue &Target,
                         const MCFixup &Fixup, bool IsPCRel) const override;
 };
-}
+} // namespace
 
 VC16ELFObjectWriter::VC16ELFObjectWriter(uint8_t OSABI)
     : MCELFObjectTargetWriter(/*Is64Bit*/ false, OSABI, ELF::EM_VC16,
@@ -52,8 +52,10 @@ unsigned VC16ELFObjectWriter::getRelocType(MCContext &Ctx,
     return ELF::R_VC16_HI11U;
   case VC16::fixup_vc16_hi11s:
     return ELF::R_VC16_HI11S;
-  case VC16::fixup_vc16_lo5_m:
-    return ELF::R_VC16_LO5_M;
+  case VC16::fixup_vc16_lo5_mw:
+    return ELF::R_VC16_LO5_MW;
+  case VC16::fixup_vc16_lo5_mb:
+    return ELF::R_VC16_LO5_MB;
   case VC16::fixup_vc16_lo5_ri5:
     return ELF::R_VC16_LO5_RI5;
   case VC16::fixup_vc16_lo5_rri5:

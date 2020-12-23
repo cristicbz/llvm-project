@@ -98,24 +98,28 @@ def simm11_lsb0 : Operand<OtherVT> {
 }
 def uimm11 : Operand<i16>, ImmLeaf<i16, [{return isUInt<11>(Imm);}]> {
   let ParserMatchClass = UImmAsmOperand<11>;
+  let EncoderMethod = "getImmOpValue";
   let DecoderMethod = "decodeUImmOperand<11>";
 }
 def uimm4 : Operand<i16>, ImmLeaf<i16, [{return isUInt<4>(Imm);}]>  {
   let ParserMatchClass = UImmAsmOperand<4>;
+  let EncoderMethod = "getImmOpValue";
   let DecoderMethod = "decodeUImmOperand<4>";
 }
 def simm5 : Operand<i16>, ImmLeaf<i16, [{return isInt<5>(Imm);}]>  {
   let ParserMatchClass = SImmAsmOperand<5>;
+  let EncoderMethod = "getImmOpValue";
   let DecoderMethod = "decodeSImmOperand<5>";
 }
 def uimm5 : Operand<i16>, ImmLeaf<i16, [{return isUInt<5>(Imm);}]>  {
   let ParserMatchClass = UImmAsmOperand<5>;
+  let EncoderMethod = "getImmOpValue";
   let DecoderMethod = "decodeUImmOperand<5>";
 }
 def uimm6_lsb0 : Operand<i16>, ImmLeaf<i16, [{return isShiftedUInt<5, 1>(Imm);}]> {
   let ParserMatchClass = UImmAsmOperand<6, "Lsb0">;
   let EncoderMethod = "getImmOpValueLsr1";
-  let DecoderMethod = "decodeSImmOperandAndLsl1<6>";
+  let DecoderMethod = "decodeUImmOperandAndLsl1<6>";
 }
 def simm9_lsb0 : Operand<OtherVT> {
   let ParserMatchClass = SImmAsmOperand<9, "Lsb0">;
@@ -212,20 +216,20 @@ def   J  : VCInstRI10<0b011, (outs), (ins simm11_lsb0:$imm10),
 
 
 let hasSideEffects = 0, mayLoad = 1, mayStore = 0 in {
-def LW : VCInstM<0b001, (outs GPR:$rs2), (ins GPR:$rs1, uimm6_lsb0:$imm5),
-                 "lw", "$rs2, ${imm5}(${rs1})">;
+def LW : VCInstMW<0b001, (outs GPR:$rs2), (ins GPR:$rs1, uimm6_lsb0:$imm5),
+                  "lw", "$rs2, ${imm5}(${rs1})">;
 
-def LB : VCInstM<0b101, (outs GPR:$rs2), (ins GPR:$rs1, uimm5:$imm5),
-                 "lb", "$rs2, ${imm5}(${rs1})">;
+def LB : VCInstMB<0b101, (outs GPR:$rs2), (ins GPR:$rs1, uimm5:$imm5),
+                  "lb", "$rs2, ${imm5}(${rs1})">;
 
 } // hasSideEffects = 0, mayLoad = 1, mayStore = 0
 
 let hasSideEffects = 0, mayLoad = 0, mayStore = 1 in {
-def SW  : VCInstM<0b010, (outs), (ins GPR:$rs2, GPR:$rs1, uimm6_lsb0:$imm5),
-                  "sw", "$rs2, ${imm5}(${rs1})">;
+def SW  : VCInstMW<0b010, (outs), (ins GPR:$rs2, GPR:$rs1, uimm6_lsb0:$imm5),
+                   "sw", "$rs2, ${imm5}(${rs1})">;
 
-def SB  : VCInstM<0b110, (outs), (ins GPR:$rs2, GPR:$rs1, uimm5:$imm5),
-                 "sb", "$rs2, ${imm5}(${rs1})">;
+def SB  : VCInstMB<0b110, (outs), (ins GPR:$rs2, GPR:$rs1, uimm5:$imm5),
+                  "sb", "$rs2, ${imm5}(${rs1})">;
 } // hasSideEffects = 0, mayLoad = 0, mayStore = 1
 
 let hasSideEffects = 0, mayLoad = 0, mayStore = 0 in

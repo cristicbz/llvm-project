@@ -6,6 +6,7 @@
 // License. See LICENSE.TXT for details.
 //
 //===----------------------------------------------------------------------===//
+#include <iostream>
 
 #include "MCTargetDesc/VC16FixupKinds.h"
 #include "MCTargetDesc/VC16MCTargetDesc.h"
@@ -30,13 +31,13 @@ class VC16AsmBackend : public MCAsmBackend {
   uint8_t OSABI;
 
 public:
-  VC16AsmBackend(uint8_t OSABI)
-      : MCAsmBackend(support::little), OSABI(OSABI) {}
+  VC16AsmBackend(uint8_t OSABI) : MCAsmBackend(support::little), OSABI(OSABI) {}
   ~VC16AsmBackend() override {}
 
   void applyFixup(const MCAssembler &Asm, const MCFixup &Fixup,
                   const MCValue &Target, MutableArrayRef<char> Data,
-                  uint64_t Value, bool IsResolved, const MCSubtargetInfo *STI) const override;
+                  uint64_t Value, bool IsResolved,
+                  const MCSubtargetInfo *STI) const override;
 
   std::unique_ptr<MCObjectTargetWriter>
   createObjectTargetWriter() const override;
@@ -53,17 +54,21 @@ public:
 
   const MCFixupKindInfo &getFixupKindInfo(MCFixupKind Kind) const override {
     const static MCFixupKindInfo Infos[VC16::NumTargetFixupKinds] = {
-      // This table *must* be in the order that the fixup_* kinds are defined in
-      // VC16FixupKinds.h.
-      //
-      // name                    offset bits  flags
-      { "fixup_vc16_hi11u",        2,     14,  0 },
-      { "fixup_vc16_hi11s",        2,     14,  0 },
-      { "fixup_vc16_lo5_m",        3,     13,  0 },
-      { "fixup_vc16_lo5_ri5",      8,      8,  0 },
-      { "fixup_vc16_lo5_rri5",     5,     11,  0 },
-      { "fixup_vc16_jal",          3,     13,  MCFixupKindInfo::FKF_IsPCRel },
-      { "fixup_vc16_branch",       8,      8,  MCFixupKindInfo::FKF_IsPCRel },
+        // This table *must* be in the order that the fixup_* kinds are defined
+        // in
+        // VC16FixupKinds.h.
+        //
+        // clang-format off
+        // name                    offset bits  flags
+        { "fixup_vc16_hi11u",        0,     16,  0 },
+        { "fixup_vc16_hi11s",        0,     16,  0 },
+        { "fixup_vc16_lo5_mw",       0,     16,  0 },
+        { "fixup_vc16_lo5_mb",       0,     16,  0 },
+        { "fixup_vc16_lo5_ri5",      0,     16,  0 },
+        { "fixup_vc16_lo5_rri5",     0,     16,  0 },
+        { "fixup_vc16_jal",          0,     16,  MCFixupKindInfo::FKF_IsPCRel },
+        { "fixup_vc16_branch",       8,      8,  MCFixupKindInfo::FKF_IsPCRel },
+        // clang-format on
     };
 
     if (Kind < FirstTargetFixupKind)
@@ -74,9 +79,13 @@ public:
     return Infos[Kind - FirstTargetFixupKind];
   }
 
-  bool mayNeedRelaxation(const MCInst &Inst, const MCSubtargetInfo &STI) const override { return false; }
+  bool mayNeedRelaxation(const MCInst &Inst,
+                         const MCSubtargetInfo &STI) const override {
+    return false;
+  }
 
-  void relaxInstruction(MCInst &Inst, const MCSubtargetInfo &STI) const override {
+  void relaxInstruction(MCInst &Inst,
+                        const MCSubtargetInfo &STI) const override {
     report_fatal_error("VC16AsmBackend::relaxInstruction() unimplemented");
   }
 
@@ -94,9 +103,9 @@ bool VC16AsmBackend::writeNopData(raw_ostream &OS, uint64_t Count) const {
   return true;
 }
 
-static uint64_t adjustFixupValue(const MCFixup &Fixup, uint64_t Value,
+static uint64_t adjustFixupValue(const MCFixup &Fixup, const uint64_t Value,
                                  MCContext &Ctx) {
-  unsigned Kind = Fixup.getKind();
+  const unsigned Kind = Fixup.getKind();
   switch (Kind) {
   default:
     llvm_unreachable("Unknown fixup kind!");
@@ -107,60 +116,74 @@ static uint64_t adjustFixupValue(const MCFixup &Fixup, uint64_t Value,
     return Value;
 
   case VC16::fixup_vc16_hi11u: {
-    const uint64_t Adjusted = (Value >> 5);
+    const uint64_t Adjusted = ((Value & 0xffff) >> 5);
     const uint64_t Msb2 = Adjusted & 0b11000000000;
     const uint64_t Lsb9 = Adjusted & 0b00111111111;
-    return (Msb2 << 3) | Lsb9;
+    return (Msb2 << 5) | (Lsb9 << 2);
   }
 
   case VC16::fixup_vc16_hi11s: {
-    const uint64_t Adjusted = (((Value + (1 << 4))) >> 5);
+    const uint64_t Adjusted = ((((Value & 0xffff) + (1 << 4))) >> 5);
     const uint64_t Msb2 = Adjusted & 0b11000000000;
     const uint64_t Lsb9 = Adjusted & 0b00111111111;
-    return (Msb2 << 3) | Lsb9;
+    return (Msb2 << 5) | (Lsb9 << 2);
   }
 
-  case VC16::fixup_vc16_lo5_m: {
+  case VC16::fixup_vc16_lo5_mb: {
     const uint64_t Msb2 = Value & 0b11000;
     const uint64_t Lsb3 = Value & 0b00111;
-    return (Msb2 << 8) | Lsb3;
+    return (Msb2 << 11) | (Lsb3 << 3);
+  }
+
+  case VC16::fixup_vc16_lo5_mw: {
+    if (Value & 0x1)
+      Ctx.reportError(Fixup.getLoc(), "MW fixup value must be 2-byte aligned");
+    const uint64_t Adjusted = (Value & 0x1f) >> 1;
+    const uint64_t Msb2 = Adjusted & 0b11000;
+    const uint64_t Lsb3 = Adjusted & 0b00111;
+    return (Msb2 << 11) | (Lsb3 << 3);
   }
 
   case VC16::fixup_vc16_lo5_ri5: {
     const uint64_t Msb2 = Value & 0b11000;
     const uint64_t Lsb3 = Value & 0b00111;
-    return (Msb2 << 3) | Lsb3;
+    return (Msb2 << 11) | (Lsb3 << 8);
   }
 
   case VC16::fixup_vc16_lo5_rri5: {
     const uint64_t Msb2 = Value & 0b11000;
     const uint64_t Lsb3 = Value & 0b00111;
-    return (Msb2 << 6) | Lsb3;
+    return (Msb2 << 11) | (Lsb3 << 5);
   }
 
   case VC16::fixup_vc16_jal: {
     if (!isInt<11>(Value))
-      Ctx.reportError(Fixup.getLoc(), "fixup value out of range");
+      Ctx.reportError(Fixup.getLoc(), "jal fixup value out of range");
     if (Value & 0x1)
-      Ctx.reportError(Fixup.getLoc(), "fixup value must be 2-byte aligned");
-    const uint64_t Msb2 = Value & 0b11000000000;
-    const uint64_t Lsb9 = Value & 0b00111111111;
-    return ((Msb2 << 3) | Lsb9) >> 1;
+      Ctx.reportError(Fixup.getLoc(), "jal fixup value must be 2-byte aligned");
+    const uint64_t Adjusted = Value >> 1;
+    const uint64_t Msb2 = Adjusted & 0b1100000000;
+    const uint64_t Lsb8 = Adjusted & 0b0011111111;
+    return (Msb2 << 6) | (Lsb8 << 3);
   }
 
   case VC16::fixup_vc16_branch:
-    if (!isInt<9>(Value))
-      Ctx.reportError(Fixup.getLoc(), "fixup value out of range");
-    if (Value & 0x1)
-      Ctx.reportError(Fixup.getLoc(), "fixup value must be 2-byte aligned");
-    return Value >> 1;
+    if (!isInt<9>(Value)) {
+      Ctx.reportError(Fixup.getLoc(), "branch fixup value out of range");
+    }
+    if (Value & 0x1) {
+      Ctx.reportError(Fixup.getLoc(),
+                      "branch fixup value must be 2-byte aligned");
+    }
+    return (Value >> 1) & 0xff;
   };
 }
 
-
 void VC16AsmBackend::applyFixup(const MCAssembler &Asm, const MCFixup &Fixup,
-                                const MCValue &Target, MutableArrayRef<char> Data,
-                                uint64_t Value, bool IsResolved, const MCSubtargetInfo *STI) const {
+                                const MCValue &Target,
+                                MutableArrayRef<char> Data, uint64_t Value,
+                                bool IsResolved,
+                                const MCSubtargetInfo *STI) const {
   MCContext &Ctx = Asm.getContext();
   MCFixupKindInfo Info = getFixupKindInfo(Fixup.getKind());
   if (!Value)
@@ -180,7 +203,7 @@ void VC16AsmBackend::applyFixup(const MCAssembler &Asm, const MCFixup &Fixup,
 
   // For each byte of the fragment that the fixup touches, mask in the
   // bits from the fixup value.
-  for (unsigned i = 0; i != 4; ++i) {
+  for (unsigned i = 0; i != 2; ++i) {
     Data[Offset + i] |= uint8_t((Value >> (i * 8)) & 0xff);
   }
 }
@@ -193,9 +216,9 @@ VC16AsmBackend::createObjectTargetWriter() const {
 } // end anonymous namespace
 
 MCAsmBackend *llvm::createVC16AsmBackend(const Target &T,
-                                          const MCSubtargetInfo &STI,
-                                          const MCRegisterInfo &MRI,
-                                          const MCTargetOptions &Options) {
+                                         const MCSubtargetInfo &STI,
+                                         const MCRegisterInfo &MRI,
+                                         const MCTargetOptions &Options) {
   const Triple &TT = STI.getTargetTriple();
   uint8_t OSABI = MCELFObjectTargetWriter::getOSABI(TT.getOS());
   return new VC16AsmBackend(OSABI);

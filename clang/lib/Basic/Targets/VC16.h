@@ -45,7 +45,7 @@ public:
     IntPtrType = SignedInt;
     PtrDiffType = SignedInt;
     SigAtomicType = SignedLong;
-    resetDataLayout("e-m:e-p:16:16-i64:16-f32:16-f64:16-n16-S16");
+    resetDataLayout("e-m:e-p:16:16-i32:16-i64:16-f32:16-f64:16-n16-S16");
   }
   void getTargetDefines(const LangOptions &Opts,
                         MacroBuilder &Builder) const override;
@@ -65,8 +65,8 @@ public:
 
   ArrayRef<TargetInfo::GCCRegAlias> getGCCRegAliases() const override {
     static const TargetInfo::GCCRegAlias GCCRegAliases[] = {
-        {{"r0"}, "a0"}, {{"r1"}, "a1"}, {{"r2"}, "a2"}, {{"r3"}, "s0"},
-        {{"r4"}, "s1"}, {{"r5"}, "t0"}, {{"r6"}, "ra"}, {{"r7"}, "sp"},
+        {{"sp"}, "x0"}, {{"ra"}, "x1"}, {{"s0"}, "x2"}, {{"s1"}, "x4"},
+        {{"a0"}, "x4"}, {{"a1"}, "x5"}, {{"a2"}, "x6"}, {{"t0"}, "x7"},
     };
     return llvm::makeArrayRef(GCCRegAliases);
   }

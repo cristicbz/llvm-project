@@ -65,8 +65,8 @@ public:
                              const MCSubtargetInfo &STI) const;
 
   int64_t getImmOpValueAsr1(const MCInst &MI, unsigned OpNo,
-                             SmallVectorImpl<MCFixup> &Fixups,
-                             const MCSubtargetInfo &STI) const;
+                            SmallVectorImpl<MCFixup> &Fixups,
+                            const MCSubtargetInfo &STI) const;
 
   uint64_t getImmOpValueLsr1(const MCInst &MI, unsigned OpNo,
                              SmallVectorImpl<MCFixup> &Fixups,
@@ -85,8 +85,8 @@ MCCodeEmitter *llvm::createVC16MCCodeEmitter(const MCInstrInfo &MCII,
 }
 
 void VC16MCCodeEmitter::encodeInstruction(const MCInst &MI, raw_ostream &OS,
-                                           SmallVectorImpl<MCFixup> &Fixups,
-                                           const MCSubtargetInfo &STI) const {
+                                          SmallVectorImpl<MCFixup> &Fixups,
+                                          const MCSubtargetInfo &STI) const {
   uint16_t Bits = getBinaryCodeForInstr(MI, Fixups, STI);
   support::endian::write(OS, Bits, support::little);
   ++MCNumEmitted; // Keep track of the # of mi's emitted.
@@ -94,8 +94,8 @@ void VC16MCCodeEmitter::encodeInstruction(const MCInst &MI, raw_ostream &OS,
 
 unsigned
 VC16MCCodeEmitter::getMachineOpValue(const MCInst &MI, const MCOperand &MO,
-                                      SmallVectorImpl<MCFixup> &Fixups,
-                                      const MCSubtargetInfo &STI) const {
+                                     SmallVectorImpl<MCFixup> &Fixups,
+                                     const MCSubtargetInfo &STI) const {
 
   if (MO.isReg())
     return Ctx.getRegisterInfo()->getEncodingValue(MO.getReg());
@@ -107,10 +107,9 @@ VC16MCCodeEmitter::getMachineOpValue(const MCInst &MI, const MCOperand &MO,
   return 0;
 }
 
-int64_t
-VC16MCCodeEmitter::getImmOpValueAsr1(const MCInst &MI, unsigned OpNo,
-                                      SmallVectorImpl<MCFixup> &Fixups,
-                                      const MCSubtargetInfo &STI) const {
+int64_t VC16MCCodeEmitter::getImmOpValueAsr1(const MCInst &MI, unsigned OpNo,
+                                             SmallVectorImpl<MCFixup> &Fixups,
+                                             const MCSubtargetInfo &STI) const {
   const MCOperand &MO = MI.getOperand(OpNo);
 
   if (MO.isImm()) {
@@ -148,8 +147,7 @@ uint64_t VC16MCCodeEmitter::getImmOpValue(const MCInst &MI, unsigned OpNo,
   if (MO.isImm())
     return MO.getImm();
 
-  assert(MO.isExpr() &&
-         "getImmOpValue expects only expressions or immediates");
+  assert(MO.isExpr() && "getImmOpValue expects only expressions or immediates");
   const MCExpr *Expr = MO.getExpr();
   MCExpr::ExprKind Kind = Expr->getKind();
   VC16::Fixups FixupKind = VC16::fixup_vc16_invalid;
@@ -161,8 +159,10 @@ uint64_t VC16MCCodeEmitter::getImmOpValue(const MCInst &MI, unsigned OpNo,
     case VC16MCExpr::VK_VC16_Invalid:
       llvm_unreachable("Unhandled fixup kind!");
     case VC16MCExpr::VK_VC16_LO:
-      if (MIFrm == VC16II::InstFormatM)
-        FixupKind = VC16::fixup_vc16_lo5_m;
+      if (MIFrm == VC16II::InstFormatMW)
+        FixupKind = VC16::fixup_vc16_lo5_mw;
+      else if (MIFrm == VC16II::InstFormatMB)
+        FixupKind = VC16::fixup_vc16_lo5_mb;
       else if (MIFrm == VC16II::InstFormatRI5)
         FixupKind = VC16::fixup_vc16_lo5_ri5;
       else if (MIFrm == VC16II::InstFormatRRI5)
@@ -178,8 +178,9 @@ uint64_t VC16MCCodeEmitter::getImmOpValue(const MCInst &MI, unsigned OpNo,
       break;
     }
   } else if (Kind == MCExpr::SymbolRef &&
-             cast<MCSymbolRefExpr>(Expr)->getKind() == MCSymbolRefExpr::VK_None) {
-    if (Desc.getOpcode() == VC16::JAL) {
+             cast<MCSymbolRefExpr>(Expr)->getKind() ==
+                 MCSymbolRefExpr::VK_None) {
+    if (Desc.getOpcode() == VC16::JAL || Desc.getOpcode() == VC16::J) {
       FixupKind = VC16::fixup_vc16_jal;
     } else if (MIFrm == VC16II::InstFormatB) {
       FixupKind = VC16::fixup_vc16_branch;
