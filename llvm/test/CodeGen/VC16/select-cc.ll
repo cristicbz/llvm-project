@@ -9,63 +9,63 @@ define i16 @foo(i16 %a, i16 *%b) {
 ; VC16I-NEXT:    cmp a0, a2
 ; VC16I-NEXT:    bz .LBB0_2
 ; VC16I-NEXT:  ; %bb.1:
-; VC16I-NEXT:    lea a0, a2, 0
+; VC16I-NEXT:    mv a0, a2
 ; VC16I-NEXT:  .LBB0_2:
 ; VC16I-NEXT:    lw a2, 0(a1)
 ; VC16I-NEXT:    cmp a0, a2
 ; VC16I-NEXT:    bnz .LBB0_4
 ; VC16I-NEXT:  ; %bb.3:
-; VC16I-NEXT:    lea a0, a2, 0
+; VC16I-NEXT:    mv a0, a2
 ; VC16I-NEXT:  .LBB0_4:
 ; VC16I-NEXT:    lw a2, 0(a1)
 ; VC16I-NEXT:    cmp a2, a0
 ; VC16I-NEXT:    bn .LBB0_6
 ; VC16I-NEXT:  ; %bb.5:
-; VC16I-NEXT:    lea a0, a2, 0
+; VC16I-NEXT:    mv a0, a2
 ; VC16I-NEXT:  .LBB0_6:
 ; VC16I-NEXT:    lw a2, 0(a1)
 ; VC16I-NEXT:    cmp a0, a2
 ; VC16I-NEXT:    bnn .LBB0_8
 ; VC16I-NEXT:  ; %bb.7:
-; VC16I-NEXT:    lea a0, a2, 0
+; VC16I-NEXT:    mv a0, a2
 ; VC16I-NEXT:  .LBB0_8:
 ; VC16I-NEXT:    lw a2, 0(a1)
 ; VC16I-NEXT:    cmp a0, a2
 ; VC16I-NEXT:    bn .LBB0_10
 ; VC16I-NEXT:  ; %bb.9:
-; VC16I-NEXT:    lea a0, a2, 0
+; VC16I-NEXT:    mv a0, a2
 ; VC16I-NEXT:  .LBB0_10:
 ; VC16I-NEXT:    lw a2, 0(a1)
 ; VC16I-NEXT:    cmp a2, a0
 ; VC16I-NEXT:    bnn .LBB0_12
 ; VC16I-NEXT:  ; %bb.11:
-; VC16I-NEXT:    lea a0, a2, 0
+; VC16I-NEXT:    mv a0, a2
 ; VC16I-NEXT:  .LBB0_12:
 ; VC16I-NEXT:    lw a2, 0(a1)
 ; VC16I-NEXT:    cmp a2, a0
 ; VC16I-NEXT:    blt .LBB0_14
 ; VC16I-NEXT:  ; %bb.13:
-; VC16I-NEXT:    lea a0, a2, 0
+; VC16I-NEXT:    mv a0, a2
 ; VC16I-NEXT:  .LBB0_14:
 ; VC16I-NEXT:    lw a2, 0(a1)
 ; VC16I-NEXT:    cmp a0, a2
 ; VC16I-NEXT:    bge .LBB0_16
 ; VC16I-NEXT:  ; %bb.15:
-; VC16I-NEXT:    lea a0, a2, 0
+; VC16I-NEXT:    mv a0, a2
 ; VC16I-NEXT:  .LBB0_16:
 ; VC16I-NEXT:    lw a2, 0(a1)
 ; VC16I-NEXT:    cmp a0, a2
 ; VC16I-NEXT:    blt .LBB0_18
 ; VC16I-NEXT:  ; %bb.17:
-; VC16I-NEXT:    lea a0, a2, 0
+; VC16I-NEXT:    mv a0, a2
 ; VC16I-NEXT:  .LBB0_18:
 ; VC16I-NEXT:    lw a2, 0(a1)
 ; VC16I-NEXT:    cmp a2, a0
 ; VC16I-NEXT:    bge .LBB0_20
 ; VC16I-NEXT:  ; %bb.19:
-; VC16I-NEXT:    lea a0, a2, 0
+; VC16I-NEXT:    mv a0, a2
 ; VC16I-NEXT:  .LBB0_20:
-; VC16I-NEXT:    jalr ra, 0
+; VC16I-NEXT:    ret
   %val1 = load volatile i16, i16* %b
   %tst1 = icmp eq i16 %a, %val1
   %val2 = select i1 %tst1, i16 %a, i16 %val1

@@ -15,19 +15,31 @@
 #include "llvm/MC/MCAsmInfo.h"
 #include "llvm/MC/MCExpr.h"
 #include "llvm/MC/MCInst.h"
+#include "llvm/MC/MCRegisterInfo.h"
 #include "llvm/MC/MCSymbol.h"
+#include "llvm/Support/CommandLine.h"
 #include "llvm/Support/ErrorHandling.h"
 #include "llvm/Support/FormattedStream.h"
 using namespace llvm;
 
 #define DEBUG_TYPE "asm-printer"
 
+#define PRINT_ALIAS_INSTR
 // Include the auto-generated portion of the assembly writer.
 #include "VC16GenAsmWriter.inc"
 
-void VC16InstPrinter::printInst(const MCInst *MI, uint64_t Address, StringRef Annot,
-                                const MCSubtargetInfo &STI, raw_ostream &O) {
-  printInstruction(MI, Address, O);
+// Alias instruction emission is disabled by default. A subsequent patch
+// will change this default and fix all affected tests.
+static cl::opt<bool>
+    NoAliases("vc16-no-aliases",
+              cl::desc("Disable the emission of assembler pseudo instructions"),
+              cl::init(false), cl::Hidden);
+
+void VC16InstPrinter::printInst(const MCInst *MI, uint64_t Address,
+                                StringRef Annot, const MCSubtargetInfo &STI,
+                                raw_ostream &O) {
+  if (NoAliases || !printAliasInstr(MI, Address, O))
+    printInstruction(MI, Address, O);
   printAnnotation(O, Annot);
 }
 

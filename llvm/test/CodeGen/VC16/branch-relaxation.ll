@@ -14,7 +14,7 @@ define void @relax_bcc(i1 %a) {
 ; CHECK-NEXT:    .zero 254
 ; CHECK-NEXT:    ;NO_APP
 ; CHECK-NEXT:  .LBB0_2: ; %tail
-; CHECK-NEXT:    jalr ra, 0
+; CHECK-NEXT:    ret
   br i1 %a, label %iftrue, label %tail
 
 iftrue:
@@ -41,12 +41,12 @@ define i16 @relax_jal(i1 %a) {
 ; CHECK-NEXT:    .zero 1022
 ; CHECK-NEXT:    ;NO_APP
 ; CHECK-NEXT:    lli a0, 1
-; CHECK-NEXT:    jalr ra, 0
+; CHECK-NEXT:    ret
 ; CHECK-NEXT:  .LBB1_2: ; %jmp
 ; CHECK-NEXT:    ;APP
 ; CHECK-NEXT:    ;NO_APP
 ; CHECK-NEXT:    lli a0, 1
-; CHECK-NEXT:    jalr ra, 0
+; CHECK-NEXT:    ret
   br i1 %a, label %iftrue, label %jmp
 
 jmp:

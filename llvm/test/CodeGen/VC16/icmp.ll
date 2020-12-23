@@ -12,10 +12,10 @@ define i16 @icmp_eq(i16 %a, i16 %b) nounwind {
 ; VC16I-NEXT:    bz .LBB0_2
 ; VC16I-NEXT:  ; %bb.1:
 ; VC16I-NEXT:    lli a0, 0
-; VC16I-NEXT:    jalr ra, 0
+; VC16I-NEXT:    ret
 ; VC16I-NEXT:  .LBB0_2:
 ; VC16I-NEXT:    lli a0, 1
-; VC16I-NEXT:    jalr ra, 0
+; VC16I-NEXT:    ret
   %1 = icmp eq i16 %a, %b
   %2 = zext i1 %1 to i16
   ret i16 %2
@@ -28,10 +28,10 @@ define i16 @icmp_ugt(i16 %a, i16 %b) nounwind {
 ; VC16I-NEXT:    bn .LBB1_2
 ; VC16I-NEXT:  ; %bb.1:
 ; VC16I-NEXT:    lli a0, 0
-; VC16I-NEXT:    jalr ra, 0
+; VC16I-NEXT:    ret
 ; VC16I-NEXT:  .LBB1_2:
 ; VC16I-NEXT:    lli a0, 1
-; VC16I-NEXT:    jalr ra, 0
+; VC16I-NEXT:    ret
   %1 = icmp ugt i16 %a, %b
   %2 = zext i1 %1 to i16
   ret i16 %2
@@ -44,10 +44,10 @@ define i16 @icmp_uge(i16 %a, i16 %b) nounwind {
 ; VC16I-NEXT:    bnn .LBB2_2
 ; VC16I-NEXT:  ; %bb.1:
 ; VC16I-NEXT:    lli a0, 0
-; VC16I-NEXT:    jalr ra, 0
+; VC16I-NEXT:    ret
 ; VC16I-NEXT:  .LBB2_2:
 ; VC16I-NEXT:    lli a0, 1
-; VC16I-NEXT:    jalr ra, 0
+; VC16I-NEXT:    ret
   %1 = icmp uge i16 %a, %b
   %2 = zext i1 %1 to i16
   ret i16 %2
@@ -60,10 +60,10 @@ define i16 @icmp_ult(i16 %a, i16 %b) nounwind {
 ; VC16I-NEXT:    bn .LBB3_2
 ; VC16I-NEXT:  ; %bb.1:
 ; VC16I-NEXT:    lli a0, 0
-; VC16I-NEXT:    jalr ra, 0
+; VC16I-NEXT:    ret
 ; VC16I-NEXT:  .LBB3_2:
 ; VC16I-NEXT:    lli a0, 1
-; VC16I-NEXT:    jalr ra, 0
+; VC16I-NEXT:    ret
   %1 = icmp ult i16 %a, %b
   %2 = zext i1 %1 to i16
   ret i16 %2
@@ -76,10 +76,10 @@ define i16 @icmp_ule(i16 %a, i16 %b) nounwind {
 ; VC16I-NEXT:    bnn .LBB4_2
 ; VC16I-NEXT:  ; %bb.1:
 ; VC16I-NEXT:    lli a0, 0
-; VC16I-NEXT:    jalr ra, 0
+; VC16I-NEXT:    ret
 ; VC16I-NEXT:  .LBB4_2:
 ; VC16I-NEXT:    lli a0, 1
-; VC16I-NEXT:    jalr ra, 0
+; VC16I-NEXT:    ret
   %1 = icmp ule i16 %a, %b
   %2 = zext i1 %1 to i16
   ret i16 %2
@@ -93,10 +93,10 @@ define i16 @icmp_sgt(i16 %a, i16 %b) nounwind {
 ; VC16I-NEXT:    blt .LBB5_2
 ; VC16I-NEXT:  ; %bb.1:
 ; VC16I-NEXT:    lli a0, 0
-; VC16I-NEXT:    jalr ra, 0
+; VC16I-NEXT:    ret
 ; VC16I-NEXT:  .LBB5_2:
 ; VC16I-NEXT:    lli a0, 1
-; VC16I-NEXT:    jalr ra, 0
+; VC16I-NEXT:    ret
   %1 = icmp sgt i16 %a, %b
   %2 = zext i1 %1 to i16
   ret i16 %2
@@ -109,10 +109,10 @@ define i16 @icmp_sge(i16 %a, i16 %b) nounwind {
 ; VC16I-NEXT:    bge .LBB6_2
 ; VC16I-NEXT:  ; %bb.1:
 ; VC16I-NEXT:    lli a0, 0
-; VC16I-NEXT:    jalr ra, 0
+; VC16I-NEXT:    ret
 ; VC16I-NEXT:  .LBB6_2:
 ; VC16I-NEXT:    lli a0, 1
-; VC16I-NEXT:    jalr ra, 0
+; VC16I-NEXT:    ret
   %1 = icmp sge i16 %a, %b
   %2 = zext i1 %1 to i16
   ret i16 %2
@@ -125,10 +125,10 @@ define i16 @icmp_slt(i16 %a, i16 %b) nounwind {
 ; VC16I-NEXT:    blt .LBB7_2
 ; VC16I-NEXT:  ; %bb.1:
 ; VC16I-NEXT:    lli a0, 0
-; VC16I-NEXT:    jalr ra, 0
+; VC16I-NEXT:    ret
 ; VC16I-NEXT:  .LBB7_2:
 ; VC16I-NEXT:    lli a0, 1
-; VC16I-NEXT:    jalr ra, 0
+; VC16I-NEXT:    ret
   %1 = icmp slt i16 %a, %b
   %2 = zext i1 %1 to i16
   ret i16 %2
@@ -142,10 +142,10 @@ define i16 @icmp_sle(i16 %a, i16 %b) nounwind {
 ; VC16I-NEXT:    bge .LBB8_2
 ; VC16I-NEXT:  ; %bb.1:
 ; VC16I-NEXT:    lli a0, 0
-; VC16I-NEXT:    jalr ra, 0
+; VC16I-NEXT:    ret
 ; VC16I-NEXT:  .LBB8_2:
 ; VC16I-NEXT:    lli a0, 1
-; VC16I-NEXT:    jalr ra, 0
+; VC16I-NEXT:    ret
   %1 = icmp sle i16 %a, %b
   %2 = zext i1 %1 to i16
   ret i16 %2

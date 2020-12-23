@@ -51,7 +51,7 @@ define void @foo(i16 %a, i16 *%b, i1 %c) {
 ; VC16I-NEXT:  ; %bb.11: ; %test12
 ; VC16I-NEXT:    lw a2, 0(a1)
 ; VC16I-NEXT:  .LBB0_12: ; %end
-; VC16I-NEXT:    jalr ra, 0
+; VC16I-NEXT:    ret
 
   %val1 = load volatile i16, i16* %b
   %tst1 = icmp eq i16 %val1, %a

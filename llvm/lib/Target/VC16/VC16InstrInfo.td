@@ -511,9 +511,11 @@ def ADJCALLSTACKUP   : Pseudo<(outs), (ins i16imm:$amt1, i16imm:$amt2),
 
 /// Aliases
 def : InstAlias<"nop",                     (LEA       X0,       X0,       0)>;
-def : InstAlias<"jalr ${rs}",              (JALR      GPR:$rs,  0), 3>;
-def : InstAlias<"jalr ${offset}(${rs})",   (JALR      GPR:$rs,  simm5:$offset)>;
-def : InstAlias<"ret",                     (JALR      X1,       0), 4>;
+def : InstAlias<"mv $rd, $rs",             (LEA       GPR:$rd,  GPR:$rs,  0)>;
+
+def : InstAlias<"jal $offset",             (JAL       X1,       simm11_lsb0:$offset)>;
+def : InstAlias<"jr ${rs}",                (JALR      GPR:$rs,  0)>;
+def : InstAlias<"ret",                     (JALR      X1,       0), 2>;
 
 
 let EmitPriority = 0 in {

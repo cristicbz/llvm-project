@@ -31,7 +31,7 @@ define void @jt(i16 %in, i16* %out) {
 ; VC16I-NEXT:  .LBB0_8: ; %exit
 ; VC16I-NEXT:    sw a2, 0(a1)
 ; VC16I-NEXT:  .LBB0_9: ; %exit
-; VC16I-NEXT:    jalr ra, 0
+; VC16I-NEXT:    ret
 entry:
   switch i16 %in, label %exit [
     i16 1, label %bb1

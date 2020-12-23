@@ -16,17 +16,17 @@ define void @simple_alloca(i16 %n) nounwind {
 ; VC16I-NEXT:    lea s0, sp, 4
 ; VC16I-NEXT:    lea a2, a0, 1
 ; VC16I-NEXT:    andi a2, -2
-; VC16I-NEXT:    lea a0, sp, 0
+; VC16I-NEXT:    mv a0, sp
 ; VC16I-NEXT:    sub a0, a2
-; VC16I-NEXT:    lea sp, a0, 0
+; VC16I-NEXT:    mv sp, a0
 ; VC16I-NEXT:    lui a2, %his(notdead)
 ; VC16I-NEXT:    lea ra, a2, %lo(notdead)
-; VC16I-NEXT:    jalr ra, 0
+; VC16I-NEXT:    ret
 ; VC16I-NEXT:    lea sp, s0, -4
 ; VC16I-NEXT:    lw ra, 0(sp)
 ; VC16I-NEXT:    lw s0, 2(sp)
 ; VC16I-NEXT:    lea sp, sp, 4
-; VC16I-NEXT:    jalr ra, 0
+; VC16I-NEXT:    ret
   %1 = alloca i8, i16 %n
   call void @notdead(i8* %1)
   ret void
@@ -44,22 +44,22 @@ define void @scoped_alloca(i16 %n) nounwind {
 ; VC16I-NEXT:    sw s0, 2(sp)
 ; VC16I-NEXT:    sw ra, 0(sp)
 ; VC16I-NEXT:    lea s0, sp, 6
-; VC16I-NEXT:    lea s1, sp, 0
+; VC16I-NEXT:    mv s1, sp
 ; VC16I-NEXT:    lea a2, a0, 1
 ; VC16I-NEXT:    andi a2, -2
-; VC16I-NEXT:    lea a0, sp, 0
+; VC16I-NEXT:    mv a0, sp
 ; VC16I-NEXT:    sub a0, a2
-; VC16I-NEXT:    lea sp, a0, 0
+; VC16I-NEXT:    mv sp, a0
 ; VC16I-NEXT:    lui a2, %his(notdead)
 ; VC16I-NEXT:    lea ra, a2, %lo(notdead)
-; VC16I-NEXT:    jalr ra, 0
-; VC16I-NEXT:    lea sp, s1, 0
+; VC16I-NEXT:    ret
+; VC16I-NEXT:    mv sp, s1
 ; VC16I-NEXT:    lea sp, s0, -6
 ; VC16I-NEXT:    lw ra, 0(sp)
 ; VC16I-NEXT:    lw s0, 2(sp)
 ; VC16I-NEXT:    lw s1, 4(sp)
 ; VC16I-NEXT:    lea sp, sp, 6
-; VC16I-NEXT:    jalr ra, 0
+; VC16I-NEXT:    ret
   %sp = call i8* @llvm.stacksave()
   %addr = alloca i8, i16 %n
   call void @notdead(i8* %addr)

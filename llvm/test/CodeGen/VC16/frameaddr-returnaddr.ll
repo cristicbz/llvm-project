@@ -13,11 +13,11 @@ define i8* @test_frameaddress_0() nounwind {
 ; VC16I-NEXT:    sw s0, 2(sp)
 ; VC16I-NEXT:    sw ra, 0(sp)
 ; VC16I-NEXT:    lea s0, sp, 4
-; VC16I-NEXT:    lea a0, s0, 0
+; VC16I-NEXT:    mv a0, s0
 ; VC16I-NEXT:    lw ra, 0(sp)
 ; VC16I-NEXT:    lw s0, 2(sp)
 ; VC16I-NEXT:    lea sp, sp, 4
-; VC16I-NEXT:    jalr ra, 0
+; VC16I-NEXT:    ret
   %1 = call i8* @llvm.frameaddress(i32 0)
   ret i8* %1
 }
@@ -36,7 +36,7 @@ define i8* @test_frameaddress_2() nounwind {
 ; VC16I-NEXT:    lw ra, 0(sp)
 ; VC16I-NEXT:    lw s0, 2(sp)
 ; VC16I-NEXT:    lea sp, sp, 4
-; VC16I-NEXT:    jalr ra, 0
+; VC16I-NEXT:    ret
   %1 = call i8* @llvm.frameaddress(i32 2)
   ret i8* %1
 }
@@ -50,8 +50,8 @@ define i8* @test_frameaddress_3_alloca() nounwind {
 ; VC16I-NEXT:    lea s0, sp, 14
 ; VC16I-NEXT:    lui a2, %his(notdead)
 ; VC16I-NEXT:    lea ra, a2, %lo(notdead)
-; VC16I-NEXT:    lea a0, sp, 0
-; VC16I-NEXT:    jalr ra, 0
+; VC16I-NEXT:    mv a0, sp
+; VC16I-NEXT:    ret
 ; VC16I-NEXT:    lea a2, s0, -2
 ; VC16I-NEXT:    lw a2, 0(a2)
 ; VC16I-NEXT:    lea a2, a2, -2
@@ -61,7 +61,7 @@ define i8* @test_frameaddress_3_alloca() nounwind {
 ; VC16I-NEXT:    lw ra, 10(sp)
 ; VC16I-NEXT:    lw s0, 12(sp)
 ; VC16I-NEXT:    lea sp, sp, 14
-; VC16I-NEXT:    jalr ra, 0
+; VC16I-NEXT:    ret
   %1 = alloca [10 x i8]
   %2 = bitcast [10 x i8]* %1 to i8*
   call void @notdead(i8* %2)
@@ -81,7 +81,7 @@ define i8* @test_returnaddress_0() nounwind {
 ; VC16I-NEXT:    lw ra, 0(sp)
 ; VC16I-NEXT:    lw s0, 2(sp)
 ; VC16I-NEXT:    lea sp, sp, 4
-; VC16I-NEXT:    jalr ra, 0
+; VC16I-NEXT:    ret
   %1 = call i8* @llvm.returnaddress(i32 0)
   ret i8* %1
 }
@@ -102,7 +102,7 @@ define i8* @test_returnaddress_2() nounwind {
 ; VC16I-NEXT:    lw ra, 0(sp)
 ; VC16I-NEXT:    lw s0, 2(sp)
 ; VC16I-NEXT:    lea sp, sp, 4
-; VC16I-NEXT:    jalr ra, 0
+; VC16I-NEXT:    ret
   %1 = call i8* @llvm.returnaddress(i32 2)
   ret i8* %1
 }

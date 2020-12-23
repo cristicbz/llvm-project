@@ -9,7 +9,7 @@ define i16 @callee(%struct.Foo* byval %f) nounwind {
 ; VC16I-LABEL: callee:
 ; VC16I:       ; %bb.0: ; %entry
 ; VC16I-NEXT:    lw a0, 0(a0)
-; VC16I-NEXT:    jalr ra, 0
+; VC16I-NEXT:    ret
 entry:
   %0 = getelementptr inbounds %struct.Foo, %struct.Foo* %f, i32 0, i32 0
   %1 = load i16, i16* %0, align 2
@@ -39,11 +39,11 @@ define void @caller() nounwind {
 ; VC16I-NEXT:    sw a2, 0(sp)
 ; VC16I-NEXT:    lui a2, %his(callee)
 ; VC16I-NEXT:    lea ra, a2, %lo(callee)
-; VC16I-NEXT:    lea a0, sp, 0
-; VC16I-NEXT:    jalr ra, 0
+; VC16I-NEXT:    mv a0, sp
+; VC16I-NEXT:    ret
 ; VC16I-NEXT:    lw ra, 10(sp)
 ; VC16I-NEXT:    lea sp, sp, 12
-; VC16I-NEXT:    jalr ra, 0
+; VC16I-NEXT:    ret
 entry:
   %call = call i16 @callee(%struct.Foo* byval @foo)
   ret void

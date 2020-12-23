@@ -5,10 +5,10 @@
 define i16 @indirectbr(i8* %target) nounwind {
 ; VC16I-LABEL: indirectbr:
 ; VC16I:       ; %bb.0:
-; VC16I-NEXT:    jalr a0, 0
+; VC16I-NEXT:    jr a0
 ; VC16I-NEXT:  .LBB0_1: ; %test_label
 ; VC16I-NEXT:    lli a0, 0
-; VC16I-NEXT:    jalr ra, 0
+; VC16I-NEXT:    ret
   indirectbr i8* %target, [label %test_label]
 test_label:
   br label %ret
@@ -22,7 +22,7 @@ define i16 @indirectbr_with_offset(i8* %a) nounwind {
 ; VC16I-NEXT:    jalr a0, 10
 ; VC16I-NEXT:  .LBB1_1: ; %test_label
 ; VC16I-NEXT:    lli a0, 0
-; VC16I-NEXT:    jalr ra, 0
+; VC16I-NEXT:    ret
   %target = getelementptr inbounds i8, i8* %a, i16 10
   indirectbr i8* %target, [label %test_label]
 test_label:
