@@ -36,12 +36,10 @@ define i32 @load_i64(i64 *%a) nounwind {
 define i32 @load_i32_global() nounwind {
 ; VC16I-LABEL: load_i32_global:
 ; VC16I:       ; %bb.0:
-; VC16I-NEXT:    lui a2, %his(val32)
-; VC16I-NEXT:    lea a2, a2, %lo(val32)
-; VC16I-NEXT:    lw a0, 0(a2)
-; VC16I-NEXT:    lui a2, %his(val32+2)
-; VC16I-NEXT:    lea a2, a2, %lo(val32+2)
-; VC16I-NEXT:    lw a1, 0(a2)
+; VC16I-NEXT:    lui a2, %hiu(val32)
+; VC16I-NEXT:    lw a0, %lo(val32)(a2)
+; VC16I-NEXT:    lui a2, %hiu(val32+2)
+; VC16I-NEXT:    lw a1, %lo(val32+2)(a2)
 ; VC16I-NEXT:    jalr ra, 0
   %1 = load i32, i32* @val32
   ret i32 %1

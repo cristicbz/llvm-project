@@ -103,17 +103,14 @@ define i16 @load_sext_zext_anyext_i1(i1 *%a) nounwind {
 @G = global i16 0
 
 define i16 @lw_sw_global(i16 %a) nounwind {
-; TODO(cristicbz): the addi should be folded in to the lw/sw operations
 ; VC16I-LABEL: lw_sw_global:
 ; VC16I:       ; %bb.0:
-; VC16I-NEXT:    lui a2, %his(G)
-; VC16I-NEXT:    lea a1, a2, %lo(G)
-; VC16I-NEXT:    lw a2, 0(a1)
-; VC16I-NEXT:    sw a0, 0(a1)
-; VC16I-NEXT:    lui a1, %his(G+18)
-; VC16I-NEXT:    lea a1, a1, %lo(G+18)
-; VC16I-NEXT:    lw t0, 0(a1)
-; VC16I-NEXT:    sw a0, 0(a1)
+; VC16I-NEXT:    lui a1, %hiu(G)
+; VC16I-NEXT:    lw a2, %lo(G)(a1)
+; VC16I-NEXT:    sw a0, %lo(G)(a1)
+; VC16I-NEXT:    lui a1, %hiu(G+18)
+; VC16I-NEXT:    lw t0, %lo(G+18)(a1)
+; VC16I-NEXT:    sw a0, %lo(G+18)(a1)
 ; VC16I-NEXT:    lea a0, a2, 0
 ; VC16I-NEXT:    jalr ra, 0
   %1 = load volatile i16, i16* @G
@@ -126,13 +123,11 @@ define i16 @lw_sw_global(i16 %a) nounwind {
 
 ; Ensure that 1 is added to the high 11 bits if bit 4 of the low part is 1
 define i16 @lw_sw_constant(i16 %a) nounwind {
-; TODO(cristicbz): the addi should be folded in to the lw/sw
 ; VC16I-LABEL: lw_sw_constant:
 ; VC16I:       ; %bb.0:
-; VC16I-NEXT:    lui a2, 1036
-; VC16I-NEXT:    lea a1, a2, -14
-; VC16I-NEXT:    lw a2, 0(a1)
-; VC16I-NEXT:    sw a0, 0(a1)
+; VC16I-NEXT:    lui a1, 1035
+; VC16I-NEXT:    lw a2, 18(a1)
+; VC16I-NEXT:    sw a0, 18(a1)
 ; VC16I-NEXT:    lea a0, a2, 0
 ; VC16I-NEXT:    jalr ra, 0
   %1 = inttoptr i16 33138 to i16*
