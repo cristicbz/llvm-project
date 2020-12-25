@@ -1083,12 +1083,12 @@ template <class ELFT> void Writer<ELFT>::addRelIpltSymbols() {
   // We'll override Out::elfHeader with In.relaIplt later when we are
   // sure that .rela.plt exists in output.
   ElfSym::relaIpltStart = addOptionalRegular(
-      config->isRela ? "__rela_iplt_start" : "__rel_iplt_start",
-      Out::elfHeader, 0, STV_HIDDEN, STB_WEAK);
+      config->isRela ? "__rela_iplt_start" : "__rel_iplt_start", Out::elfHeader,
+      0, STV_HIDDEN, STB_WEAK);
 
-  ElfSym::relaIpltEnd = addOptionalRegular(
-      config->isRela ? "__rela_iplt_end" : "__rel_iplt_end",
-      Out::elfHeader, 0, STV_HIDDEN, STB_WEAK);
+  ElfSym::relaIpltEnd =
+      addOptionalRegular(config->isRela ? "__rela_iplt_end" : "__rel_iplt_end",
+                         Out::elfHeader, 0, STV_HIDDEN, STB_WEAK);
 }
 
 template <class ELFT>
@@ -2146,7 +2146,8 @@ template <class ELFT> void Writer<ELFT>::finalizeSections() {
   if (errorCount())
     return;
 
-  // finalizeAddressDependentContent may have added local symbols to the static symbol table.
+  // finalizeAddressDependentContent may have added local symbols to the static
+  // symbol table.
   finalizeSynthetic(in.symTab);
   finalizeSynthetic(in.ppc64LongBranchTarget);
 
@@ -2174,7 +2175,8 @@ template <class ELFT> void Writer<ELFT>::checkExecuteOnly() {
     if (os->flags & SHF_EXECINSTR)
       for (InputSection *isec : getInputSections(os))
         if (!(isec->flags & SHF_EXECINSTR))
-          error("cannot place " + toString(isec) + " into " + toString(os->name) +
+          error("cannot place " + toString(isec) + " into " +
+                toString(os->name) +
                 ": -execute-only does not support intermingling data and code");
 }
 
@@ -2522,8 +2524,8 @@ static uint64_t computeFileOffset(OutputSection *os, uint64_t off) {
   // File offsets are not significant for .bss sections other than the first one
   // in a PT_LOAD. By convention, we keep section offsets monotonically
   // increasing rather than setting to zero.
-   if (os->type == SHT_NOBITS)
-     return off;
+  if (os->type == SHT_NOBITS)
+    return off;
 
   // If the section is not in a PT_LOAD, we just have to align it.
   if (!os->ptLoad)
