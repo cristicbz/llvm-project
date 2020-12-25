@@ -45,6 +45,7 @@ RelExpr VC16::getRelExpr(const RelType type, const Symbol &s,
   switch (type) {
   case R_RISCV_NONE:
     return R_NONE;
+  case R_VC16_16:
   case R_VC16_32:
   case R_VC16_64:
   case R_VC16_HI11U:
@@ -67,6 +68,9 @@ RelExpr VC16::getRelExpr(const RelType type, const Symbol &s,
 // Extract bits V[Begin:End], where range is inclusive, and Begin must be < 63.
 void VC16::relocate(uint8_t *loc, const Relocation &rel, uint64_t val) const {
   switch (rel.type) {
+  case R_VC16_16:
+    write16le(loc, val);
+    return;
   case R_VC16_32:
     write32le(loc, val);
     return;

@@ -12,6 +12,7 @@
 #include "llvm/MC/MCELFObjectWriter.h"
 #include "llvm/MC/MCFixup.h"
 #include "llvm/MC/MCObjectWriter.h"
+#include "llvm/Support/Debug.h"
 #include "llvm/Support/ErrorHandling.h"
 
 #include <memory>
@@ -44,6 +45,8 @@ unsigned VC16ELFObjectWriter::getRelocType(MCContext &Ctx,
   switch ((unsigned)Fixup.getKind()) {
   default:
     llvm_unreachable("invalid fixup kind!");
+  case FK_Data_2:
+    return ELF::R_VC16_16;
   case FK_Data_4:
     return ELF::R_VC16_32;
   case FK_Data_8:
