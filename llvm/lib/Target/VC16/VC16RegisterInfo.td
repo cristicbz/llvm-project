@@ -41,8 +41,26 @@ def GPR : RegisterClass<"VC16", [i16], 16, (add
 def GPR_JAL : RegisterClass<"VC16", [i16], 16, (add X5, X7, X3, X1)>;
 
 // Status register.
-def FLAGS : VC16Reg<4, "FLAGS", ["FLAGS"]>, DwarfRegNum<[8]>;
+let RegAltNameIndices = [ABIRegAltName] in {
+  def CS    : VC16Reg<0, "csr0", ["cs"]>,    DwarfRegNum<[8]>;
+  def XS    : VC16Reg<1, "csr1", ["xs"]>,    DwarfRegNum<[9]>;
+  def YS    : VC16Reg<2, "csr2", ["ys"]>,    DwarfRegNum<[10]>;
+  def SS    : VC16Reg<3, "csr3", ["ss"]>,    DwarfRegNum<[11]>;
+  def FLAGS : VC16Reg<4, "csr4", ["flags"]>, DwarfRegNum<[12]>;
+  def CSR5  : VC16Reg<5, "csr5", ["csr5"]>,  DwarfRegNum<[13]>;
+  def CSR6  : VC16Reg<6, "csr6", ["csr6"]>,  DwarfRegNum<[14]>;
+  def CSR7  : VC16Reg<7, "csr7", ["csr7"]>,  DwarfRegNum<[15]>;
+}
+
 def CCR : RegisterClass<"VC16", [i16], 16, (add FLAGS)>
 {
   let CopyCost = -1;      // Don't allow copying of status registers
+}
+def SSREG : RegisterClass<"VC16", [i16], 16, (add CS, XS, YS, SS)>
+{
+  let CopyCost = -1;      // Don't allow copying of segment registers
+}
+def CSREG : RegisterClass<"VC16", [i16], 16, (add CS, XS, YS, SS, FLAGS)>
+{
+  let CopyCost = -1;      // Don't allow copying of CSRs.
 }

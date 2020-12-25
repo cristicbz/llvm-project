@@ -266,3 +266,15 @@ lli a0, -6
 # CHECK: encoding: [0xff,0xe2]
 andi a0, -6
 
+# CHECK-INST: csri xs, 5
+# CHECK: encoding: [0x57,0x05]
+csri xs, 5
+
+# CHECK-INST: csrw ys, a0
+# CHECK: encoding: [0x57,0x62]
+csrw csr2, a0
+
+# CHECK-INST: csrr a0, ss
+# CHECK: encoding: [0x17,0x63]
+csrr a0, ss
+

@@ -56,6 +56,10 @@ static const unsigned GPRDecoderTable[] = {
     VC16::X0, VC16::X1, VC16::X2, VC16::X3,
     VC16::X4, VC16::X5, VC16::X6, VC16::X7,
 };
+static const unsigned CSRDecoderTable[] = {
+    VC16::CS,    VC16::XS,   VC16::YS,   VC16::SS,
+    VC16::FLAGS, VC16::CSR5, VC16::CSR6, VC16::CSR7,
+};
 
 static DecodeStatus DecodeGPRRegisterClass(MCInst &Inst, uint64_t RegNo,
                                            uint64_t Address,
@@ -81,6 +85,34 @@ static DecodeStatus DecodeGPR_JALRegisterClass(MCInst &Inst, uint64_t RegNo,
   // Accessing index RegNo in the register class will work in the case that
   // registers were added in ascending order, but not in general.
   unsigned Reg = GPRDecoderTable[RegNo];
+  Inst.addOperand(MCOperand::createReg(Reg));
+  return MCDisassembler::Success;
+}
+
+static DecodeStatus DecodeCSREGRegisterClass(MCInst &Inst, uint64_t RegNo,
+                                             uint64_t Address,
+                                             const void *Decoder) {
+  if (RegNo > sizeof(CSRDecoderTable))
+    return MCDisassembler::Fail;
+
+  // We must define our own mapping from RegNo to register identifier.
+  // Accessing index RegNo in the register class will work in the case that
+  // registers were added in ascending order, but not in general.
+  unsigned Reg = CSRDecoderTable[RegNo];
+  Inst.addOperand(MCOperand::createReg(Reg));
+  return MCDisassembler::Success;
+}
+
+static DecodeStatus DecodeSSREGRegisterClass(MCInst &Inst, uint64_t RegNo,
+                                             uint64_t Address,
+                                             const void *Decoder) {
+  if (RegNo > 3)
+    return MCDisassembler::Fail;
+
+  // We must define our own mapping from RegNo to register identifier.
+  // Accessing index RegNo in the register class will work in the case that
+  // registers were added in ascending order, but not in general.
+  unsigned Reg = CSRDecoderTable[RegNo];
   Inst.addOperand(MCOperand::createReg(Reg));
   return MCDisassembler::Success;
 }

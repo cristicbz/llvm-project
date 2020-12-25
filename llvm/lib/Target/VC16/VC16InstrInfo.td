@@ -106,6 +106,11 @@ def uimm4 : Operand<i16>, ImmLeaf<i16, [{return isUInt<4>(Imm);}]>  {
   let EncoderMethod = "getImmOpValue";
   let DecoderMethod = "decodeUImmOperand<4>";
 }
+def uimm6 : Operand<i16>, ImmLeaf<i16, [{return isUInt<6>(Imm);}]>  {
+  let ParserMatchClass = UImmAsmOperand<4>;
+  let EncoderMethod = "getImmOpValue";
+  let DecoderMethod = "decodeUImmOperand<6>";
+}
 def simm5 : Operand<i16>, ImmLeaf<i16, [{return isInt<5>(Imm);}]>  {
   let ParserMatchClass = SImmAsmOperand<5>;
   let EncoderMethod = "getImmOpValue";
@@ -199,6 +204,15 @@ class BranchCC_i<bits<8> op8, string opcodestr, bits<8> cond>
 //===----------------------------------------------------------------------===//
 // Instructions
 //===----------------------------------------------------------------------===//
+let hasSideEffects = 1, mayStore = 1, mayLoad = 0 in {
+def CSRI : VCInstSI6<0b00,   0b010111, (outs SSREG:$ss), (ins uimm6:$imm6),
+                     "csri", " $ss, $imm6">;
+def CSRR : VCInstCR <0b01, 0b00010111, (outs GPR:$r), (ins CSREG:$csr),
+                     "csrr", "  $r,  $csr">;
+def CSRW : VCInstCR <0b01, 0b01010111, (outs CSREG:$csr), (ins GPR:$r),
+                     "csrw", "$csr,    $r">;
+}
+
 let hasSideEffects = 0, mayLoad = 0, mayStore = 0 in {
 let isAsCheapAsAMove = 1 in
 def LUI  : VCInstRI11<0b00, (outs GPR:$rd), (ins uimm11:$imm11),

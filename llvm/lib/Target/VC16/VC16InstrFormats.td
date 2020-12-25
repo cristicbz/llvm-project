@@ -17,6 +17,9 @@ def InstFormatRR     : InstFormat<7>;
 def InstFormatRI4    : InstFormat<8>;
 def InstFormatRI5    : InstFormat<9>;
 
+def InstFormatSI6    : InstFormat<10>;
+def InstFormatCR     : InstFormat<11>;
+
 class VCInst<dag outs, dag ins, string opcodestr, string argstr,
              list<dag> pattern, InstFormat format>
     : Instruction {
@@ -174,5 +177,31 @@ class VCInstRI5<bits<8> op8, dag outs, dag ins,
   let Inst{15-14} = imm5{4-3};
   let Inst{13-11} = rs;
   let Inst{10-8} = imm5{2-0};
+  let Inst{7-0} = op8;
+}
+
+class VCInstSI6<bits<2> op2, bits<6> op6, dag outs, dag ins,
+    string opcodestr, string argstr, list<dag> pattern = []>
+    : VCInst<outs, ins, opcodestr, argstr, pattern, InstFormatSI6>
+{
+  bits<6> imm6;
+  bits<3> ss;
+
+  let Inst{15-14} = op2;
+  let Inst{13-8} = imm6;
+  let Inst{7-6} = ss{1-0};
+  let Inst{5-0} = op6;
+}
+
+class VCInstCR<bits<2> op2, bits<8> op8, dag outs, dag ins,
+    string opcodestr, string argstr, list<dag> pattern = []>
+    : VCInst<outs, ins, opcodestr, argstr, pattern, InstFormatCR>
+{
+  bits<3> r;
+  bits<3> csr;
+
+  let Inst{15-14} = op2;
+  let Inst{13-11} = r;
+  let Inst{10-8} = csr;
   let Inst{7-0} = op8;
 }
