@@ -68,6 +68,7 @@ public:
         { "fixup_vc16_lo5_rri5",     0,     16,  0 },
         { "fixup_vc16_jal",          0,     16,  MCFixupKindInfo::FKF_IsPCRel },
         { "fixup_vc16_branch",       8,      8,  MCFixupKindInfo::FKF_IsPCRel },
+        { "fixup_vc16_csri_seg",     8,      6,  0 },
         // clang-format on
     };
 
@@ -176,6 +177,9 @@ static uint64_t adjustFixupValue(const MCFixup &Fixup, const uint64_t Value,
                       "branch fixup value must be 2-byte aligned");
     }
     return (Value >> 1) & 0xff;
+
+  case VC16::fixup_vc16_csri_seg:
+    return (Value >> 16) & 0b111111;
   };
 }
 

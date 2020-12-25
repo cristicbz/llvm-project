@@ -27,6 +27,7 @@ public:
     VK_VC16_LO,
     VK_VC16_HIU,
     VK_VC16_HIS,
+    VK_VC16_SEG6,
     VK_VC16_Invalid
   };
 
@@ -41,7 +42,7 @@ private:
 
 public:
   static const VC16MCExpr *create(const MCExpr *Expr, VariantKind Kind,
-                                   MCContext &Ctx);
+                                  MCContext &Ctx);
 
   VariantKind getKind() const { return Kind; }
 

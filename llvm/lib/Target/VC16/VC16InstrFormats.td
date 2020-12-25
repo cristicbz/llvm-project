@@ -67,15 +67,12 @@ class VCInstMW<bits<3> op3, dag outs, dag ins, string opcodestr,
   bits<5> imm5;
   bits<3> rs2;
   bits<3> rs1;
-
-  // TODO(cristicbz): Add support for segment selectors, currently just point to
-  // stack.
-  // bits<2> ss;
+  bits<3> seg;
 
   let Inst{15-14} = imm5{4-3};
   let Inst{13-11} = rs2;
   let Inst{10-8} = rs1;
-  let Inst{7-6} = 0b11;
+  let Inst{7-6} = seg{1-0};
   let Inst{5-3} = imm5{2-0};
   let Inst{2-0} = op3;
 }
@@ -87,15 +84,12 @@ class VCInstMB<bits<3> op3, dag outs, dag ins, string opcodestr,
   bits<5> imm5;
   bits<3> rs2;
   bits<3> rs1;
-
-  // TODO(cristicbz): Add support for segment selectors, currently just point to
-  // stack.
-  // bits<2> ss;
+  bits<3> seg;
 
   let Inst{15-14} = imm5{4-3};
   let Inst{13-11} = rs2;
   let Inst{10-8} = rs1;
-  let Inst{7-6} = 0b11;
+  let Inst{7-6} = seg{1-0};
   let Inst{5-3} = imm5{2-0};
   let Inst{2-0} = op3;
 }
@@ -185,11 +179,11 @@ class VCInstSI6<bits<2> op2, bits<6> op6, dag outs, dag ins,
     : VCInst<outs, ins, opcodestr, argstr, pattern, InstFormatSI6>
 {
   bits<6> imm6;
-  bits<3> ss;
+  bits<3> seg;
 
   let Inst{15-14} = op2;
   let Inst{13-8} = imm6;
-  let Inst{7-6} = ss{1-0};
+  let Inst{7-6} = seg{1-0};
   let Inst{5-0} = op6;
 }
 

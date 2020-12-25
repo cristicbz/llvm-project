@@ -67,6 +67,8 @@ unsigned VC16ELFObjectWriter::getRelocType(MCContext &Ctx,
     return ELF::R_VC16_JAL;
   case VC16::fixup_vc16_branch:
     return ELF::R_VC16_BRANCH;
+  case VC16::fixup_vc16_csri_seg:
+    return ELF::R_VC16_CSRI_SEG;
   }
 }
 

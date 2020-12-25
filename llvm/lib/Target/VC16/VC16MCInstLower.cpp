@@ -46,6 +46,9 @@ static MCOperand lowerSymbolOperand(const MachineOperand &MO, MCSymbol *Sym,
   case VC16II::MO_HIS:
     Kind = VC16MCExpr::VK_VC16_HIS;
     break;
+  case VC16II::MO_SEG6:
+    Kind = VC16MCExpr::VK_VC16_SEG6;
+    break;
   }
 
   const MCExpr *ME =

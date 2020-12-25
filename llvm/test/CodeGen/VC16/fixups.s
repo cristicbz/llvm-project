@@ -13,6 +13,10 @@ lui t0, %hiu(val)
 ; CHECK-FIXUP: fixup A - offset: 0, value: %hiu(val), kind: fixup_vc16_hi11u
 ; CHECK-INSTR: lui t0, 691
 
+lui t0, %his(val)
+; CHECK-FIXUP: fixup A - offset: 0, value: %his(val), kind: fixup_vc16_hi11s
+; CHECK-INSTR: lui t0, 692
+
 lw a0, %lo(val)(t0)
 ; CHECK-FIXUP: fixup A - offset: 0, value: %lo(val), kind: fixup_vc16_lo5_mw
 ; CHECK-INSTR: lw a0, 24(t0)
@@ -26,15 +30,19 @@ sb a0, %lo(val)(t0)
 ; CHECK-FIXUP: fixup A - offset: 0, value: %lo(val), kind: fixup_vc16_lo5_mb
 ; CHECK-INSTR: sb a0, 24(t0)
 
+csri xs, %seg6(val)
+; CHECK-FIXUP: fixup A - offset: 0, value: %seg6(val), kind: fixup_vc16_csri_seg
+; CHECK-INSTR: csri xs, 52
+
 j .LBB0
 ; CHECK-FIXUP: fixup A - offset: 0, value: .LBB0, kind: fixup_vc16_jal
-; CHECK-INSTR: j -10
+; CHECK-INSTR: j -14
 jal t0, .LBB2
 ; CHECK-FIXUP: fixup A - offset: 0, value: .LBB2, kind: fixup_vc16_jal
 ; CHECK-INSTR: jal t0, 708
 bz .LBB0
 ; CHECK-FIXUP: fixup A - offset: 0, value: .LBB0, kind: fixup_vc16_branch
-; CHECK-INSTR: bz -14
+; CHECK-INSTR: bz -18
 blt .LBB1
 ; CHECK-FIXUP: fixup A - offset: 0, value: .LBB1, kind: fixup_vc16_branch
 ; CHECK-INSTR: blt 202
@@ -47,6 +55,6 @@ blt .LBB1
 nop
 .LBB2:
 
-.set val, 0x5678
+.set val, 0x345678
 
 ; CHECK-REL-NOT: R_VC16

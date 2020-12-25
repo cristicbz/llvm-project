@@ -47,6 +47,9 @@ enum Fixups {
   // instructions
   fixup_vc16_branch,
 
+  // fixup_vc16_branch - 6-bit fixup for symbol references in csri segment
+  fixup_vc16_csri_seg,
+
   // fixup_vc16_invalid - used as a sentinel and a marker, must be last fixup
   fixup_vc16_invalid,
   NumTargetFixupKinds = fixup_vc16_invalid - FirstTargetFixupKind

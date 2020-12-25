@@ -30,6 +30,22 @@ lb a0, 18(t0)
 # CHECK: encoding: [0xf6,0xbc]
 sb t0, 22(a0)
 
+# CHECK-INST: lw a0, 36(t0), xs
+# CHECK: encoding: [0x51,0xa7]
+lw a0, 36(t0), xs
+
+# CHECK-INST: sw t0, 44(a0), xs
+# CHECK: encoding: [0x72,0xbc]
+sw t0, 44(a0), xs
+
+# CHECK-INST: lb a0, 18(t0), xs
+# CHECK: encoding: [0x55,0xa7]
+lb a0, 18(t0), xs
+
+# CHECK-INST: sb t0, 22(a0), xs
+# CHECK: encoding: [0x76,0xbc]
+sb t0, 22(a0), xs
+
 # CHECK-INST: jal 1000
 # CHECK: encoding: [0xa3,0x4f]
 jal 1000

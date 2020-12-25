@@ -57,7 +57,8 @@ void VC16InstrInfo::storeRegToStackSlot(MachineBasicBlock &MBB,
     BuildMI(MBB, I, DL, get(VC16::SW))
         .addReg(SrcReg, getKillRegState(IsKill))
         .addFrameIndex(FI)
-        .addImm(0);
+        .addImm(0)
+        .addReg(VC16::SS);
   else
     llvm_unreachable("Can't store this register to stack slot");
 }
@@ -72,7 +73,10 @@ void VC16InstrInfo::loadRegFromStackSlot(MachineBasicBlock &MBB,
     DL = I->getDebugLoc();
 
   if (VC16::GPRRegClass.hasSubClassEq(RC))
-    BuildMI(MBB, I, DL, get(VC16::LW), DstReg).addFrameIndex(FI).addImm(0);
+    BuildMI(MBB, I, DL, get(VC16::LW), DstReg)
+        .addFrameIndex(FI)
+        .addImm(0)
+        .addReg(VC16::SS);
   else
     llvm_unreachable("Can't load this register from stack slot");
 }

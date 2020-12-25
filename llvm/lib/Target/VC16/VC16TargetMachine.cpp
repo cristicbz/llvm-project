@@ -30,7 +30,8 @@ extern "C" void LLVMInitializeVC16Target() {
 }
 
 static std::string computeDataLayout(const Triple &TT) {
-  return "e-m:e-p:16:16-i32:16-i64:16-f32:16-f64:16-n16-S16";
+  return "e-m:e-p0:16:16-p1:16:16-p2:16:16-p3:16:16-i32:16-i64:16-f32:"
+         "16-f64:16-n16-S16";
 }
 
 static Reloc::Model getEffectiveRelocModel(const Triple &TT,

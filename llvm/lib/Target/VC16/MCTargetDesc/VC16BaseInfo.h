@@ -32,6 +32,8 @@ enum {
   InstFormatRR = 7,
   InstFormatRI4 = 8,
   InstFormatRI5 = 9,
+  InstFormatSI6 = 10,
+  InstFormatCR = 11,
 
   InstFormatMask = 15
 };
@@ -40,6 +42,7 @@ enum {
   MO_LO,
   MO_HIU,
   MO_HIS,
+  MO_SEG6,
 };
 } // namespace VC16II
 

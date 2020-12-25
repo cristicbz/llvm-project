@@ -223,10 +223,11 @@ void VC16DAGToDAGISel::doPeepholeLoadStoreLEA() {
 
     // Modify the offset operand of the load/store.
     if (BaseOpIdx == 0) // Load
-      CurDAG->UpdateNodeOperands(N, NewBaseUpper, ImmOperand, N->getOperand(2));
+      CurDAG->UpdateNodeOperands(N, NewBaseUpper, ImmOperand, N->getOperand(2),
+                                 N->getOperand(3));
     else // Store
       CurDAG->UpdateNodeOperands(N, N->getOperand(0), NewBaseUpper, ImmOperand,
-                                 N->getOperand(3));
+                                 N->getOperand(3), N->getOperand(4));
 
     // The LEA and LUI may now be dead, in which case remove it.
     if (Base.getNode()->use_empty())

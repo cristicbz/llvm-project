@@ -26,7 +26,7 @@ using namespace llvm;
 #define DEBUG_TYPE "vc16mcexpr"
 
 const VC16MCExpr *VC16MCExpr::create(const MCExpr *Expr, VariantKind Kind,
-                                       MCContext &Ctx) {
+                                     MCContext &Ctx) {
   return new (Ctx) VC16MCExpr(Expr, Kind);
 }
 
@@ -40,8 +40,8 @@ void VC16MCExpr::printImpl(raw_ostream &OS, const MCAsmInfo *MAI) const {
 }
 
 bool VC16MCExpr::evaluateAsRelocatableImpl(MCValue &Res,
-                                            const MCAsmLayout *Layout,
-                                            const MCFixup *Fixup) const {
+                                           const MCAsmLayout *Layout,
+                                           const MCFixup *Fixup) const {
   return getSubExpr()->evaluateAsRelocatable(Res, Layout, Fixup);
 }
 
@@ -54,6 +54,7 @@ VC16MCExpr::VariantKind VC16MCExpr::getVariantKindForName(StringRef name) {
       .Case("lo", VK_VC16_LO)
       .Case("hiu", VK_VC16_HIU)
       .Case("his", VK_VC16_HIS)
+      .Case("seg6", VK_VC16_SEG6)
       .Default(VK_VC16_Invalid);
 }
 
@@ -67,6 +68,8 @@ StringRef VC16MCExpr::getVariantKindName(VariantKind Kind) {
     return "hiu";
   case VK_VC16_HIS:
     return "his";
+  case VK_VC16_SEG6:
+    return "seg6";
   }
 }
 
@@ -94,5 +97,7 @@ int64_t VC16MCExpr::evaluateAsInt64(int64_t Value) const {
   case VK_VC16_HIS:
     // Add 1 if bit 4 is 1, to compensate for low 12 bits being negative.
     return ((Value + (1 << 4)) >> 5) & 0x7ff;
+  case VK_VC16_SEG6:
+    return (Value >> 16) & 0b111111;
   }
 }

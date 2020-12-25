@@ -151,6 +151,7 @@ static VC16Cond::Code translateCC(SDValue &LHS, SDValue &RHS,
     LLVM_FALLTHROUGH;
   case ISD::SETUGE:
     Translated = VC16Cond::NN;
+    break;
   }
 
   if (Swap) {
@@ -317,7 +318,7 @@ SDValue VC16TargetLowering::lowerSELECT(SDValue Op, SelectionDAG &DAG) const {
   // lowered VC16ISD::SELECT_CC to take advantage of the integer
   // compare+branch instructions. i.e.:
   // (select (setcc lhs, rhs, cc), truev, falsev)
-  // -> (riscvisd::select_cc lhs, rhs, cc, truev, falsev)
+  // -> (vc16isd::select_cc lhs, rhs, cc, truev, falsev)
   if (Op.getSimpleValueType() == MVT::i16 && CondV.getOpcode() == ISD::SETCC &&
       CondV.getOperand(0).getSimpleValueType() == MVT::i16) {
     SDValue LHS = CondV.getOperand(0);
@@ -335,7 +336,7 @@ SDValue VC16TargetLowering::lowerSELECT(SDValue Op, SelectionDAG &DAG) const {
 
   // Otherwise:
   // (select condv, truev, falsev)
-  // -> (riscvisd::select_cc condv, zero, setne, truev, falsev)
+  // -> (vc16isd::select_cc condv, zero, setne, truev, falsev)
   SDValue Zero = DAG.getConstant(0, DL, MVT::i16);
   SDValue SetNE = DAG.getConstant(ISD::SETNE, DL, MVT::i16);
 

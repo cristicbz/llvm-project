@@ -43,7 +43,7 @@ uint32_t VC16::calcEFlags() const {
 RelExpr VC16::getRelExpr(const RelType type, const Symbol &s,
                          const uint8_t *loc) const {
   switch (type) {
-  case R_RISCV_NONE:
+  case R_VC16_NONE:
     return R_NONE;
   case R_VC16_16:
   case R_VC16_32:
@@ -54,6 +54,7 @@ RelExpr VC16::getRelExpr(const RelType type, const Symbol &s,
   case R_VC16_LO5_MB:
   case R_VC16_LO5_RI5:
   case R_VC16_LO5_RRI5:
+  case R_VC16_CSRI_SEG:
     return R_ABS;
   case R_VC16_JAL:
   case R_VC16_BRANCH:
@@ -159,7 +160,12 @@ void VC16::relocate(uint8_t *loc, const Relocation &rel, uint64_t val) const {
     write16le(loc, insn | update);
     return;
   }
-
+  case R_VC16_CSRI_SEG: {
+    const uint16_t insn = read16le(loc) & 0b1100000011111111;
+    const uint16_t update = ((val >> 16) & 0b111111) << 8;
+    write16le(loc, insn | update);
+    return;
+  }
   default:
     error(getErrorLocation(loc) +
           "unimplemented relocation: " + toString(rel.type));

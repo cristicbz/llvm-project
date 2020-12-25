@@ -107,7 +107,7 @@ def uimm4 : Operand<i16>, ImmLeaf<i16, [{return isUInt<4>(Imm);}]>  {
   let DecoderMethod = "decodeUImmOperand<4>";
 }
 def uimm6 : Operand<i16>, ImmLeaf<i16, [{return isUInt<6>(Imm);}]>  {
-  let ParserMatchClass = UImmAsmOperand<4>;
+  let ParserMatchClass = UImmAsmOperand<6>;
   let EncoderMethod = "getImmOpValue";
   let DecoderMethod = "decodeUImmOperand<6>";
 }
@@ -205,12 +205,12 @@ class BranchCC_i<bits<8> op8, string opcodestr, bits<8> cond>
 // Instructions
 //===----------------------------------------------------------------------===//
 let hasSideEffects = 1, mayStore = 1, mayLoad = 0 in {
-def CSRI : VCInstSI6<0b00,   0b010111, (outs SSREG:$ss), (ins uimm6:$imm6),
-                     "csri", " $ss, $imm6">;
+def CSRI : VCInstSI6<0b00,   0b010111, (outs SSREG:$seg), (ins uimm6:$imm6),
+                     "csri", "$seg, $imm6">;
 def CSRR : VCInstCR <0b01, 0b00010111, (outs GPR:$r), (ins CSREG:$csr),
-                     "csrr", "  $r,  $csr">;
+                     "csrr", "$r, $csr">;
 def CSRW : VCInstCR <0b01, 0b01010111, (outs CSREG:$csr), (ins GPR:$r),
-                     "csrw", "$csr,    $r">;
+                     "csrw", "$csr, $r">;
 }
 
 let hasSideEffects = 0, mayLoad = 0, mayStore = 0 in {
@@ -230,20 +230,24 @@ def   J  : VCInstRI10<0b011, (outs), (ins simm11_lsb0:$imm10),
 
 
 let hasSideEffects = 0, mayLoad = 1, mayStore = 0 in {
-def LW : VCInstMW<0b001, (outs GPR:$rs2), (ins GPR:$rs1, uimm6_lsb0:$imm5),
-                  "lw", "$rs2, ${imm5}(${rs1})">;
+def LW : VCInstMW<0b001, (outs GPR:$rs2),
+                  (ins GPR:$rs1, uimm6_lsb0:$imm5, SSREG:$seg),
+                  "lw", "$rs2, ${imm5}(${rs1}), ${seg}">;
 
-def LB : VCInstMB<0b101, (outs GPR:$rs2), (ins GPR:$rs1, uimm5:$imm5),
-                  "lb", "$rs2, ${imm5}(${rs1})">;
+def LB : VCInstMB<0b101, (outs GPR:$rs2),
+                  (ins GPR:$rs1, uimm5:$imm5, SSREG:$seg),
+                  "lb", "$rs2, ${imm5}(${rs1}), ${seg}">;
 
 } // hasSideEffects = 0, mayLoad = 1, mayStore = 0
 
 let hasSideEffects = 0, mayLoad = 0, mayStore = 1 in {
-def SW  : VCInstMW<0b010, (outs), (ins GPR:$rs2, GPR:$rs1, uimm6_lsb0:$imm5),
-                   "sw", "$rs2, ${imm5}(${rs1})">;
+def SW  : VCInstMW<0b010, (outs),
+                   (ins GPR:$rs2, GPR:$rs1, uimm6_lsb0:$imm5, SSREG:$seg),
+                   "sw", "$rs2, ${imm5}(${rs1}), ${seg}">;
 
-def SB  : VCInstMB<0b110, (outs), (ins GPR:$rs2, GPR:$rs1, uimm5:$imm5),
-                  "sb", "$rs2, ${imm5}(${rs1})">;
+def SB  : VCInstMB<0b110, (outs),
+                   (ins GPR:$rs2, GPR:$rs1, uimm5:$imm5, SSREG:$seg),
+                   "sb", "$rs2, ${imm5}(${rs1}), ${seg}">;
 } // hasSideEffects = 0, mayLoad = 0, mayStore = 1
 
 let hasSideEffects = 0, mayLoad = 0, mayStore = 0 in
@@ -259,9 +263,9 @@ def JALR : VCInstRI5 <0b00001111,
                       "jalr", "$rs, $imm5">;
 
 
-def  BZ  : BranchCC_i<0b00101111, "bz", 1>;
+def  BZ  : BranchCC_i<0b00101111,  "bz", 1>;
 def BNZ  : BranchCC_i<0b01001111, "bnz", 2>;
-def  BN  : BranchCC_i<0b01101111, "bn", 3>;
+def  BN  : BranchCC_i<0b01101111,  "bn", 3>;
 def BNN  : BranchCC_i<0b10001111, "bnn", 4>;
 def BLT  : BranchCC_i<0b10101111, "blt", 5>;
 def BGE  : BranchCC_i<0b11001111, "bge", 6>;
@@ -353,9 +357,6 @@ class PatGprSimm5<SDPatternOperator OpNode, VCInst Inst>
     : Pat<(OpNode GPR:$rs, simm5:$imm5), (Inst GPR:$rs, simm5:$imm5)>;
 class PatGprUimm4<SDPatternOperator OpNode, VCInstRI4 Inst>
     : Pat<(OpNode GPR:$rs, uimm4:$imm4), (Inst GPR:$rs, uimm4:$imm4)>;
-
-// Define pattern expansions for setcc operations that aren't directly
-// handled by a RISC-V instruction.
 
 // ALU binary
 
@@ -480,35 +481,90 @@ let isBarrier = 1, isReturn = 1, isTerminator = 1 in
 def PseudoRET : Pseudo<(outs), (ins), [(RetFlag)]>,
                 PseudoInstExpansion<(JALR X1, X1, 0)>;
 
-/// Loads
-multiclass LdPat<PatFrag LoadOp, ImmLeaf LoImmT, VCInst Inst> {
-  def : Pat<(LoadOp GPR:$rs1), (Inst GPR:$rs1, 0)>;
-  def : Pat<(LoadOp AddrFI:$rs1), (Inst AddrFI:$rs1, 0)>;
-  def : Pat<(LoadOp (add GPR:$rs1, LoImmT:$imm5)), (Inst GPR:$rs1, LoImmT:$imm5)>;
-  def : Pat<(LoadOp (add AddrFI:$rs1, LoImmT:$imm5)),
-            (Inst AddrFI:$rs1, LoImmT:$imm5)>;
-  def : Pat<(LoadOp (IsOrAdd AddrFI:$rs1, LoImmT:$imm5)),
-            (Inst AddrFI:$rs1, LoImmT:$imm5)>;
+/// Address space pattern fragments.
+foreach as = [ 0, 1, 2, 3 ] in {
+let AddressSpaces = [ as ] in {
+def load_as_#as : PatFrag<(ops node:$ptr), (load node:$ptr)> {
+  let IsLoad = 1;
+  let IsNonExtLoad = 1;
 }
 
-defm : LdPat<extloadi8, uimm5, LB>;
-defm : LdPat<zextloadi8, uimm5, LB>;
-defm : LdPat<load, uimm6_lsb0, LW>;
+def extloadi8_as_#as : PatFrag<(ops node:$ptr), (extloadi8 node:$ptr)> {
+  let IsLoad = 1;
+  let MemoryVT = i8;
+}
+
+def zextloadi8_as_#as : PatFrag<(ops node:$ptr), (zextloadi8 node:$ptr)> {
+  let IsLoad = 1;
+  let MemoryVT = i8;
+}
+
+def store_as_#as : PatFrag<(ops node:$val, node:$ptr),
+                           (store node:$val, node:$ptr)> {
+  let IsStore = 1;
+  let IsTruncStore = 0;
+}
+
+def truncstorei8_as_#as : PatFrag<(ops node:$val, node:$ptr),
+                                  (truncstorei8 node:$val, node:$ptr)> {
+  let IsStore = 1;
+  let IsTruncStore = 1;
+  let MemoryVT = i8;
+}
+} // let AddressSpaces
+} // foreach
+
+/// Loads
+multiclass LdPat<PatFrag LoadOp, ImmLeaf LoImmT, VCInst Inst, VC16Reg Seg> {
+  def : Pat<(LoadOp GPR:$rs1), (Inst GPR:$rs1, 0, Seg)>;
+  def : Pat<(LoadOp AddrFI:$rs1), (Inst AddrFI:$rs1, 0, Seg)>;
+  def : Pat<(LoadOp (add GPR:$rs1, LoImmT:$imm5)),
+            (Inst GPR:$rs1, LoImmT:$imm5, Seg)>;
+  def : Pat<(LoadOp (add AddrFI:$rs1, LoImmT:$imm5)),
+            (Inst AddrFI:$rs1, LoImmT:$imm5, Seg)>;
+  def : Pat<(LoadOp (IsOrAdd AddrFI:$rs1, LoImmT:$imm5)),
+            (Inst AddrFI:$rs1, LoImmT:$imm5, Seg)>;
+}
+
+defm : LdPat<extloadi8_as_0, uimm5, LB, SS>;
+defm : LdPat<zextloadi8_as_0, uimm5, LB, SS>;
+defm : LdPat<load_as_0, uimm6_lsb0, LW, SS>;
+
+defm : LdPat<extloadi8_as_1, uimm5, LB, XS>;
+defm : LdPat<zextloadi8_as_1, uimm5, LB, XS>;
+defm : LdPat<load_as_1, uimm6_lsb0, LW, XS>;
+
+defm : LdPat<extloadi8_as_2, uimm5, LB, YS>;
+defm : LdPat<zextloadi8_as_2, uimm5, LB, YS>;
+defm : LdPat<load_as_2, uimm6_lsb0, LW, YS>;
+
+defm : LdPat<extloadi8_as_3, uimm5, LB, CS>;
+defm : LdPat<zextloadi8_as_3, uimm5, LB, CS>;
+defm : LdPat<load_as_3, uimm6_lsb0, LW, CS>;
 
 /// Stores
-multiclass StPat<PatFrag StoreOp, ImmLeaf LoImmT, VCInst Inst> {
-  def : Pat<(StoreOp GPR:$rs2, GPR:$rs1), (Inst GPR:$rs2, GPR:$rs1, 0)>;
-  def : Pat<(StoreOp GPR:$rs2, AddrFI:$rs1), (Inst GPR:$rs2, AddrFI:$rs1, 0)>;
+multiclass StPat<PatFrag StoreOp, ImmLeaf LoImmT, VCInst Inst, VC16Reg Seg> {
+  def : Pat<(StoreOp GPR:$rs2, GPR:$rs1), (Inst GPR:$rs2, GPR:$rs1, 0, Seg)>;
+  def : Pat<(StoreOp GPR:$rs2, AddrFI:$rs1), (Inst GPR:$rs2, AddrFI:$rs1, 0, Seg)>;
   def : Pat<(StoreOp GPR:$rs2, (add GPR:$rs1, LoImmT:$imm5)),
-            (Inst GPR:$rs2, GPR:$rs1, LoImmT:$imm5)>;
+            (Inst GPR:$rs2, GPR:$rs1, LoImmT:$imm5, Seg)>;
   def : Pat<(StoreOp GPR:$rs2, (add AddrFI:$rs1, LoImmT:$imm12)),
-            (Inst GPR:$rs2, AddrFI:$rs1, LoImmT:$imm12)>;
+            (Inst GPR:$rs2, AddrFI:$rs1, LoImmT:$imm12, Seg)>;
   def : Pat<(StoreOp GPR:$rs2, (IsOrAdd AddrFI:$rs1, LoImmT:$imm12)),
-            (Inst GPR:$rs2, AddrFI:$rs1, LoImmT:$imm12)>;
+            (Inst GPR:$rs2, AddrFI:$rs1, LoImmT:$imm12, Seg)>;
 }
 
-defm : StPat<truncstorei8, uimm5, SB>;
-defm : StPat<store, uimm6_lsb0, SW>;
+defm : StPat<truncstorei8_as_0, uimm5, SB, SS>;
+defm : StPat<store_as_0, uimm6_lsb0, SW, SS>;
+
+defm : StPat<truncstorei8_as_1, uimm5, SB, XS>;
+defm : StPat<store_as_1, uimm6_lsb0, SW, XS>;
+
+defm : StPat<truncstorei8_as_2, uimm5, SB, YS>;
+defm : StPat<store_as_2, uimm6_lsb0, SW, YS>;
+
+defm : StPat<truncstorei8_as_3, uimm5, SB, CS>;
+defm : StPat<store_as_3, uimm6_lsb0, SW, CS>;
 
 /// FrameIndex calculations
 
@@ -536,11 +592,20 @@ def : InstAlias<"jr ${rs}",                (JALR      GPR:$rs,  0)>;
 def : InstAlias<"ret",                     (JALR      X1,       0), 2>;
 
 
+def : InstAlias<"lb $rd, ${imm5}(${rs1})",
+                (LB  GPR:$rd, GPR:$rs1, uimm5:$imm5, SS)>;
+def : InstAlias<"lw $rd, ${imm5}(${rs1})",
+                (LW  GPR:$rd, GPR:$rs1, uimm6_lsb0:$imm5, SS)>;
+def : InstAlias<"sb $rs2, ${imm5}(${rs1})",
+                (SB  GPR:$rs2, GPR:$rs1, uimm5:$imm5, SS)>;
+def : InstAlias<"sw $rs2, ${imm5}(${rs1})",
+                (SW  GPR:$rs2, GPR:$rs1, uimm6_lsb0:$imm5, SS)>;
+
 let EmitPriority = 0 in {
-def : InstAlias<"lb $rd, (${rs1})",  (LB  GPR:$rd, GPR:$rs1, 0)>;
-def : InstAlias<"lw $rd, (${rs1})",  (LW  GPR:$rd, GPR:$rs1, 0)>;
-def : InstAlias<"sb $rs2, (${rs1})", (SB  GPR:$rs2, GPR:$rs1, 0)>;
-def : InstAlias<"sw $rs2, (${rs1})", (SW  GPR:$rs2, GPR:$rs1, 0)>;
+def : InstAlias<"lb $rd, (${rs1})",  (LB  GPR:$rd, GPR:$rs1, 0, SS), 2>;
+def : InstAlias<"lw $rd, (${rs1})",  (LW  GPR:$rd, GPR:$rs1, 0, SS), 2>;
+def : InstAlias<"sb $rs2, (${rs1})", (SB  GPR:$rs2, GPR:$rs1, 0, SS), 2>;
+def : InstAlias<"sw $rs2, (${rs1})", (SW  GPR:$rs2, GPR:$rs1, 0, SS), 2>;
 }
 
 def : MnemonicAlias<"bltu", "bn">;

@@ -176,6 +176,12 @@ uint64_t VC16MCCodeEmitter::getImmOpValue(const MCInst &MI, unsigned OpNo,
     case VC16MCExpr::VK_VC16_HIU:
       FixupKind = VC16::fixup_vc16_hi11u;
       break;
+    case VC16MCExpr::VK_VC16_SEG6:
+      if (MIFrm != VC16II::InstFormatSI6)
+        llvm_unreachable(
+            "VK_VC16_SEG6 used with unexpected instruction format");
+      FixupKind = VC16::fixup_vc16_csri_seg;
+      break;
     }
   } else if (Kind == MCExpr::SymbolRef &&
              cast<MCSymbolRefExpr>(Expr)->getKind() ==

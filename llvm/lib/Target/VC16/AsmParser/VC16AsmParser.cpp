@@ -182,6 +182,21 @@ public:
            (VK == VC16MCExpr::VK_VC16_None || VK == VC16MCExpr::VK_VC16_LO);
   }
 
+  bool isUImm6() const {
+    VC16MCExpr::VariantKind VK;
+    int64_t Imm;
+    bool IsValid;
+    if (!isImm())
+      return false;
+    bool IsConstantImm = evaluateConstantImm(Imm, VK);
+    if (!IsConstantImm)
+      IsValid = VC16AsmParser::classifySymbolRef(getImm(), VK, Imm);
+    else
+      IsValid = isUInt<6>(Imm);
+    return IsValid &&
+           (VK == VC16MCExpr::VK_VC16_None || VK == VC16MCExpr::VK_VC16_SEG6);
+  }
+
   bool isUImm11() const {
     VC16MCExpr::VariantKind VK;
     int64_t Imm;
