@@ -110,16 +110,16 @@ static VC16Cond::Code getCCFromOp(unsigned OpCode) {
     return VC16Cond::Z;
   case VC16::BNZ:
     return VC16Cond::NZ;
-  case VC16::BN:
-    return VC16Cond::N;
-  case VC16::BNN:
-    return VC16Cond::NN;
+  case VC16::BC:
+    return VC16Cond::C;
+  case VC16::BNC:
+    return VC16Cond::NC;
   case VC16::BLT:
     return VC16Cond::LT;
   case VC16::BGE:
     return VC16Cond::GE;
-  case VC16::BNC:
-    return VC16Cond::NC;
+  case VC16::BNN:
+    return VC16Cond::NN;
   }
 }
 
@@ -131,16 +131,16 @@ static unsigned getOpFromCC(VC16Cond::Code CondCode) {
     return VC16::BZ;
   case VC16Cond::NZ:
     return VC16::BNZ;
-  case VC16Cond::N:
-    return VC16::BN;
-  case VC16Cond::NN:
-    return VC16::BNN;
+  case VC16Cond::C:
+    return VC16::BC;
+  case VC16Cond::NC:
+    return VC16::BNC;
   case VC16Cond::LT:
     return VC16::BLT;
   case VC16Cond::GE:
     return VC16::BGE;
-  case VC16Cond::NC:
-    return VC16::BNC;
+  case VC16Cond::NN:
+    return VC16::BNN;
   }
 }
 
@@ -165,15 +165,15 @@ static VC16Cond::Code oppositeCC(VC16Cond::Code CC) {
     return VC16Cond::LT;
   case VC16Cond::LT:
     return VC16Cond::GE;
-  case VC16Cond::N:
-    return VC16Cond::NN;
-  case VC16Cond::NN:
-    return VC16Cond::N;
+  case VC16Cond::C:
+    return VC16Cond::NC;
+  case VC16Cond::NC:
+    return VC16Cond::C;
   case VC16Cond::Z:
     return VC16Cond::NZ;
   case VC16Cond::NZ:
     return VC16Cond::Z;
-  case VC16Cond::NC:
+  case VC16Cond::NN:
     return VC16Cond::INVALID;
   }
 }
@@ -377,11 +377,11 @@ bool VC16InstrInfo::isBranchOffsetInRange(unsigned BranchOp,
     llvm_unreachable("Unexpected opcode!");
   case VC16::BZ:
   case VC16::BNZ:
-  case VC16::BN:
-  case VC16::BNN:
+  case VC16::BC:
+  case VC16::BNC:
   case VC16::BLT:
   case VC16::BGE:
-  case VC16::BNC:
+  case VC16::BNN:
     return isIntN(9, BrOffset);
   case VC16::JAL:
   case VC16::J:

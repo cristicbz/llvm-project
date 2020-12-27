@@ -25,7 +25,7 @@ define i16 @icmp_ugt(i16 %a, i16 %b) nounwind {
 ; VC16I-LABEL: icmp_ugt:
 ; VC16I:       ; %bb.0:
 ; VC16I-NEXT:    cmp a1, a0
-; VC16I-NEXT:    bn .LBB1_2
+; VC16I-NEXT:    bc .LBB1_2
 ; VC16I-NEXT:  ; %bb.1:
 ; VC16I-NEXT:    lli a0, 0
 ; VC16I-NEXT:    ret
@@ -41,7 +41,7 @@ define i16 @icmp_uge(i16 %a, i16 %b) nounwind {
 ; VC16I-LABEL: icmp_uge:
 ; VC16I:       ; %bb.0:
 ; VC16I-NEXT:    cmp a0, a1
-; VC16I-NEXT:    bnn .LBB2_2
+; VC16I-NEXT:    bnc .LBB2_2
 ; VC16I-NEXT:  ; %bb.1:
 ; VC16I-NEXT:    lli a0, 0
 ; VC16I-NEXT:    ret
@@ -57,7 +57,7 @@ define i16 @icmp_ult(i16 %a, i16 %b) nounwind {
 ; VC16I-LABEL: icmp_ult:
 ; VC16I:       ; %bb.0:
 ; VC16I-NEXT:    cmp a0, a1
-; VC16I-NEXT:    bn .LBB3_2
+; VC16I-NEXT:    bc .LBB3_2
 ; VC16I-NEXT:  ; %bb.1:
 ; VC16I-NEXT:    lli a0, 0
 ; VC16I-NEXT:    ret
@@ -73,7 +73,7 @@ define i16 @icmp_ule(i16 %a, i16 %b) nounwind {
 ; VC16I-LABEL: icmp_ule:
 ; VC16I:       ; %bb.0:
 ; VC16I-NEXT:    cmp a1, a0
-; VC16I-NEXT:    bnn .LBB4_2
+; VC16I-NEXT:    bnc .LBB4_2
 ; VC16I-NEXT:  ; %bb.1:
 ; VC16I-NEXT:    lli a0, 0
 ; VC16I-NEXT:    ret

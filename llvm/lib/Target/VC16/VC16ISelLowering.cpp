@@ -144,13 +144,13 @@ static VC16Cond::Code translateCC(SDValue &LHS, SDValue &RHS,
     Swap = true;
     LLVM_FALLTHROUGH;
   case ISD::SETULT:
-    Translated = VC16Cond::N;
+    Translated = VC16Cond::NC;
     break;
   case ISD::SETULE:
     Swap = true;
     LLVM_FALLTHROUGH;
   case ISD::SETUGE:
-    Translated = VC16Cond::NN;
+    Translated = VC16Cond::C;
     break;
   }
 
@@ -178,9 +178,9 @@ static unsigned getBranchOpcodeForIntCondCode(ISD::CondCode CC) {
   case ISD::SETGE:
     return VC16::BGE;
   case ISD::SETULT:
-    return VC16::BN;
+    return VC16::BC;
   case ISD::SETUGE:
-    return VC16::BNN;
+    return VC16::BNC;
   }
 }
 

@@ -114,13 +114,13 @@ bz -256
 # CHECK: encoding: [0x4f,0x80]
 bnz -256
 
-# CHECK-INST: bn -256
+# CHECK-INST: bc -256
 # CHECK: encoding: [0x6f,0x80]
-bn -256
+bc -256
 
-# CHECK-INST: bnn -256
+# CHECK-INST: bnc -256
 # CHECK: encoding: [0x8f,0x80]
-bnn -256
+bnc -256
 
 # CHECK-INST: blt -256
 # CHECK: encoding: [0xaf,0x80]
@@ -130,9 +130,9 @@ blt -256
 # CHECK: encoding: [0xcf,0x80]
 bge -256
 
-# CHECK-INST: bnc -256
+# CHECK-INST: bnn -256
 # CHECK: encoding: [0xef,0x80]
-bnc -256
+bnn -256
 
 # CHECK-INST: bz 86
 # CHECK: encoding: [0x2f,0x2b]
@@ -142,13 +142,13 @@ bz 86
 # CHECK: encoding: [0x4f,0x2b]
 bnz 86
 
-# CHECK-INST: bn 86
+# CHECK-INST: bc 86
 # CHECK: encoding: [0x6f,0x2b]
-bn 86
+bc 86
 
-# CHECK-INST: bnn 86
+# CHECK-INST: bnc 86
 # CHECK: encoding: [0x8f,0x2b]
-bnn 86
+bnc 86
 
 # CHECK-INST: blt 86
 # CHECK: encoding: [0xaf,0x2b]
@@ -158,9 +158,9 @@ blt 86
 # CHECK: encoding: [0xcf,0x2b]
 bge 86
 
-# CHECK-INST: bnc 86
+# CHECK-INST: bnn 86
 # CHECK: encoding: [0xef,0x2b]
-bnc 86
+bnn 86
 
 # CHECK-INST: mul s0, s1
 # CHECK: encoding: [0x17,0xd3]
@@ -288,9 +288,10 @@ csri xs, 5
 
 # CHECK-INST: csrw ys, a0
 # CHECK: encoding: [0x57,0x62]
-csrw csr2, a0
+csrw ys, a0
 
 # CHECK-INST: csrr a0, ss
 # CHECK: encoding: [0x17,0x63]
 csrr a0, ss
+
 

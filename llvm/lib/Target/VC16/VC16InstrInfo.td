@@ -263,13 +263,13 @@ def JALR : VCInstRI5 <0b00001111,
                       "jalr", "$rs, $imm5">;
 
 
-def  BZ  : BranchCC_i<0b00101111,  "bz", 1>;
+def  BZ  : BranchCC_i<0b00101111, "bz", 1>;
 def BNZ  : BranchCC_i<0b01001111, "bnz", 2>;
-def  BN  : BranchCC_i<0b01101111,  "bn", 3>;
-def BNN  : BranchCC_i<0b10001111, "bnn", 4>;
+def  BC  : BranchCC_i<0b01101111, "bc", 3>;
+def BNC  : BranchCC_i<0b10001111, "bnc", 4>;
 def BLT  : BranchCC_i<0b10101111, "blt", 5>;
 def BGE  : BranchCC_i<0b11001111, "bge", 6>;
-def BNC  : BranchCC_i<0b11101111, "bnc", 7>;
+def BNN  : BranchCC_i<0b11101111, "bnn", 7>;
 
 /// ALU RR instructions.
 let isCommutable = 1 in

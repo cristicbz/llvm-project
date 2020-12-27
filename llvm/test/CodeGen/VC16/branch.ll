@@ -23,11 +23,11 @@ define void @foo(i16 %a, i16 *%b, i1 %c) {
 ; VC16I-NEXT:  ; %bb.4: ; %test5
 ; VC16I-NEXT:    lw t0, 0(a1)
 ; VC16I-NEXT:    cmp t0, a0
-; VC16I-NEXT:    bn .LBB0_12
+; VC16I-NEXT:    bnc .LBB0_12
 ; VC16I-NEXT:  ; %bb.5: ; %test6
 ; VC16I-NEXT:    lw t0, 0(a1)
 ; VC16I-NEXT:    cmp t0, a0
-; VC16I-NEXT:    bnn .LBB0_12
+; VC16I-NEXT:    bc .LBB0_12
 ; VC16I-NEXT:  ; %bb.6: ; %test7
 ; VC16I-NEXT:    lw t0, 0(a1)
 ; VC16I-NEXT:    cmp a0, t0
@@ -39,11 +39,11 @@ define void @foo(i16 %a, i16 *%b, i1 %c) {
 ; VC16I-NEXT:  ; %bb.8: ; %test9
 ; VC16I-NEXT:    lw t0, 0(a1)
 ; VC16I-NEXT:    cmp a0, t0
-; VC16I-NEXT:    bn .LBB0_12
+; VC16I-NEXT:    bnc .LBB0_12
 ; VC16I-NEXT:  ; %bb.9: ; %test10
 ; VC16I-NEXT:    lw t0, 0(a1)
 ; VC16I-NEXT:    cmp a0, t0
-; VC16I-NEXT:    bnn .LBB0_12
+; VC16I-NEXT:    bc .LBB0_12
 ; VC16I-NEXT:  ; %bb.10: ; %test11
 ; VC16I-NEXT:    lw a0, 0(a1)
 ; VC16I-NEXT:    tsti a2, 1

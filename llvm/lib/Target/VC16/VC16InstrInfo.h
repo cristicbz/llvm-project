@@ -26,11 +26,11 @@ namespace VC16Cond {
 enum Code {
   Z = 1,
   NZ = 2,
-  N = 3,
-  NN = 4,
+  C = 3,
+  NC = 4,
   LT = 5,
   GE = 6,
-  NC = 7,
+  NN = 7,
   INVALID = 8,
 };
 }
