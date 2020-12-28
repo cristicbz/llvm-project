@@ -48,9 +48,9 @@ def SDTBinaryArithWithFlagsInOut : SDTypeProfile<2, 3,
 // (target, condition code, flags)
 def SDT_VC16Brcond : SDTypeProfile<0, 3,
                                   [SDTCisVT<0, OtherVT>,
-                                   SDTCisVT<1, i8>,
+                                   SDTCisVT<1, i16>,
                                    SDTCisVT<2, i16>]>;
-def SDT_VC16Cmp : SDTypeProfile<0, 2, [SDTCisSameAs<0, 1>]>;
+def SDT_VC16Cmp : SDTypeProfile<1, 2, [SDTCisSameAs<1, 2>, SDTCisVT<0, i16>]>;
 
 
 def Call         : SDNode<"VC16ISD::CALL", SDT_VC16Call,
@@ -62,13 +62,12 @@ def CallSeqEnd   : SDNode<"ISD::CALLSEQ_END", SDT_VC16CallSeqEnd,
                           [SDNPHasChain, SDNPOptInGlue, SDNPOutGlue]>;
 def RetFlag      : SDNode<"VC16ISD::RET_FLAG", SDTNone,
                           [SDNPHasChain, SDNPOptInGlue, SDNPVariadic]>;
-def SelectCC     : SDNode<"VC16ISD::SELECT_CC", SDT_VC16SelectCC,
-                          [SDNPInGlue]>;
+def SelectCC     : SDNode<"VC16ISD::SELECT_CC", SDT_VC16SelectCC>;
 
 def VC16brcond   : SDNode<"VC16ISD::BRCOND", SDT_VC16Brcond, [SDNPHasChain]>;
 def VC16cmp      : SDNode<"VC16ISD::CMP", SDT_VC16Cmp>;
 
-def ccode : Operand<i8> {
+def ccode : Operand<i16> {
   let PrintMethod = "printCondCode";
   let OperandNamespace = "VC16";
   let OperandType = "OPERAND_COND_CODE";
@@ -199,7 +198,7 @@ let hasSideEffects = 0, mayLoad = 0, mayStore = 0 in
 let isBranch = 1, isTerminator = 1, Uses=[FLAGS] in
 class BranchCC_i<bits<8> op8, string opcodestr, bits<8> cond>
     : VCInstB<op8, (outs), (ins simm9_lsb0:$imm8),
-              opcodestr, "$imm8", [(VC16brcond bb:$imm8, (i8 cond), FLAGS)]>;
+              opcodestr, "$imm8", [(VC16brcond bb:$imm8, (i16 cond), FLAGS)]>;
 
 //===----------------------------------------------------------------------===//
 // Instructions
@@ -305,8 +304,8 @@ def  NOT :   ALU_Unary_RF_R<0b11, 0b10110111, "not">;
 
 /// ALU Compare RR instructions.
 let isCompare = 1 in
-def  CMP :  ALU_Binary_F_RR<0b10, 0b01110111, "cmp",
-                            [(set FLAGS, (VC16cmp GPR:$r1, GPR:$r2))]>;
+def CMP :  ALU_Binary_F_RR<0b10, 0b01110111, "cmp",
+                           [(set FLAGS, (VC16cmp GPR:$r1, GPR:$r2))]>;
 let isCompare = 1 in
 def CMPC :  ALU_Binary_F_RR<0b11, 0b01110111, "cmpc", []>;
 let isCompare = 1, isCommutable = 1 in
@@ -457,7 +456,7 @@ let usesCustomInserter = 1 in
 def Select_GPR_Using_CC_GPR
     : Pseudo<(outs GPR:$dst),
              (ins GPR:$lhs, GPR:$rhs, i16imm:$imm, GPR:$src, GPR:$src2),
-             [(set i16:$dst, (SelectCC GPR:$lhs, GPR:$rhs,
+             [(set GPR:$dst, (SelectCC GPR:$lhs, GPR:$rhs,
               (i16 imm:$imm), GPR:$src, GPR:$src2))]>;
 
 
@@ -608,7 +607,7 @@ def : InstAlias<"sb $rs2, (${rs1})", (SB  GPR:$rs2, GPR:$rs1, 0, SS), 2>;
 def : InstAlias<"sw $rs2, (${rs1})", (SW  GPR:$rs2, GPR:$rs1, 0, SS), 2>;
 }
 
-def : MnemonicAlias<"bltu", "bn">;
-def : MnemonicAlias<"bgeu", "bnn">;
+def : MnemonicAlias<"bltu", "bc">;
+def : MnemonicAlias<"bgeu", "bnc">;
 def : MnemonicAlias<"beq", "bz">;
 def : MnemonicAlias<"bne", "bnz">;

@@ -19,6 +19,7 @@
 #include "VC16RegisterInfo.h"
 #include "VC16Subtarget.h"
 #include "VC16TargetMachine.h"
+#include "llvm/ADT/SmallSet.h"
 #include "llvm/CodeGen/CallingConvLower.h"
 #include "llvm/CodeGen/MachineFrameInfo.h"
 #include "llvm/CodeGen/MachineFunction.h"
@@ -178,9 +179,9 @@ static unsigned getBranchOpcodeForIntCondCode(ISD::CondCode CC) {
   case ISD::SETGE:
     return VC16::BGE;
   case ISD::SETULT:
-    return VC16::BC;
-  case ISD::SETUGE:
     return VC16::BNC;
+  case ISD::SETUGE:
+    return VC16::BC;
   }
 }
 
@@ -290,7 +291,7 @@ SDValue VC16TargetLowering::lowerBRCOND(SDValue Op, SelectionDAG &DAG) const {
 
   VC16Cond::Code Code = VC16Cond::NZ;
   SDValue LHS = CondV;
-  SDValue RHS = DAG.getTargetConstant(0, DL, MVT::i16);
+  SDValue RHS = DAG.getConstant(0, DL, MVT::i16);
 
   if (CondV.getOpcode() == ISD::SETCC &&
       CondV.getOperand(0).getSimpleValueType() == MVT::i16) {
@@ -302,9 +303,8 @@ SDValue VC16TargetLowering::lowerBRCOND(SDValue Op, SelectionDAG &DAG) const {
 
   // Perform a comparison
   SDValue FLAGS = DAG.getNode(VC16ISD::CMP, DL, MVT::i16, LHS, RHS).getValue(0);
-
   return DAG.getNode(VC16ISD::BRCOND, DL, MVT::Other, Chain, Dest,
-                     DAG.getTargetConstant(Code, DL, MVT::i8), FLAGS);
+                     DAG.getConstant(Code, DL, MVT::i16), FLAGS);
 }
 
 SDValue VC16TargetLowering::lowerSELECT(SDValue Op, SelectionDAG &DAG) const {
@@ -323,12 +323,10 @@ SDValue VC16TargetLowering::lowerSELECT(SDValue Op, SelectionDAG &DAG) const {
       CondV.getOperand(0).getSimpleValueType() == MVT::i16) {
     SDValue LHS = CondV.getOperand(0);
     SDValue RHS = CondV.getOperand(1);
-    auto CC = cast<CondCodeSDNode>(CondV.getOperand(2));
-    ISD::CondCode CCVal = CC->get();
+    ISD::CondCode CC = cast<CondCodeSDNode>(CondV.getOperand(2))->get();
 
-    normaliseSetCC(LHS, RHS, CCVal);
-
-    SDValue TargetCC = DAG.getConstant(CCVal, DL, MVT::i16);
+    normaliseSetCC(LHS, RHS, CC);
+    SDValue TargetCC = DAG.getConstant(CC, DL, MVT::i16);
     SDVTList VTs = DAG.getVTList(Op.getValueType(), MVT::Glue);
     SDValue Ops[] = {LHS, RHS, TargetCC, TrueV, FalseV};
     return DAG.getNode(VC16ISD::SELECT_CC, DL, VTs, Ops);
@@ -340,7 +338,7 @@ SDValue VC16TargetLowering::lowerSELECT(SDValue Op, SelectionDAG &DAG) const {
   SDValue Zero = DAG.getConstant(0, DL, MVT::i16);
   SDValue SetNE = DAG.getConstant(ISD::SETNE, DL, MVT::i16);
 
-  SDVTList VTs = DAG.getVTList(Op.getValueType(), MVT::Glue);
+  SDVTList VTs = DAG.getVTList(Op.getValueType());
   SDValue Ops[] = {CondV, Zero, SetNE, TrueV, FalseV};
 
   return DAG.getNode(VC16ISD::SELECT_CC, DL, VTs, Ops);
@@ -350,17 +348,21 @@ SDValue VC16TargetLowering::lowerSETCC(SDValue Op, SelectionDAG &DAG) const {
   SDLoc DL(Op);
   SDValue LHS = Op.getOperand(0);
   SDValue RHS = Op.getOperand(1);
-  auto CC = cast<CondCodeSDNode>(Op.getOperand(2));
-  ISD::CondCode CCVal = CC->get();
+  ISD::CondCode CC = cast<CondCodeSDNode>(Op.getOperand(2))->get();
 
-  normaliseSetCC(LHS, RHS, CCVal);
+  normaliseSetCC(LHS, RHS, CC);
 
-  SDValue TargetCC = DAG.getConstant(CCVal, DL, MVT::i16);
-  SDVTList VTs = DAG.getVTList(Op.getValueType(), MVT::Glue);
+  dbgs() << "lowerSETCC CCVal " << CC << "\n";
+  SDValue TargetCC = DAG.getConstant(CC, DL, MVT::i16);
   SDValue TrueV = DAG.getConstant(1, DL, Op.getValueType());
   SDValue FalseV = DAG.getConstant(0, DL, Op.getValueType());
+  SDVTList VTs = DAG.getVTList(Op.getValueType());
   SDValue Ops[] = {LHS, RHS, TargetCC, TrueV, FalseV};
-  return DAG.getNode(VC16ISD::SELECT_CC, DL, VTs, Ops);
+  auto Node = DAG.getNode(VC16ISD::SELECT_CC, DL, VTs, Ops);
+  dbgs() << "lowerSETCC Node ";
+  Node->dump(&DAG);
+  dbgs() << "\n";
+  return Node;
 }
 
 SDValue VC16TargetLowering::lowerVASTART(SDValue Op, SelectionDAG &DAG) const {
@@ -403,7 +405,7 @@ SDValue VC16TargetLowering::LowerFRAMEADDR(SDValue Op,
 
 SDValue VC16TargetLowering::LowerRETURNADDR(SDValue Op,
                                             SelectionDAG &DAG) const {
-  const VC16RegisterInfo &RI = *Subtarget.getRegisterInfo();
+  // const VC16RegisterInfo &RI = *Subtarget.getRegisterInfo();
   MachineFunction &MF = DAG.getMachineFunction();
   MachineFrameInfo &MFI = MF.getFrameInfo();
   MFI.setReturnAddressIsTaken(true);
@@ -433,9 +435,6 @@ SDValue VC16TargetLowering::LowerRETURNADDR(SDValue Op,
 MachineBasicBlock *
 VC16TargetLowering::EmitInstrWithCustomInserter(MachineInstr &MI,
                                                 MachineBasicBlock *BB) const {
-  const TargetInstrInfo &TII = *BB->getParent()->getSubtarget().getInstrInfo();
-  DebugLoc DL = MI.getDebugLoc();
-
   assert(MI.getOpcode() == VC16::Select_GPR_Using_CC_GPR &&
          "Unexpected instr type to insert");
 
@@ -450,7 +449,46 @@ VC16TargetLowering::EmitInstrWithCustomInserter(MachineInstr &MI,
   //     |  IfFalseMBB
   //     | /
   //    TailMBB
+
+  // Insert appropriate branch.
+  Register LHS = MI.getOperand(1).getReg();
+  Register RHS = MI.getOperand(2).getReg();
+  auto CC = static_cast<ISD::CondCode>(MI.getOperand(3).getImm());
+
+  SmallVector<MachineInstr *, 4> SelectDebugValues;
+  SmallSet<Register, 4> SelectDests;
+  SelectDests.insert(MI.getOperand(0).getReg());
+
+  MachineInstr *LastSelectPseudo = &MI;
+
+  for (auto E = BB->end(), SequenceMBBI = MachineBasicBlock::iterator(MI);
+       SequenceMBBI != E; ++SequenceMBBI) {
+    if (SequenceMBBI->isDebugInstr())
+      continue;
+    else if (SequenceMBBI->getOpcode() == VC16::Select_GPR_Using_CC_GPR) {
+      if (SequenceMBBI->getOperand(1).getReg() != LHS ||
+          SequenceMBBI->getOperand(2).getReg() != RHS ||
+          SequenceMBBI->getOperand(3).getImm() != CC ||
+          SelectDests.count(SequenceMBBI->getOperand(4).getReg()) ||
+          SelectDests.count(SequenceMBBI->getOperand(5).getReg()))
+        break;
+      LastSelectPseudo = &*SequenceMBBI;
+      SequenceMBBI->collectDebugValues(SelectDebugValues);
+      SelectDests.insert(SequenceMBBI->getOperand(0).getReg());
+    } else {
+      if (SequenceMBBI->hasUnmodeledSideEffects() ||
+          SequenceMBBI->mayLoadOrStore())
+        break;
+      if (llvm::any_of(SequenceMBBI->operands(), [&](MachineOperand &MO) {
+            return MO.isReg() && MO.isUse() && SelectDests.count(MO.getReg());
+          }))
+        break;
+    }
+  }
+
+  const TargetInstrInfo &TII = *BB->getParent()->getSubtarget().getInstrInfo();
   const BasicBlock *LLVM_BB = BB->getBasicBlock();
+  DebugLoc DL = MI.getDebugLoc();
   MachineFunction::iterator I = ++BB->getIterator();
 
   MachineBasicBlock *HeadMBB = BB;
@@ -460,9 +498,14 @@ VC16TargetLowering::EmitInstrWithCustomInserter(MachineInstr &MI,
 
   F->insert(I, IfFalseMBB);
   F->insert(I, TailMBB);
+
+  // Transfer debug instructions associated with the selects to TailMBB.
+  for (MachineInstr *DebugInstr : SelectDebugValues) {
+    TailMBB->push_back(DebugInstr->removeFromParent());
+  }
   // Move all remaining instructions to TailMBB.
   TailMBB->splice(TailMBB->begin(), HeadMBB,
-                  std::next(MachineBasicBlock::iterator(MI)), HeadMBB->end());
+                  std::next(LastSelectPseudo->getIterator()), HeadMBB->end());
   // Update machine-CFG edges by transferring all successors of the current
   // block to the new block which will contain the Phi node for the select.
   TailMBB->transferSuccessorsAndUpdatePHIs(HeadMBB);
@@ -470,27 +513,37 @@ VC16TargetLowering::EmitInstrWithCustomInserter(MachineInstr &MI,
   HeadMBB->addSuccessor(IfFalseMBB);
   HeadMBB->addSuccessor(TailMBB);
 
-  // Insert appropriate branch.
-  unsigned LHS = MI.getOperand(1).getReg();
-  unsigned RHS = MI.getOperand(2).getReg();
-  auto CC = static_cast<ISD::CondCode>(MI.getOperand(3).getImm());
   unsigned Opcode = getBranchOpcodeForIntCondCode(CC);
 
-  BuildMI(HeadMBB, DL, TII.get(VC16::CMP)).addReg(LHS).addReg(RHS);
+  {
+    auto mi = BuildMI(HeadMBB, DL, TII.get(VC16::CMP)).addReg(LHS).addReg(RHS);
+    dbgs() << "Inserter " << *mi << "\n";
+  }
   BuildMI(HeadMBB, DL, TII.get(Opcode)).addMBB(TailMBB);
 
   // IfFalseMBB just falls through to TailMBB.
   IfFalseMBB->addSuccessor(TailMBB);
 
-  // %Result = phi [ %TrueValue, HeadMBB ], [ %FalseValue, IfFalseMBB ]
-  BuildMI(*TailMBB, TailMBB->begin(), DL, TII.get(VC16::PHI),
-          MI.getOperand(0).getReg())
-      .addReg(MI.getOperand(4).getReg())
-      .addMBB(HeadMBB)
-      .addReg(MI.getOperand(5).getReg())
-      .addMBB(IfFalseMBB);
+  // Create PHIs for all of the select pseudo-instructions.
+  auto SelectMBBI = MI.getIterator();
+  auto SelectEnd = std::next(LastSelectPseudo->getIterator());
+  auto InsertionPoint = TailMBB->begin();
+  while (SelectMBBI != SelectEnd) {
+    auto Next = std::next(SelectMBBI);
+    if (SelectMBBI->getOpcode() == VC16::Select_GPR_Using_CC_GPR) {
+      // %Result = phi [ %TrueValue, HeadMBB ], [ %FalseValue, IfFalseMBB ]
+      BuildMI(*TailMBB, InsertionPoint, SelectMBBI->getDebugLoc(),
+              TII.get(VC16::PHI), SelectMBBI->getOperand(0).getReg())
+          .addReg(SelectMBBI->getOperand(4).getReg())
+          .addMBB(HeadMBB)
+          .addReg(SelectMBBI->getOperand(5).getReg())
+          .addMBB(IfFalseMBB);
+      SelectMBBI->eraseFromParent();
+    }
+    SelectMBBI = Next;
+  }
 
-  MI.eraseFromParent(); // The pseudo instruction is gone now.
+  F->getProperties().reset(MachineFunctionProperties::Property::NoPHIs);
   return TailMBB;
 }
 
