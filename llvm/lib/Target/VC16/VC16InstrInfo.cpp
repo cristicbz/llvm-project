@@ -92,12 +92,14 @@ void VC16InstrInfo::movImm16(MachineBasicBlock &MBB,
   if (Hi11 != 0) {
     BuildMI(MBB, MBBI, DL, get(VC16::LUI), DstReg).addImm(Hi11).setMIFlag(Flag);
     if (Lo5 != 0) {
+      assert(isInt<5>(Lo5) && "Out of bounds LEA offset.");
       BuildMI(MBB, MBBI, DL, get(VC16::LEA), DstReg)
           .addReg(DstReg, RegState::Kill)
           .addImm(Lo5)
           .setMIFlag(Flag);
     }
   } else {
+    assert(isInt<5>(Lo5) && "Out of bounds LEA offset.");
     BuildMI(MBB, MBBI, DL, get(VC16::LLI), DstReg).addImm(Lo5).setMIFlag(Flag);
   }
 }
@@ -247,6 +249,8 @@ bool VC16InstrInfo::analyzeBranch(MachineBasicBlock &MBB,
       I->getDesc().isUnconditionalBranch()) {
     parseCondBranch(*std::prev(I), TBB, Cond);
     FBB = getBranchDestBlock(*I);
+    assert(MBB.isSuccessor(FBB) && "FBB");
+    assert(MBB.isSuccessor(TBB) && "TBB");
     return false;
   }
 

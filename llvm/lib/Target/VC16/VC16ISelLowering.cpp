@@ -166,38 +166,22 @@ static VC16Cond::Code translateCC(SDValue &LHS, SDValue &RHS,
 // Return the VC16 branch opcode that matches the given DAG integer condition
 // code. The CondCode must be one of those supported by the VC16 ISA (see
 // normaliseSetCC).
-static unsigned getBranchOpcodeForIntCondCode(ISD::CondCode CC) {
+static unsigned getBranchOpcodeForIntCondCode(unsigned CC) {
   switch (CC) {
   default:
     llvm_unreachable("Unsupported CondCode");
-  case ISD::SETEQ:
+  case VC16Cond::Z:
     return VC16::BZ;
-  case ISD::SETNE:
+  case VC16Cond::NZ:
     return VC16::BNZ;
-  case ISD::SETLT:
+  case VC16Cond::LT:
     return VC16::BLT;
-  case ISD::SETGE:
+  case VC16Cond::GE:
     return VC16::BGE;
-  case ISD::SETULT:
+  case VC16Cond::NC:
     return VC16::BNC;
-  case ISD::SETUGE:
+  case VC16Cond::C:
     return VC16::BC;
-  }
-}
-
-// Changes the condition code and swaps operands if necessary, so the SetCC
-// operation matches one of the comparisons supported directly in the VC16 ISA.
-static void normaliseSetCC(SDValue &LHS, SDValue &RHS, ISD::CondCode &CC) {
-  switch (CC) {
-  default:
-    break;
-  case ISD::SETGT:
-  case ISD::SETLE:
-  case ISD::SETUGT:
-  case ISD::SETULE:
-    CC = ISD::getSetCCSwappedOperands(CC);
-    std::swap(LHS, RHS);
-    break;
   }
 }
 
@@ -302,7 +286,7 @@ SDValue VC16TargetLowering::lowerBRCOND(SDValue Op, SelectionDAG &DAG) const {
   }
 
   // Perform a comparison
-  SDValue FLAGS = DAG.getNode(VC16ISD::CMP, DL, MVT::i16, LHS, RHS).getValue(0);
+  SDValue FLAGS = DAG.getNode(VC16ISD::CMP, DL, MVT::i16, LHS, RHS);
   return DAG.getNode(VC16ISD::BRCOND, DL, MVT::Other, Chain, Dest,
                      DAG.getConstant(Code, DL, MVT::i16), FLAGS);
 }
@@ -324,11 +308,12 @@ SDValue VC16TargetLowering::lowerSELECT(SDValue Op, SelectionDAG &DAG) const {
     SDValue LHS = CondV.getOperand(0);
     SDValue RHS = CondV.getOperand(1);
     ISD::CondCode CC = cast<CondCodeSDNode>(CondV.getOperand(2))->get();
+    VC16Cond::Code Code = translateCC(LHS, RHS, CC);
+    SDValue Cmp = DAG.getNode(VC16ISD::CMP, DL, MVT::i16, LHS, RHS);
 
-    normaliseSetCC(LHS, RHS, CC);
-    SDValue TargetCC = DAG.getConstant(CC, DL, MVT::i16);
-    SDVTList VTs = DAG.getVTList(Op.getValueType(), MVT::Glue);
-    SDValue Ops[] = {LHS, RHS, TargetCC, TrueV, FalseV};
+    SDValue TargetCC = DAG.getConstant(Code, DL, MVT::i16);
+    SDVTList VTs = DAG.getVTList(Op.getValueType());
+    SDValue Ops[] = {TargetCC, Cmp, TrueV, FalseV};
     return DAG.getNode(VC16ISD::SELECT_CC, DL, VTs, Ops);
   }
 
@@ -336,10 +321,11 @@ SDValue VC16TargetLowering::lowerSELECT(SDValue Op, SelectionDAG &DAG) const {
   // (select condv, truev, falsev)
   // -> (vc16isd::select_cc condv, zero, setne, truev, falsev)
   SDValue Zero = DAG.getConstant(0, DL, MVT::i16);
-  SDValue SetNE = DAG.getConstant(ISD::SETNE, DL, MVT::i16);
+  SDValue Cmp = DAG.getNode(VC16ISD::CMP, DL, MVT::i16, CondV, Zero);
+  SDValue TargetCC = DAG.getConstant(VC16Cond::NZ, DL, MVT::i16);
 
   SDVTList VTs = DAG.getVTList(Op.getValueType());
-  SDValue Ops[] = {CondV, Zero, SetNE, TrueV, FalseV};
+  SDValue Ops[] = {TargetCC, Cmp, TrueV, FalseV};
 
   return DAG.getNode(VC16ISD::SELECT_CC, DL, VTs, Ops);
 }
@@ -349,20 +335,15 @@ SDValue VC16TargetLowering::lowerSETCC(SDValue Op, SelectionDAG &DAG) const {
   SDValue LHS = Op.getOperand(0);
   SDValue RHS = Op.getOperand(1);
   ISD::CondCode CC = cast<CondCodeSDNode>(Op.getOperand(2))->get();
+  VC16Cond::Code Code = translateCC(LHS, RHS, CC);
 
-  normaliseSetCC(LHS, RHS, CC);
-
-  dbgs() << "lowerSETCC CCVal " << CC << "\n";
-  SDValue TargetCC = DAG.getConstant(CC, DL, MVT::i16);
+  SDValue TargetCC = DAG.getConstant(Code, DL, MVT::i16);
   SDValue TrueV = DAG.getConstant(1, DL, Op.getValueType());
   SDValue FalseV = DAG.getConstant(0, DL, Op.getValueType());
+  SDValue Cmp = DAG.getNode(VC16ISD::CMP, DL, MVT::i16, LHS, RHS);
   SDVTList VTs = DAG.getVTList(Op.getValueType());
-  SDValue Ops[] = {LHS, RHS, TargetCC, TrueV, FalseV};
-  auto Node = DAG.getNode(VC16ISD::SELECT_CC, DL, VTs, Ops);
-  dbgs() << "lowerSETCC Node ";
-  Node->dump(&DAG);
-  dbgs() << "\n";
-  return Node;
+  SDValue Ops[] = {TargetCC, Cmp, TrueV, FalseV};
+  return DAG.getNode(VC16ISD::SELECT_CC, DL, VTs, Ops);
 }
 
 SDValue VC16TargetLowering::lowerVASTART(SDValue Op, SelectionDAG &DAG) const {
@@ -451,27 +432,29 @@ VC16TargetLowering::EmitInstrWithCustomInserter(MachineInstr &MI,
   //    TailMBB
 
   // Insert appropriate branch.
-  Register LHS = MI.getOperand(1).getReg();
-  Register RHS = MI.getOperand(2).getReg();
-  auto CC = static_cast<ISD::CondCode>(MI.getOperand(3).getImm());
+  auto CC = static_cast<ISD::CondCode>(MI.getOperand(1).getImm());
+  Register FLAGS = MI.getOperand(2).getReg();
 
   SmallVector<MachineInstr *, 4> SelectDebugValues;
   SmallSet<Register, 4> SelectDests;
   SelectDests.insert(MI.getOperand(0).getReg());
 
   MachineInstr *LastSelectPseudo = &MI;
+  dbgs() << "Original select: ";
+  MI.dump();
 
   for (auto E = BB->end(), SequenceMBBI = MachineBasicBlock::iterator(MI);
        SequenceMBBI != E; ++SequenceMBBI) {
     if (SequenceMBBI->isDebugInstr())
       continue;
     else if (SequenceMBBI->getOpcode() == VC16::Select_GPR_Using_CC_GPR) {
-      if (SequenceMBBI->getOperand(1).getReg() != LHS ||
-          SequenceMBBI->getOperand(2).getReg() != RHS ||
-          SequenceMBBI->getOperand(3).getImm() != CC ||
-          SelectDests.count(SequenceMBBI->getOperand(4).getReg()) ||
-          SelectDests.count(SequenceMBBI->getOperand(5).getReg()))
+      if (SequenceMBBI->getOperand(1).getImm() != CC ||
+          SequenceMBBI->getOperand(2).getReg() != FLAGS ||
+          SelectDests.count(SequenceMBBI->getOperand(3).getReg()) ||
+          SelectDests.count(SequenceMBBI->getOperand(4).getReg()))
         break;
+      dbgs() << "Added select: ";
+      SequenceMBBI->dump();
       LastSelectPseudo = &*SequenceMBBI;
       SequenceMBBI->collectDebugValues(SelectDebugValues);
       SelectDests.insert(SequenceMBBI->getOperand(0).getReg());
@@ -489,15 +472,27 @@ VC16TargetLowering::EmitInstrWithCustomInserter(MachineInstr &MI,
   const TargetInstrInfo &TII = *BB->getParent()->getSubtarget().getInstrInfo();
   const BasicBlock *LLVM_BB = BB->getBasicBlock();
   DebugLoc DL = MI.getDebugLoc();
-  MachineFunction::iterator I = ++BB->getIterator();
 
   MachineBasicBlock *HeadMBB = BB;
   MachineFunction *F = BB->getParent();
   MachineBasicBlock *TailMBB = F->CreateMachineBasicBlock(LLVM_BB);
   MachineBasicBlock *IfFalseMBB = F->CreateMachineBasicBlock(LLVM_BB);
 
-  F->insert(I, IfFalseMBB);
+  MachineBasicBlock *FallThrough = BB->getFallThrough();
+  // If the current basic block falls through to another basic block,
+  // we must insert an unconditional branch to the fallthrough destination
+  // if we are to insert basic blocks at the prior fallthrough point.
+  if (FallThrough != nullptr) {
+    BuildMI(BB, DL, TII.get(VC16::J)).addMBB(FallThrough);
+  }
+
+  MachineFunction::iterator I;
+  for (I = F->begin(); I != F->end() && &(*I) != BB; ++I)
+    ;
+  if (I != F->end())
+    ++I;
   F->insert(I, TailMBB);
+  F->insert(I, IfFalseMBB);
 
   // Transfer debug instructions associated with the selects to TailMBB.
   for (MachineInstr *DebugInstr : SelectDebugValues) {
@@ -509,19 +504,17 @@ VC16TargetLowering::EmitInstrWithCustomInserter(MachineInstr &MI,
   // Update machine-CFG edges by transferring all successors of the current
   // block to the new block which will contain the Phi node for the select.
   TailMBB->transferSuccessorsAndUpdatePHIs(HeadMBB);
+
+  unsigned Opcode = getBranchOpcodeForIntCondCode(CC);
+
+  BuildMI(HeadMBB, DL, TII.get(Opcode)).addMBB(TailMBB);
+  BuildMI(HeadMBB, DL, TII.get(VC16::J)).addMBB(IfFalseMBB);
   // Set the successors for HeadMBB.
   HeadMBB->addSuccessor(IfFalseMBB);
   HeadMBB->addSuccessor(TailMBB);
 
-  unsigned Opcode = getBranchOpcodeForIntCondCode(CC);
-
-  {
-    auto mi = BuildMI(HeadMBB, DL, TII.get(VC16::CMP)).addReg(LHS).addReg(RHS);
-    dbgs() << "Inserter " << *mi << "\n";
-  }
-  BuildMI(HeadMBB, DL, TII.get(Opcode)).addMBB(TailMBB);
-
   // IfFalseMBB just falls through to TailMBB.
+  BuildMI(IfFalseMBB, DL, TII.get(VC16::J)).addMBB(TailMBB);
   IfFalseMBB->addSuccessor(TailMBB);
 
   // Create PHIs for all of the select pseudo-instructions.
@@ -534,9 +527,9 @@ VC16TargetLowering::EmitInstrWithCustomInserter(MachineInstr &MI,
       // %Result = phi [ %TrueValue, HeadMBB ], [ %FalseValue, IfFalseMBB ]
       BuildMI(*TailMBB, InsertionPoint, SelectMBBI->getDebugLoc(),
               TII.get(VC16::PHI), SelectMBBI->getOperand(0).getReg())
-          .addReg(SelectMBBI->getOperand(4).getReg())
+          .addReg(SelectMBBI->getOperand(3).getReg())
           .addMBB(HeadMBB)
-          .addReg(SelectMBBI->getOperand(5).getReg())
+          .addReg(SelectMBBI->getOperand(4).getReg())
           .addMBB(IfFalseMBB);
       SelectMBBI->eraseFromParent();
     }
@@ -712,7 +705,7 @@ static SDValue unpackFromRegLoc(SelectionDAG &DAG, SDValue Chain,
   EVT LocVT = VA.getLocVT();
   SDValue Val;
 
-  unsigned VReg = RegInfo.createVirtualRegister(&VC16::GPRRegClass);
+  Register VReg = RegInfo.createVirtualRegister(&VC16::GPRRegClass);
   RegInfo.addLiveIn(VA.getLocReg(), VReg);
   Val = DAG.getCopyFromReg(Chain, DL, VReg, LocVT);
 
@@ -809,61 +802,60 @@ SDValue VC16TargetLowering::LowerFormalArguments(
       continue;
     }
 
-    if (IsVarArg) {
-      ArrayRef<MCPhysReg> ArgRegs = makeArrayRef(ArgGPRs);
-      unsigned Idx = CCInfo.getFirstUnallocated(ArgRegs);
-      const TargetRegisterClass *RC = &VC16::GPRRegClass;
-      MachineFrameInfo &MFI = MF.getFrameInfo();
-      MachineRegisterInfo &RegInfo = MF.getRegInfo();
-      VC16MachineFunctionInfo *VCFI = MF.getInfo<VC16MachineFunctionInfo>();
-
-      // Offset of the first variable argument from stack pointer, and size of
-      // the vararg save area. For now, the varargs save area is either zero or
-      // large enough to hold a0-a7.
-      int VaArgOffset, VarArgsSaveSize;
-
-      // If all registers are allocated, then all varargs must be passed on the
-      // stack and we don't need to save any argregs.
-      if (ArgRegs.size() == Idx) {
-        VaArgOffset = CCInfo.getNextStackOffset();
-        VarArgsSaveSize = 0;
-      } else {
-        VarArgsSaveSize = 2 * (ArgRegs.size() - Idx);
-        VaArgOffset = -VarArgsSaveSize;
-      }
-
-      // Record the frame index of the first variable argument
-      // which is a value necessary to VASTART.
-      int FI = MFI.CreateFixedObject(2, VaArgOffset, true);
-      VCFI->setVarArgsFrameIndex(FI);
-
-      // Copy the integer registers that may have been used for passing varargs
-      // to the vararg save area.
-      for (unsigned I = Idx; I < ArgRegs.size(); ++I, VaArgOffset += 2) {
-        const Register Reg = RegInfo.createVirtualRegister(RC);
-        RegInfo.addLiveIn(ArgRegs[I], Reg);
-        SDValue ArgValue = DAG.getCopyFromReg(Chain, DL, Reg, MVT::i16);
-        FI = MFI.CreateFixedObject(2, VaArgOffset, true);
-        SDValue PtrOff =
-            DAG.getFrameIndex(FI, getPointerTy(DAG.getDataLayout()));
-        SDValue Store = DAG.getStore(Chain, DL, ArgValue, PtrOff,
-                                     MachinePointerInfo::getFixedStack(MF, FI));
-        cast<StoreSDNode>(Store.getNode())
-            ->getMemOperand()
-            ->setValue((Value *)nullptr);
-        OutChains.push_back(Store);
-      }
-      VCFI->setVarArgsSaveSize(VarArgsSaveSize);
-    }
-
-    // All stores are grouped in one node to allow the matching between
-    // the size of Ins and InVals. This only happens for vararg functions.
-    if (!OutChains.empty()) {
-      OutChains.push_back(Chain);
-      Chain = DAG.getNode(ISD::TokenFactor, DL, MVT::Other, OutChains);
-    }
-
     InVals.push_back(ArgValue);
+  }
+
+  if (IsVarArg) {
+    ArrayRef<MCPhysReg> ArgRegs = makeArrayRef(ArgGPRs);
+    unsigned Idx = CCInfo.getFirstUnallocated(ArgRegs);
+    const TargetRegisterClass *RC = &VC16::GPRRegClass;
+    MachineFrameInfo &MFI = MF.getFrameInfo();
+    MachineRegisterInfo &RegInfo = MF.getRegInfo();
+    VC16MachineFunctionInfo *VCFI = MF.getInfo<VC16MachineFunctionInfo>();
+
+    // Offset of the first variable argument from stack pointer, and size of
+    // the vararg save area. For now, the varargs save area is either zero or
+    // large enough to hold a0-a7.
+    int VaArgOffset, VarArgsSaveSize;
+
+    // If all registers are allocated, then all varargs must be passed on the
+    // stack and we don't need to save any argregs.
+    if (ArgRegs.size() == Idx) {
+      VaArgOffset = CCInfo.getNextStackOffset();
+      VarArgsSaveSize = 0;
+    } else {
+      VarArgsSaveSize = 2 * (ArgRegs.size() - Idx);
+      VaArgOffset = -VarArgsSaveSize;
+    }
+
+    // Record the frame index of the first variable argument
+    // which is a value necessary to VASTART.
+    int FI = MFI.CreateFixedObject(2, VaArgOffset, true);
+    VCFI->setVarArgsFrameIndex(FI);
+
+    // Copy the integer registers that may have been used for passing varargs
+    // to the vararg save area.
+    for (unsigned I = Idx; I < ArgRegs.size(); ++I, VaArgOffset += 2) {
+      const Register Reg = RegInfo.createVirtualRegister(RC);
+      RegInfo.addLiveIn(ArgRegs[I], Reg);
+      SDValue ArgValue = DAG.getCopyFromReg(Chain, DL, Reg, MVT::i16);
+      FI = MFI.CreateFixedObject(2, VaArgOffset, true);
+      SDValue PtrOff = DAG.getFrameIndex(FI, getPointerTy(DAG.getDataLayout()));
+      SDValue Store = DAG.getStore(Chain, DL, ArgValue, PtrOff,
+                                   MachinePointerInfo::getFixedStack(MF, FI));
+      cast<StoreSDNode>(Store.getNode())
+          ->getMemOperand()
+          ->setValue((Value *)nullptr);
+      OutChains.push_back(Store);
+    }
+    VCFI->setVarArgsSaveSize(VarArgsSaveSize);
+  }
+
+  // All stores are grouped in one node to allow the matching between
+  // the size of Ins and InVals. This only happens for vararg functions.
+  if (!OutChains.empty()) {
+    OutChains.push_back(Chain);
+    Chain = DAG.getNode(ISD::TokenFactor, DL, MVT::Other, OutChains);
   }
   return Chain;
 }

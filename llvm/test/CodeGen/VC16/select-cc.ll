@@ -19,25 +19,25 @@ define i16 @foo(i16 %a, i16 *%b) {
 ; VC16I-NEXT:  .LBB0_4:
 ; VC16I-NEXT:    lw a2, 0(a1)
 ; VC16I-NEXT:    cmp a2, a0
-; VC16I-NEXT:    bc .LBB0_6
+; VC16I-NEXT:    bnc .LBB0_6
 ; VC16I-NEXT:  ; %bb.5:
 ; VC16I-NEXT:    mv a0, a2
 ; VC16I-NEXT:  .LBB0_6:
 ; VC16I-NEXT:    lw a2, 0(a1)
 ; VC16I-NEXT:    cmp a0, a2
-; VC16I-NEXT:    bnc .LBB0_8
+; VC16I-NEXT:    bc .LBB0_8
 ; VC16I-NEXT:  ; %bb.7:
 ; VC16I-NEXT:    mv a0, a2
 ; VC16I-NEXT:  .LBB0_8:
 ; VC16I-NEXT:    lw a2, 0(a1)
 ; VC16I-NEXT:    cmp a0, a2
-; VC16I-NEXT:    bc .LBB0_10
+; VC16I-NEXT:    bnc .LBB0_10
 ; VC16I-NEXT:  ; %bb.9:
 ; VC16I-NEXT:    mv a0, a2
 ; VC16I-NEXT:  .LBB0_10:
 ; VC16I-NEXT:    lw a2, 0(a1)
 ; VC16I-NEXT:    cmp a2, a0
-; VC16I-NEXT:    bnc .LBB0_12
+; VC16I-NEXT:    bc .LBB0_12
 ; VC16I-NEXT:  ; %bb.11:
 ; VC16I-NEXT:    mv a0, a2
 ; VC16I-NEXT:  .LBB0_12:

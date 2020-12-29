@@ -5,9 +5,7 @@
 define i16 @bare_select(i1 %a, i16 %b, i16 %c) {
 ; VC16I-LABEL: bare_select:
 ; VC16I:       ; %bb.0:
-; VC16I-NEXT:    andi a0, 1
-; VC16I-NEXT:    lli t0, 0
-; VC16I-NEXT:    cmp a0, t0
+; VC16I-NEXT:    tsti a0, 1
 ; VC16I-NEXT:    bnz .LBB0_2
 ; VC16I-NEXT:  ; %bb.1:
 ; VC16I-NEXT:    mv a1, a2

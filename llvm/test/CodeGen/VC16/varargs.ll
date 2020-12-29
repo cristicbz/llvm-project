@@ -143,9 +143,11 @@ define float @va3(i16 %a, float %b, ...) nounwind {
 ; VC16I-NEXT:    lea s0, sp, 12
 ; VC16I-NEXT:    mv t0, a2
 ; VC16I-NEXT:    mv a0, a1
-; VC16I-NEXT:    lea a2, sp, 27
+; VC16I-NEXT:    lea a2, sp, 12
+; VC16I-NEXT:    lea a2, a2, 15
 ; VC16I-NEXT:    sw a2, 4(sp)
-; VC16I-NEXT:    lea a2, sp, 19
+; VC16I-NEXT:    lea a2, sp, 4
+; VC16I-NEXT:    lea a2, a2, 15
 ; VC16I-NEXT:    andi a2, -8
 ; VC16I-NEXT:    mv a1, a2
 ; VC16I-NEXT:    ori a1, 2
@@ -189,7 +191,8 @@ define float @va3_va_arg(i16 %a, float %b, ...) nounwind {
 ; VC16I-NEXT:    mv a0, a1
 ; VC16I-NEXT:    lw a2, 14(sp)
 ; VC16I-NEXT:    sw a2, 0(sp)
-; VC16I-NEXT:    lea a2, sp, 16
+; VC16I-NEXT:    lea a2, sp, 1
+; VC16I-NEXT:    lea a2, a2, 15
 ; VC16I-NEXT:    sw a2, 4(sp)
 ; VC16I-NEXT:    lui a2, %his(__addsf3)
 ; VC16I-NEXT:    lea ra, a2, %lo(__addsf3)
@@ -321,9 +324,8 @@ define void @va5_aligned_stack_caller() nounwind {
 ; VC16I-NEXT:    lui a2, 2
 ; VC16I-NEXT:    addn a2, sp
 ; VC16I-NEXT:    sw s0, 14(a2)
-; VC16I-NEXT:    lui a2, 2
-; VC16I-NEXT:    addn a2, sp
-; VC16I-NEXT:    sw ra, 12(a2)
+; VC16I-NEXT:    lea a2, sp, 14
+; VC16I-NEXT:    sw ra, 62(a2)
 ; VC16I-NEXT:    lui a2, 3
 ; VC16I-NEXT:    lea a2, a2, -16
 ; VC16I-NEXT:    addn s0, a2
@@ -381,16 +383,15 @@ define void @va5_aligned_stack_caller() nounwind {
 ; VC16I-NEXT:    lea ra, a2, %lo(va5_aligned_stack_callee)
 ; VC16I-NEXT:    lli a0, 1
 ; VC16I-NEXT:    lli a1, 11
-; VC16I-NEXT:    lui a2, 1
+; VC16I-NEXT:    lui a2, 2
 ; VC16I-NEXT:    addn a2, sp
-; VC16I-NEXT:    lea a2, a2, 16
+; VC16I-NEXT:    lea a2, a2, -16
 ; VC16I-NEXT:    ret
 ; VC16I-NEXT:    lui a2, 2046
 ; VC16I-NEXT:    lea a2, a2, -16
 ; VC16I-NEXT:    addn sp, a2
-; VC16I-NEXT:    lui a2, 2
-; VC16I-NEXT:    addn a2, sp
-; VC16I-NEXT:    lw ra, 12(a2)
+; VC16I-NEXT:    lea a2, sp, 14
+; VC16I-NEXT:    lw ra, 62(a2)
 ; VC16I-NEXT:    lui a2, 2
 ; VC16I-NEXT:    addn a2, sp
 ; VC16I-NEXT:    lw s0, 14(a2)
@@ -411,16 +412,19 @@ define void @va5_aligned_stack_caller() nounwind {
 define i16 @va6_no_fixed_args(...) nounwind {
 ; VC16I-LABEL: va6_no_fixed_args:
 ; VC16I:       ; %bb.0:
-; VC16I-NEXT:    lea sp, sp, -8
-; VC16I-NEXT:    sw s0, 6(sp)
-; VC16I-NEXT:    sw ra, 4(sp)
-; VC16I-NEXT:    lea s0, sp, 8
-; VC16I-NEXT:    lea a0, sp, 2
-; VC16I-NEXT:    sw a0, 0(sp)
-; VC16I-NEXT:    lea sp, s0, -8
-; VC16I-NEXT:    lw ra, 4(sp)
-; VC16I-NEXT:    lw s0, 6(sp)
-; VC16I-NEXT:    lea sp, sp, 8
+; VC16I-NEXT:    lea sp, sp, -12
+; VC16I-NEXT:    sw s0, 4(sp)
+; VC16I-NEXT:    sw ra, 2(sp)
+; VC16I-NEXT:    lea s0, sp, 6
+; VC16I-NEXT:    sw a2, 10(sp)
+; VC16I-NEXT:    sw a1, 8(sp)
+; VC16I-NEXT:    lea a2, sp, 8
+; VC16I-NEXT:    sw a2, 0(sp)
+; VC16I-NEXT:    sw a0, 6(sp)
+; VC16I-NEXT:    lea sp, s0, -6
+; VC16I-NEXT:    lw ra, 2(sp)
+; VC16I-NEXT:    lw s0, 4(sp)
+; VC16I-NEXT:    lea sp, sp, 12
 ; VC16I-NEXT:    ret
   %va = alloca i8*, align 4
   %1 = bitcast i8** %va to i8*

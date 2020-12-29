@@ -21,10 +21,11 @@ def SDT_VC16Call         : SDTypeProfile<0, -1, [SDTCisVT<0, i16>]>;
 def SDT_VC16CallSeqStart : SDCallSeqStart<[SDTCisVT<0, i16>,
                                             SDTCisVT<1, i16>]>;
 def SDT_VC16CallSeqEnd   : SDCallSeqEnd<[SDTCisVT<0, i16>,
-                                          SDTCisVT<1, i16>]>;
-def SDT_VC16SelectCC     : SDTypeProfile<1, 5, [SDTCisSameAs<1, 2>,
-                                                SDTCisSameAs<0, 4>,
-                                                SDTCisSameAs<4, 5>]>;
+                                         SDTCisVT<1, i16>]>;
+def SDT_VC16SelectCC     : SDTypeProfile<1, 4, [SDTCisSameAs<0, 3>,
+                                                SDTCisSameAs<3, 4>,
+                                                SDTCisVT<0, i16>,
+                                                SDTCisVT<1, i16>]>;
 
 // Unary and binary operator instructions that set EFLAGS as a side-effect.
 def SDTUnaryArithWithFlags : SDTypeProfile<2, 1,
@@ -322,6 +323,7 @@ def ADDI :  ALU_Binary_RF_RI5<     0b01011111, "addi">;
 def ADCI :  ALU_Binary_RF_RI5<     0b11011111, "adci">;
 let isAsCheapAsAMove = 1 in
 def  ORI :  ALU_Binary_RF_RI5<     0b00111111, "ori">;
+let isAsCheapAsAMove = 1 in
 def  LLI :    ALU_Unary_R_RI5<     0b10111111, "lli">;
 def ANDI :  ALU_Binary_RF_RI5<     0b11111111, "andi">;
 
@@ -452,12 +454,12 @@ def : Pat<(simm16_shift5:$imm), (LUI (HI20U $imm))>;
 def : Pat<(simm16:$imm), (LEA (LUI (HI20S imm:$imm)), (LO5Sext imm:$imm))>;
 
 
-let usesCustomInserter = 1 in
+let usesCustomInserter = 1, Uses = [FLAGS] in
 def Select_GPR_Using_CC_GPR
     : Pseudo<(outs GPR:$dst),
-             (ins GPR:$lhs, GPR:$rhs, i16imm:$imm, GPR:$src, GPR:$src2),
-             [(set GPR:$dst, (SelectCC GPR:$lhs, GPR:$rhs,
-              (i16 imm:$imm), GPR:$src, GPR:$src2))]>;
+             (ins i16imm:$imm, CCR:$flags, GPR:$src, GPR:$src2),
+             [(set GPR:$dst,
+               (SelectCC (i16 imm:$imm), CCR:$flags, GPR:$src, GPR:$src2))]>;
 
 
 /// Branches and jumps

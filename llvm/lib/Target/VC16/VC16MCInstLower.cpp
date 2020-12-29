@@ -79,8 +79,7 @@ bool llvm::LowerVC16MachineOperandToMCOperand(const MachineOperand &MO,
     MCOp = MCOperand::createImm(MO.getImm());
     break;
   case MachineOperand::MO_MachineBasicBlock:
-    MCOp = MCOperand::createExpr(
-        MCSymbolRefExpr::create(MO.getMBB()->getSymbol(), AP.OutContext));
+    MCOp = lowerSymbolOperand(MO, MO.getMBB()->getSymbol(), AP);
     break;
   case MachineOperand::MO_GlobalAddress:
     MCOp = lowerSymbolOperand(MO, AP.getSymbol(MO.getGlobal()), AP);

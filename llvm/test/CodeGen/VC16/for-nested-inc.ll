@@ -15,27 +15,16 @@ define i8* @mPutLine(i16 %charX, i8* readonly %text) {
 ; VC16I-NEXT:    bz .LBB0_11
 ; VC16I-NEXT:  .LBB0_2: ; %for.body.preheader
 ; VC16I-NEXT:    ; =>This Loop Header: Depth=1
-; VC16I-NEXT:    ; Child Loop BB0_6 Depth 2
+; VC16I-NEXT:    ; Child Loop BB0_4 Depth 2
 ; VC16I-NEXT:    mv a2, a0
 ; VC16I-NEXT:    ori a2, -4
 ; VC16I-NEXT:    lea a1, a1, 1
-; VC16I-NEXT:    j .LBB0_6
+; VC16I-NEXT:    j .LBB0_4
 ; VC16I-NEXT:  .LBB0_3: ; %for.cond
-; VC16I-NEXT:    ; in Loop: Header=BB0_6 Depth=2
-; VC16I-NEXT:    lli t0, 0
-; VC16I-NEXT:    cmpi t0, 0
-; VC16I-NEXT:    bz .LBB0_6
-; VC16I-NEXT:    j .LBB0_7
-; VC16I-NEXT:  .LBB0_4: ; %for.cond
-; VC16I-NEXT:    ; in Loop: Header=BB0_6 Depth=2
-; VC16I-NEXT:    lea a2, t0, 1
-; VC16I-NEXT:    cmp a2, t0
-; VC16I-NEXT:    bc .LBB0_3
-; VC16I-NEXT:  ; %bb.5: ; in Loop: Header=BB0_6 Depth=2
-; VC16I-NEXT:    lli t0, 1
+; VC16I-NEXT:    ; in Loop: Header=BB0_4 Depth=2
 ; VC16I-NEXT:    cmpi t0, 0
 ; VC16I-NEXT:    bnz .LBB0_7
-; VC16I-NEXT:  .LBB0_6: ; %for.body
+; VC16I-NEXT:  .LBB0_4: ; %for.body
 ; VC16I-NEXT:    ; Parent Loop BB0_2 Depth=1
 ; VC16I-NEXT:    ; => This Inner Loop Header: Depth=2
 ; VC16I-NEXT:    mv t0, a2
@@ -43,8 +32,17 @@ define i8* @mPutLine(i16 %charX, i8* readonly %text) {
 ; VC16I-NEXT:    lea a2, a2, 8
 ; VC16I-NEXT:    lea a0, a0, 1
 ; VC16I-NEXT:    cmp a0, a2
-; VC16I-NEXT:    bnc .LBB0_4
-; VC16I-NEXT:    j .LBB0_10
+; VC16I-NEXT:    bc .LBB0_8
+; VC16I-NEXT:  ; %bb.5: ; %for.cond
+; VC16I-NEXT:    ; in Loop: Header=BB0_4 Depth=2
+; VC16I-NEXT:    lea a2, t0, 1
+; VC16I-NEXT:    cmp a2, t0
+; VC16I-NEXT:    lli t0, 1
+; VC16I-NEXT:    bnc .LBB0_3
+; VC16I-NEXT:  ; %bb.6: ; %for.cond
+; VC16I-NEXT:    ; in Loop: Header=BB0_4 Depth=2
+; VC16I-NEXT:    lli t0, 0
+; VC16I-NEXT:    j .LBB0_3
 ; VC16I-NEXT:  .LBB0_7: ; %cleanup10
 ; VC16I-NEXT:    ; in Loop: Header=BB0_2 Depth=1
 ; VC16I-NEXT:    lli a2, 4
@@ -53,16 +51,14 @@ define i8* @mPutLine(i16 %charX, i8* readonly %text) {
 ; VC16I-NEXT:    cmpi a2, 0
 ; VC16I-NEXT:    lli a2, 0
 ; VC16I-NEXT:    bnz .LBB0_2
-; VC16I-NEXT:  ; %bb.8: ; %return
-; VC16I-NEXT:    mv a0, a2
-; VC16I-NEXT:    ret
-; VC16I-NEXT:  .LBB0_9:
-; VC16I-NEXT:    mv a0, a1
-; VC16I-NEXT:    ret
-; VC16I-NEXT:  .LBB0_10: ; %cleanup10.thread
+; VC16I-NEXT:    j .LBB0_10
+; VC16I-NEXT:  .LBB0_8: ; %cleanup10.thread
 ; VC16I-NEXT:    lli a0, 4
 ; VC16I-NEXT:    sw a2, 0(a0)
-; VC16I-NEXT:    mv a0, a1
+; VC16I-NEXT:  .LBB0_9: ; %return
+; VC16I-NEXT:    mv a2, a1
+; VC16I-NEXT:  .LBB0_10: ; %return
+; VC16I-NEXT:    mv a0, a2
 ; VC16I-NEXT:    ret
 ; VC16I-NEXT:  .LBB0_11:
 ; VC16I-NEXT:    lli a0, 0

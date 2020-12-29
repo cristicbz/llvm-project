@@ -32,8 +32,8 @@ define i16 @relax_jal(i1 %a) {
 ; CHECK-NEXT:    tsti a0, 1
 ; CHECK-NEXT:    bnz .LBB1_1
 ; CHECK-NEXT:  ; %bb.3:
-; CHECK-NEXT:    lui a2, .LBB1_2
-; CHECK-NEXT:    jalr a2, .LBB1_2
+; CHECK-NEXT:    lui a2, %his(.LBB1_2)
+; CHECK-NEXT:    jalr a2, %lo(.LBB1_2)
 ; CHECK-NEXT:  .LBB1_1: ; %iftrue
 ; CHECK-NEXT:    ;APP
 ; CHECK-NEXT:    ;NO_APP

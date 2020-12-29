@@ -217,6 +217,7 @@ void VC16FrameLowering::adjustReg(MachineBasicBlock &MBB,
       SrcReg = DestReg;
     }
     if (Val != 0) {
+      assert(isInt<5>(Val) && "Out of bounds LEA offset.");
       BuildMI(MBB, MBBI, DL, TII->get(VC16::LEA), DestReg)
           .addReg(SrcReg)
           .addImm(Val)

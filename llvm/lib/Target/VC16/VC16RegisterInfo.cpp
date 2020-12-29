@@ -41,9 +41,10 @@ BitVector VC16RegisterInfo::getReservedRegs(const MachineFunction &MF) const {
   BitVector Reserved(getNumRegs());
 
   // Use markSuperRegs to ensure any register aliases are also reserved
-  markSuperRegs(Reserved, VC16::X0); // sp
-  markSuperRegs(Reserved, VC16::CS); // code segment
-  markSuperRegs(Reserved, VC16::SS); // stack segment
+  markSuperRegs(Reserved, VC16::X0);    // sp
+  markSuperRegs(Reserved, VC16::CS);    // code segment
+  markSuperRegs(Reserved, VC16::SS);    // stack segment
+  markSuperRegs(Reserved, VC16::FLAGS); // flags
   if (TFI->hasFP(MF))
     markSuperRegs(Reserved, VC16::X2); // fp
   assert(checkAllSuperRegsMarked(Reserved));
@@ -76,27 +77,54 @@ void VC16RegisterInfo::eliminateFrameIndex(MachineBasicBlock::iterator II,
   }
 
   MachineBasicBlock &MBB = *MI.getParent();
-  bool FrameRegIsKill = false;
   unsigned OpCode = MI.getOpcode();
-  bool isWordBased = OpCode == VC16::LW || OpCode == VC16::SW;
 
-  if ((!isWordBased && !isUInt<5>(Offset)) || !isUInt<6>(Offset)) {
-    assert(isUInt<16>(Offset) && "Uint16 expected");
-    // The offset won't fit in an immediate, so use a scratch register
-    // instead Modify Offset and FrameReg appropriately
-    Register ScratchReg = MRI.createVirtualRegister(&VC16::GPRRegClass);
-    unsigned Hiu11 = Offset >> 5;
-    BuildMI(MBB, II, DL, TII->get(VC16::LUI), ScratchReg).addImm(Hiu11);
+  int64_t BoundedOffset;
+  switch (OpCode) {
+  case VC16::LEA:
+    BoundedOffset = !isInt<6>(Offset)
+                        ? SignExtend64<5>(Offset)
+                        : Offset < -16 ? -16 : Offset > 15 ? 15 : Offset;
+    break;
+  case VC16::LB:
+  case VC16::SB:
+    BoundedOffset =
+        (Offset > (31 + 15)) ? Offset & 31 : Offset > 31 ? 31 : Offset;
+    break;
+  case VC16::LW:
+  case VC16::SW:
+    BoundedOffset =
+        (Offset > (62 + 14)) ? Offset & 63 : Offset > 62 ? 62 : Offset;
+    break;
+  default:
+    MI.dump();
+    llvm_unreachable("Unknown operation for eliminateFrameIndex in operation");
+  }
+
+  if (Offset == BoundedOffset) {
+    MI.getOperand(FIOperandNum).ChangeToRegister(FrameReg, false);
+    MI.getOperand(FIOperandNum + 1).ChangeToImmediate(Offset);
+    return;
+  }
+
+  // The offset won't fit in an immediate, so use a scratch register
+  // instead Modify Offset and FrameReg appropriately
+  assert(isInt<16>(Offset) && "Int16 expected");
+  Register ScratchReg = MRI.createVirtualRegister(&VC16::GPRRegClass);
+  Offset -= BoundedOffset;
+  if (isInt<5>(Offset)) {
+    BuildMI(MBB, II, DL, TII->get(VC16::LEA), ScratchReg)
+        .addReg(FrameReg)
+        .addImm(Offset);
+  } else {
+    BuildMI(MBB, II, DL, TII->get(VC16::LUI), ScratchReg).addImm(Offset >> 5);
     BuildMI(MBB, II, DL, TII->get(VC16::ADDN), ScratchReg)
         .addReg(ScratchReg, RegState::Kill)
         .addReg(FrameReg);
-    Offset -= Hiu11 << 5;
-    FrameReg = ScratchReg;
-    FrameRegIsKill = true;
   }
   MI.getOperand(FIOperandNum)
-      .ChangeToRegister(FrameReg, false, false, FrameRegIsKill);
-  MI.getOperand(FIOperandNum + 1).ChangeToImmediate(Offset);
+      .ChangeToRegister(ScratchReg, false, false, /* isKill = */ true);
+  MI.getOperand(FIOperandNum + 1).ChangeToImmediate(BoundedOffset);
 }
 
 Register VC16RegisterInfo::getFrameRegister(const MachineFunction &MF) const {
