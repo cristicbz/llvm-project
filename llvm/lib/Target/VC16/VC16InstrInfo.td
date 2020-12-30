@@ -285,7 +285,7 @@ let isCommutable = 1 in
 def MLHU :  ALU_Binary_R_RR<0b11, 0b01010111, "mlhu">;
 let isCommutable = 1 in
 def MLHS :  ALU_Binary_R_RR<0b11, 0b10010111, "mlhs">;
-def  NEG :   ALU_Unary_RF_R<0b11, 0b11010111, "neg">;
+def  NEG :   ALU_Unary_R_R<0b11, 0b11010111, "neg">;
 
 let isCommutable = 1 in
 def  ADD : ALU_Binary_RF_RR<0b00, 0b00110111, "add">;
@@ -299,16 +299,16 @@ def  ADC : ALU_Binary_RF_RR<0b01, 0b00110111, "adc">;
 def  SBC : ALU_Binary_RF_RR<0b01, 0b01110111, "sbc">;
 def  SRA :  ALU_Binary_R_RR<0b01, 0b10110111, "sra">;
 let isCommutable = 1 in
-def   OR : ALU_Binary_RF_RR<0b01, 0b11110111, "or">;
+def   OR : ALU_Binary_R_RR<0b01, 0b11110111, "or">;
 
 def  SLL :  ALU_Binary_R_RR<0b10, 0b00110111, "sll">;
 def  SRL :  ALU_Binary_R_RR<0b10, 0b10110111, "srl">;
 let isCommutable = 1 in
-def  AND : ALU_Binary_RF_RR<0b10, 0b11110111, "and">;
+def  AND : ALU_Binary_R_RR<0b10, 0b11110111, "and">;
 
 let isCommutable = 1 in
-def ADDN : ALU_Binary_RF_RR<0b11, 0b00110111, "addn">;
-def  NOT :   ALU_Unary_RF_R<0b11, 0b10110111, "not">;
+def ADDN : ALU_Binary_R_RR<0b11, 0b00110111, "addn">;
+def  NOT :   ALU_Unary_R_R<0b11, 0b10110111, "not">;
 
 /// ALU Compare RR instructions.
 let isCompare = 1 in
@@ -329,10 +329,10 @@ let isAsCheapAsAMove = 1 in
 def ADDI :  ALU_Binary_RF_RI5<     0b01011111, "addi">;
 def ADCI :  ALU_Binary_RF_RI5<     0b11011111, "adci">;
 let isAsCheapAsAMove = 1 in
-def  ORI :  ALU_Binary_RF_RI5<     0b00111111, "ori">;
+def  ORI :  ALU_Binary_F_RI5<     0b00111111, "ori">;
 let isAsCheapAsAMove = 1 in
 def  LLI :    ALU_Unary_R_RI5<     0b10111111, "lli">;
-def ANDI :  ALU_Binary_RF_RI5<     0b11111111, "andi">;
+def ANDI :  ALU_Binary_F_RI5<     0b11111111, "andi">;
 
 /// ALU Compare RI instructions.
 let isCompare = 1 in
