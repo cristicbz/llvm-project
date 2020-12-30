@@ -172,6 +172,13 @@ class ALU_Binary_RF_RI5<bits<8> op8, string opcodestr, list<dag> pattern = []>
 }
 
 let hasSideEffects = 0, mayLoad = 0, mayStore = 0 in
+class ALU_Binary_R_RI5<bits<8> op8, string opcodestr, list<dag> pattern = []>
+    : VCInstRI5<op8, (outs GPR:$rd), (ins GPR:$rs, simm5:$imm5),
+                opcodestr, "$rs, $imm5", pattern> {
+  let Constraints = "$rd = $rs";
+}
+
+let hasSideEffects = 0, mayLoad = 0, mayStore = 0 in
 class ALU_Unary_R_RI5<bits<8> op8, string opcodestr, list<dag> pattern = []>
     : VCInstRI5<op8, (outs GPR:$rs), (ins simm5:$imm5),
                 opcodestr, "$rs, $imm5", pattern>;
@@ -457,9 +464,9 @@ def : Pat<(simm16:$imm), (LEA (LUI (HI20S imm:$imm)), (LO5Sext imm:$imm))>;
 let usesCustomInserter = 1, Uses = [FLAGS] in
 def Select_GPR_Using_CC_GPR
     : Pseudo<(outs GPR:$dst),
-             (ins i16imm:$imm, CCR:$flags, GPR:$src, GPR:$src2),
+             (ins i16imm:$imm, GPR:$src, GPR:$src2),
              [(set GPR:$dst,
-               (SelectCC (i16 imm:$imm), CCR:$flags, GPR:$src, GPR:$src2))]>;
+               (SelectCC (i16 imm:$imm), FLAGS, GPR:$src, GPR:$src2))]>;
 
 
 /// Branches and jumps

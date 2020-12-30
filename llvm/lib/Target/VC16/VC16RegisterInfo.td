@@ -54,13 +54,16 @@ let RegAltNameIndices = [ABIRegAltName] in {
 
 def CCR : RegisterClass<"VC16", [i16], 16, (add FLAGS)>
 {
-  let CopyCost = -1;      // Don't allow copying of status registers
+  let CopyCost = 10;      // Don't allow copying of status registers
+  let isAllocatable = 0;
 }
 def SSREG : RegisterClass<"VC16", [i16], 16, (add CS, XS, YS, SS)>
 {
-  let CopyCost = -1;      // Don't allow copying of segment registers
+  let CopyCost = 10;      // Don't allow copying of segment registers
+  let isAllocatable = 0;
 }
 def CSREG : RegisterClass<"VC16", [i16], 16, (add CS, XS, YS, SS, FLAGS)>
 {
-  let CopyCost = -1;      // Don't allow copying of CSRs.
+  let CopyCost = 10;      // Don't allow copying of CSRs.
+  let isAllocatable = 0;
 }

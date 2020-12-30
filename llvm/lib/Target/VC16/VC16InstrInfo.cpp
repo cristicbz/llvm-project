@@ -36,12 +36,31 @@ void VC16InstrInfo::copyPhysReg(MachineBasicBlock &MBB,
                                 MachineBasicBlock::iterator MBBI,
                                 const DebugLoc &DL, MCRegister DstReg,
                                 MCRegister SrcReg, bool KillSrc) const {
-  assert(VC16::GPRRegClass.contains(DstReg, SrcReg) &&
-         "Impossible reg-to-reg copy");
 
-  BuildMI(MBB, MBBI, DL, get(VC16::LEA), DstReg)
-      .addReg(SrcReg, getKillRegState(KillSrc))
-      .addImm(0);
+  if (VC16::GPRRegClass.contains(DstReg, SrcReg)) {
+    BuildMI(MBB, MBBI, DL, get(VC16::LEA), DstReg)
+        .addReg(SrcReg, getKillRegState(KillSrc))
+        .addImm(0);
+  } else if (VC16::CSREGRegClass.contains(DstReg) &&
+             VC16::GPRRegClass.contains(SrcReg)) {
+    BuildMI(MBB, MBBI, DL, get(VC16::CSRW), DstReg)
+        .addReg(SrcReg, getKillRegState(KillSrc));
+  } else if (VC16::CSREGRegClass.contains(SrcReg) &&
+             VC16::GPRRegClass.contains(DstReg)) {
+    BuildMI(MBB, MBBI, DL, get(VC16::CSRR), DstReg)
+        .addReg(SrcReg, getKillRegState(KillSrc));
+  } else if (VC16::CSREGRegClass.contains(SrcReg, DstReg)) {
+    MachineFunction *MF = MBB.getParent();
+    MachineRegisterInfo &MRI = MF->getRegInfo();
+    Register ScratchReg = MRI.createVirtualRegister(&VC16::GPRRegClass);
+
+    BuildMI(MBB, MBBI, DL, get(VC16::CSRW), ScratchReg)
+        .addReg(SrcReg, getKillRegState(KillSrc));
+    BuildMI(MBB, MBBI, DL, get(VC16::CSRR), DstReg)
+        .addReg(ScratchReg, RegState::Kill);
+  } else {
+    assert("Impossible reg-to-reg copy");
+  }
 }
 
 void VC16InstrInfo::storeRegToStackSlot(MachineBasicBlock &MBB,

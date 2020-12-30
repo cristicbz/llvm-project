@@ -433,7 +433,6 @@ VC16TargetLowering::EmitInstrWithCustomInserter(MachineInstr &MI,
 
   // Insert appropriate branch.
   auto CC = static_cast<ISD::CondCode>(MI.getOperand(1).getImm());
-  Register FLAGS = MI.getOperand(2).getReg();
 
   SmallVector<MachineInstr *, 4> SelectDebugValues;
   SmallSet<Register, 4> SelectDests;
@@ -449,9 +448,8 @@ VC16TargetLowering::EmitInstrWithCustomInserter(MachineInstr &MI,
       continue;
     else if (SequenceMBBI->getOpcode() == VC16::Select_GPR_Using_CC_GPR) {
       if (SequenceMBBI->getOperand(1).getImm() != CC ||
-          SequenceMBBI->getOperand(2).getReg() != FLAGS ||
-          SelectDests.count(SequenceMBBI->getOperand(3).getReg()) ||
-          SelectDests.count(SequenceMBBI->getOperand(4).getReg()))
+          SelectDests.count(SequenceMBBI->getOperand(2).getReg()) ||
+          SelectDests.count(SequenceMBBI->getOperand(3).getReg()))
         break;
       dbgs() << "Added select: ";
       SequenceMBBI->dump();
@@ -460,7 +458,8 @@ VC16TargetLowering::EmitInstrWithCustomInserter(MachineInstr &MI,
       SelectDests.insert(SequenceMBBI->getOperand(0).getReg());
     } else {
       if (SequenceMBBI->hasUnmodeledSideEffects() ||
-          SequenceMBBI->mayLoadOrStore())
+          SequenceMBBI->mayLoadOrStore() ||
+          SequenceMBBI->definesRegister(VC16::FLAGS))
         break;
       if (llvm::any_of(SequenceMBBI->operands(), [&](MachineOperand &MO) {
             return MO.isReg() && MO.isUse() && SelectDests.count(MO.getReg());
@@ -527,9 +526,9 @@ VC16TargetLowering::EmitInstrWithCustomInserter(MachineInstr &MI,
       // %Result = phi [ %TrueValue, HeadMBB ], [ %FalseValue, IfFalseMBB ]
       BuildMI(*TailMBB, InsertionPoint, SelectMBBI->getDebugLoc(),
               TII.get(VC16::PHI), SelectMBBI->getOperand(0).getReg())
-          .addReg(SelectMBBI->getOperand(3).getReg())
+          .addReg(SelectMBBI->getOperand(2).getReg())
           .addMBB(HeadMBB)
-          .addReg(SelectMBBI->getOperand(4).getReg())
+          .addReg(SelectMBBI->getOperand(3).getReg())
           .addMBB(IfFalseMBB);
       SelectMBBI->eraseFromParent();
     }
